@@ -1,0 +1,480 @@
+#+PROPERTY: header-args:emacs-lisp :tangle /home/sliberman/.emacs.d/init.el
+
+* MELPA
+#+begin_src emacs-lisp
+  (require 'package)
+
+  (setq package-archives '(("melpa" . "https://melpa.org/packages/")
+                           ("org" . "https://orgmode.org/elpa/")
+                           ("elpa" . "https://elpa.gnu.org/packages/")))
+
+  (package-initialize)
+
+  (unless package-archive-contents
+    (package-refresh-contents))
+
+  (unless (package-installed-p 'use-package)
+    (package-install 'use-package))
+
+  (require 'use-package)
+  (setq use-package-always-ensure t)
+#+end_src
+
+* Open init function
+#+begin_src emacs-lisp
+  (defun sergio/open-init ()
+    (interactive)
+    (find-file "~/Documents/src/dotfiles/init-el.org"))
+
+  (add-hook 'after-init-hook '(lambda () (sergio/open-init) (switch-to-prev-buffer)))
+#+end_src
+* Graphical interface setup
+Inhibit the messages
+#+begin_src emacs-lisp
+  (setq inhibit-startup-message t)
+#+end_src
+
+Remove menus, tools and scroll bars.
+#+begin_src emacs-lisp
+  (tool-bar-mode -1)
+  (menu-bar-mode -1)
+  (scroll-bar-mode -1)
+#+end_src
+
+Remove tooltips (like the ones in the modeline).
+#+begin_src emacs-lisp
+  (tooltip-mode -1)
+#+end_src
+
+Add some right and left margin.
+#+begin_src emacs-lisp
+  (set-fringe-mode 10)
+#+end_src
+
+Add visual bell.
+#+begin_src emacs-lisp
+  (setq visual-bell t)
+#+end_src
+
+Custom font.
+#+begin_src emacs-lisp
+  (setq sergio/font-size-fixed 120)
+  (setq sergio/font-size-variable 120)
+
+  (set-face-attribute 'default nil :font "Bitstream Vera Sans Mono" :height sergio/font-size-fixed)
+
+  ;; Set the fixed pitch face
+  (set-face-attribute 'fixed-pitch nil :font "Fira Code Retina" :height sergio/font-size-fixed)
+
+  ;; Set the variable pitch face
+  (set-face-attribute 'variable-pitch nil :font "Cantarell" :height sergio/font-size-variable :weight 'regular)
+#+end_src
+
+Set theme.
+#+begin_src emacs-lisp
+  (use-package doom-themes
+    :config
+    (load-theme 'doom-palenight t))
+#+end_src
+
+Add battery.
+#+begin_src emacs-lisp
+  (display-battery-mode t)
+#+end_src
+
+Add date and time.
+#+begin_src emacs-lisp
+  (setq display-time-default-load-average nil)
+  (display-time)
+#+end_src
+
+Match parentheses mode.
+#+begin_src emacs-lisp
+  (show-paren-mode 1)
+#+end_src
+** Line numbers
+Enable line numbers. We have to avoid using it in some modes.
+#+begin_src emacs-lisp
+  (global-display-line-numbers-mode t)
+
+  (dolist (mode '(org-mode-hook
+		  term-mode-hook
+		  shell-mode-hook
+		  eshell-mode-hook
+		  helm-major-mode-hook))
+    (add-hook mode (lambda () (display-line-numbers-mode 0))))
+#+end_src
+
+Single escape to finalize a command.
+#+begin_src emacs-lisp
+(global-set-key (kbd "<escape>") 'keyboard-escape-quit)
+#+end_src
+
+Column number mode.
+#+begin_src emacs-lisp
+  (column-number-mode 1)
+#+end_src
+
+Change yes/no to y/n
+#+begin_src emacs-lisp
+(defalias 'yes-or-no-p 'y-or-n-p)
+#+end_src
+* Helm mode
+#+begin_src emacs-lisp
+  (use-package helm
+    :diminish
+    :bind (("M-x" . 'helm-M-x)
+	   ("C-x C-f" . 'helm-find-files)
+	   ("M-o" . 'helm-occur)
+	   ("C-x C-b" . 'helm-buffers-list)
+	   ("C-x b" . 'helm-buffers-list)
+	   ("M-y" . 'helm-show-kill-ring)
+	   :map emacs-lisp-mode-map
+	   ("C-M-i" . 'helm-lisp-completion-at-point))
+    :init
+    (helm-mode 1))
+#+end_src
+
+Helm swoop is like swiper.
+
+#+begin_src emacs-lisp
+  (use-package helm-swoop
+    :after evil
+    :config 
+    (define-key evil-normal-state-map (kbd "/") 'helm-swoop))
+#+end_src
+
+Helm themes.
+#+begin_src emacs-lisp
+  (use-package helm-themes)
+#+end_src
+
+* Which key
+#+begin_src emacs-lisp
+  (use-package which-key
+    :init
+    (which-key-mode)
+    :config
+    (setq which-key-idle-delay 0.2))
+#+end_src
+* Doom modeline
+#+begin_src emacs-lisp
+    (use-package doom-modeline
+      :init (doom-modeline-mode 1)
+      :config
+      (setq doom-modeline-buffer-encoding nil))
+#+end_src
+* Nicer delimeters
+#+begin_src emacs-lisp
+  (use-package rainbow-delimiters
+    :hook (prog-mode . rainbow-delimiters-mode))
+#+end_src
+* Projectile
+#+begin_src emacs-lisp
+  (use-package projectile
+    :diminish
+    :config
+    (projectile-mode)
+    :custom
+    (projectile-completion-system 'helm)
+    :bind-keymap 
+    ("C-c p" . projectile-command-map)
+    :init
+    (when (and (file-directory-p "~/Documents") (file-directory-p "~/Documents/KTH/"))
+      (setq projectile-project-search-path '("~/Documents" "~/Documents/KTH")))
+    (setq projectile-switch-project-action 'projectile-dired))
+#+end_src
+
+Integrate it with helm mode.
+#+begin_src emacs-lisp
+  (use-package helm-projectile
+    :after projectile
+    :config
+    (define-key 'projectile-command-map (kbd "/") 'helm-projectile-rg))
+#+end_src
+
+* Helpful
+Better help.
+#+begin_src emacs-lisp
+  (use-package helpful
+    :bind
+    ("C-h k" . 'helpful-key)
+    ("C-h f" . 'helpful-callable)
+    ("C-h v" . 'helpful-variable))
+#+end_src
+* Custom menu
+#+begin_src emacs-lisp
+  (use-package general
+    :config
+    (general-create-definer sergio/leader-keys
+      :keymaps '(normal insert visual emacs)
+      :prefix "SPC"
+      :global-prefix "C-SPC"))
+#+end_src
+* Undo tree
+#+begin_src emacs-lisp
+  (use-package undo-tree
+    :config
+    (global-undo-tree-mode))
+#+end_src
+
+* Org
+#+begin_src emacs-lisp
+  (defun sergio/org-mode-setup ()
+    (org-indent-mode)
+    (variable-pitch-mode 1)
+    (auto-fill-mode 0)
+    (visual-line-mode 1))
+
+  (use-package org
+    :ensure org-plus-contrib
+    :hook (org-mode . sergio/org-mode-setup)
+    :config
+    (setq org-ellipsis " ⌄"
+          org-hide-emphasis-markers t)
+    (sergio/org-font-setup)
+    (setq org-latex-pdf-process (list "latexmk -f -pdf %f"))
+    (setq org-confirm-babel-evaluate nil)
+  )
+
+  (defun sergio/org-mode-visual-fill ()
+    (setq visual-fill-column-width 100
+          visual-fill-column-center-text t)
+    (visual-fill-column-mode 1))
+
+  (use-package visual-fill-column
+    :hook (org-mode . sergio/org-mode-visual-fill))
+#+end_src
+
+Nice heading bullets with org bullets.
+
+#+begin_src emacs-lisp
+  (use-package org-bullets
+    :after org
+    :hook (org-mode . org-bullets-mode)
+    :custom
+    (org-bullets-bullet-list '("◉" "○" "●" "○" "●" "○" "●")))
+#+end_src
+
+Nice fonts.
+
+#+begin_src emacs-lisp
+(defun sergio/org-font-setup ()
+  ;; Replace list hyphen with dot
+  (font-lock-add-keywords 'org-mode
+                          '(("^ *\\([-]\\) "
+                             (0 (prog1 () (compose-region (match-beginning 1) (match-end 1) "•"))))))
+
+  ;; Set faces for heading levels
+  (dolist (face '((org-level-1 . 1.2)
+                  (org-level-2 . 1.1)
+                  (org-level-3 . 1.05)
+                  (org-level-4 . 1.0)
+                  (org-level-5 . 1.1)
+                  (org-level-6 . 1.1)
+                  (org-level-7 . 1.1)
+                  (org-level-8 . 1.1)))
+    (set-face-attribute (car face) nil :font "Cantarell" :weight 'regular :height (cdr face)))
+
+  ;; Ensure that anything that should be fixed-pitch in Org files appears that way
+  (set-face-attribute 'org-block nil :foreground nil :inherit 'fixed-pitch)
+  (set-face-attribute 'org-code nil   :inherit '(shadow fixed-pitch))
+  (set-face-attribute 'org-table nil   :inherit '(shadow fixed-pitch))
+  (set-face-attribute 'org-verbatim nil :inherit '(shadow fixed-pitch))
+  (set-face-attribute 'org-special-keyword nil :inherit '(font-lock-comment-face fixed-pitch))
+  (set-face-attribute 'org-meta-line nil :inherit '(font-lock-comment-face fixed-pitch))
+  (set-face-attribute 'org-checkbox nil :inherit 'fixed-pitch))
+#+end_src
+
+Babel languages.
+
+#+begin_src emacs-lisp
+    (org-babel-do-load-languages
+      'org-babel-load-languages
+      '((emacs-lisp . t)
+        (latex . t)
+        (python . t)))
+
+    (push '("conf-unix" . conf-unix) org-src-lang-modes)
+#+end_src
+
+Templates.
+#+begin_src emacs-lisp
+  (require 'org-tempo)
+
+  (add-to-list 'org-structure-template-alist '("sh" . "src shell"))
+  (add-to-list 'org-structure-template-alist '("el" . "src emacs-lisp"))
+  (add-to-list 'org-structure-template-alist '("py" . "src python"))
+#+end_src
+
+Auto tangle configuration files.
+#+begin_src emacs-lisp
+(defun sergio/org-babel-tangle-config ()
+  (when (string-equal (buffer-file-name)
+                      (expand-file-name "~/Documents/src/dotfiles/init-el.org"))
+    ;; Dynamic scoping to the rescue
+    (let ((org-confirm-babel-evaluate nil))
+      (org-babel-tangle))))
+
+(add-hook 'org-mode-hook (lambda () (add-hook 'after-save-hook 'sergio/org-babel-tangle-config)))
+#+end_src
+
+Org ref.
+#+begin_src emacs-lisp
+(use-package org-ref
+  :config
+  (setq reftex-default-bibliography '("~/Documents/bibliography/library.bib"))
+
+  ;; see org-ref for use of these variables
+  (setq org-ref-bibliography-notes "~/Documents/bibliography/notes.org"
+        org-ref-default-bibliography '("~/Documents/bibliography/library.bib")
+        org-ref-pdf-directory "~/Documents/bibliography/bibtex-pdfs/"))
+#+end_src
+
+* Evil
+#+begin_src emacs-lisp
+  (use-package evil
+    :init
+    (setq evil-want-integration t)
+    (setq evil-want-keybinding nil)
+    (setq evil-want-C-u-scroll t)
+    (setq evil-want-C-i-jump nil)
+    :config
+    (evil-mode 1)
+    (define-key evil-insert-state-map (kbd "C-g") 'evil-normal-state)
+    (define-key evil-insert-state-map (kbd "C-h") 'evil-delete-backward-char-and-join)
+
+    ;; Use visual line motions even outside of visual-line-mode buffers
+    (evil-global-set-key 'motion "j" 'evil-next-visual-line)
+    (evil-global-set-key 'motion "k" 'evil-previous-visual-line)
+
+    (define-key evil-normal-state-map (kbd "C-:") 'evil-avy-goto-char)
+    (define-key evil-normal-state-map (kbd "C-'") 'evil-avy-goto-char-2)
+    
+    (evil-set-initial-state 'messages-buffer-mode 'normal)
+    (evil-set-initial-state 'dashboard-mode 'normal))
+#+end_src
+
+Make escape key quit prompts.
+#+begin_src emacs-lisp
+  ;; Make ESC quit prompts
+  (global-set-key (kbd "<escape>") 'keyboard-escape-quit)
+#+end_src
+
+Evil collection for other packages interoperability with Evil.
+#+begin_src emacs-lisp
+(use-package evil-collection
+  :after evil
+  :config
+  (evil-collection-init))
+#+end_src
+
+Evil multiedit for multiple cursors.
+#+begin_src emacs-lisp
+(use-package evil-multiedit
+  :config
+  (evil-multiedit-default-keybinds))
+#+end_src
+* Text scale with hydra 
+#+begin_src emacs-lisp
+  (use-package hydra)
+
+  (defhydra hydra-text-scale (:timeout 4)
+    "scale text"
+    ("j" text-scale-increase "in")
+    ("k" text-scale-decrease "out")
+    ("f" nil "finished" :exit t))
+
+  (sergio/leader-keys
+    "ts" '(hydra-text-scale/body :which-key "scale text"))
+#+end_src
+* Flycheck 
+#+begin_src emacs-lisp
+(use-package flycheck)
+#+end_src
+* Pyvenv
+#+begin_src emacs-lisp
+  (use-package pyvenv
+    :init
+    (setenv "WORKON_HOME" "~/.conda/envs"))
+#+end_src
+* LSP
+#+begin_src emacs-lisp
+  (defun sergio/lsp-mode-setup ()
+    (setq lsp-headerline-breadcrumb-segments '(path-up-to-project file symbols))
+    (lsp-headerline-breadcrumb-mode))
+
+  (use-package lsp-mode
+    :commands (lsp lsp-deferred)
+    :hook (lsp-mode . sergio/lsp-mode-setup)
+    :init
+    (setq lsp-keymap-prefix "C-c l")
+    :config
+    (lsp-enable-which-key-integration t))
+#+end_src
+
+  (use-package lsp-pyls)
+LSP UI.
+#+begin_src emacs-lisp
+  (use-package lsp-ui
+    :hook (lsp-mode . lsp-ui-mode)
+    :custom
+    (lsp-ui-doc-position 'bottom))
+#+end_src
+
+LSP Treemacs.
+#+begin_src emacs-lisp
+  (use-package lsp-treemacs
+    :after lsp)
+#+end_src
+
+LSP Helm.
+#+begin_src emacs-lisp
+(use-package helm-lsp
+  :after '(flycheck lsp))
+#+end_src
+
+Python LSP mode.
+#+begin_src emacs-lisp
+(use-package python
+  :hook (python-mode . lsp-deferred))
+#+end_src
+* Company
+#+begin_src emacs-lisp
+  (use-package company
+    :after lsp-mode
+    :hook (lsp-mode . company-mode)
+    :bind (:map company-active-map
+                ("<tab>" . company-complete-selection))
+          (:map lsp-mode-map
+                ("<tab>" . company-indent-or-complete-common))
+    :custom
+    (company-minimum-prefix-length 1)
+    (company-idle-delay 0.0))
+
+  (use-package company-box
+    :hook (company-mode . company-box-mode))
+#+end_src
+
+* Magit
+#+begin_src emacs-lisp
+(use-package magit
+  :bind
+  ("C-x g" . 'magit-status)
+  :custom
+  (magit-display-buffer-function #'magit-display-buffer-same-window-except-diff-v1))
+
+(use-package evil-magit
+  :after magit)
+#+end_src
+
+* Better commenting
+#+begin_src emacs-lisp
+(use-package evil-nerd-commenter
+  :bind ("M-/" . evilnc-comment-or-uncomment-lines))
+#+end_src
+* Recent files
+#+begin_src emacs-lisp
+(recentf-mode 1)
+(global-set-key (kbd "M-[") 'helm-recentf)
+#+end_src
