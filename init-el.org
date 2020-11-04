@@ -20,14 +20,6 @@
   (setq use-package-always-ensure t)
 #+end_src
 
-* Open init function
-#+begin_src emacs-lisp
-  (defun sergio/open-init ()
-    (interactive)
-    (find-file "~/Documents/src/dotfiles/init-el.org"))
-
-  (add-hook 'after-init-hook '(lambda () (sergio/open-init) (switch-to-prev-buffer)))
-#+end_src
 * Graphical interface setup
 Inhibit the messages
 #+begin_src emacs-lisp
@@ -210,6 +202,9 @@ Better help.
       :keymaps '(normal insert visual emacs)
       :prefix "SPC"
       :global-prefix "C-SPC"))
+
+  (sergio/leader-keys
+    "e" '(:ignore t :which-key "Emacs"))
 #+end_src
 * Undo tree
 #+begin_src emacs-lisp
@@ -235,6 +230,7 @@ Better help.
     (sergio/org-font-setup)
     (setq org-latex-pdf-process (list "latexmk -f -pdf %f"))
     (setq org-confirm-babel-evaluate nil)
+    (setq org-latex-caption-above nil)
   )
 
   (defun sergio/org-mode-visual-fill ()
@@ -259,43 +255,43 @@ Nice heading bullets with org bullets.
 Nice fonts.
 
 #+begin_src emacs-lisp
-(defun sergio/org-font-setup ()
-  ;; Replace list hyphen with dot
-  (font-lock-add-keywords 'org-mode
-                          '(("^ *\\([-]\\) "
-                             (0 (prog1 () (compose-region (match-beginning 1) (match-end 1) "•"))))))
+  (defun sergio/org-font-setup ()
+    ;; Replace list hyphen with dot
+    (font-lock-add-keywords 'org-mode
+                            '(("^ *\\([-]\\) "
+                               (0 (prog1 () (compose-region (match-beginning 1) (match-end 1) "•"))))))
 
-  ;; Set faces for heading levels
-  (dolist (face '((org-level-1 . 1.2)
-                  (org-level-2 . 1.1)
-                  (org-level-3 . 1.05)
-                  (org-level-4 . 1.0)
-                  (org-level-5 . 1.1)
-                  (org-level-6 . 1.1)
-                  (org-level-7 . 1.1)
-                  (org-level-8 . 1.1)))
-    (set-face-attribute (car face) nil :font "Cantarell" :weight 'regular :height (cdr face)))
+    ;; Set faces for heading levels
+    (dolist (face '((org-level-1 . 1.2)
+                    (org-level-2 . 1.1)
+                    (org-level-3 . 1.05)
+                    (org-level-4 . 1.0)
+                    (org-level-5 . 1.1)
+                    (org-level-6 . 1.1)
+                    (org-level-7 . 1.1)
+                    (org-level-8 . 1.1)))
+      (set-face-attribute (car face) nil :font "Cantarell" :weight 'regular :height (cdr face)))
 
-  ;; Ensure that anything that should be fixed-pitch in Org files appears that way
-  (set-face-attribute 'org-block nil :foreground nil :inherit 'fixed-pitch)
-  (set-face-attribute 'org-code nil   :inherit '(shadow fixed-pitch))
-  (set-face-attribute 'org-table nil   :inherit '(shadow fixed-pitch))
-  (set-face-attribute 'org-verbatim nil :inherit '(shadow fixed-pitch))
-  (set-face-attribute 'org-special-keyword nil :inherit '(font-lock-comment-face fixed-pitch))
-  (set-face-attribute 'org-meta-line nil :inherit '(font-lock-comment-face fixed-pitch))
-  (set-face-attribute 'org-checkbox nil :inherit 'fixed-pitch))
+    ;; Ensure that anything that should be fixed-pitch in Org files appears that way
+    (set-face-attribute 'org-block nil :foreground nil :inherit 'fixed-pitch)
+    (set-face-attribute 'org-code nil   :inherit '(shadow fixed-pitch))
+    (set-face-attribute 'org-table nil   :inherit '(shadow fixed-pitch))
+    (set-face-attribute 'org-verbatim nil :inherit '(shadow fixed-pitch))
+    (set-face-attribute 'org-special-keyword nil :inherit '(font-lock-comment-face fixed-pitch))
+    (set-face-attribute 'org-meta-line nil :inherit '(font-lock-comment-face fixed-pitch))
+    (set-face-attribute 'org-checkbox nil :inherit 'fixed-pitch))
 #+end_src
 
 Babel languages.
 
 #+begin_src emacs-lisp
-    (org-babel-do-load-languages
-      'org-babel-load-languages
-      '((emacs-lisp . t)
-        (latex . t)
-        (python . t)))
+  (org-babel-do-load-languages
+    'org-babel-load-languages
+    '((emacs-lisp . t)
+      (latex . t)
+      (python . t)))
 
-    (push '("conf-unix" . conf-unix) org-src-lang-modes)
+  (push '("conf-unix" . conf-unix) org-src-lang-modes)
 #+end_src
 
 Templates.
@@ -386,7 +382,8 @@ Evil multiedit for multiple cursors.
     ("f" nil "finished" :exit t))
 
   (sergio/leader-keys
-    "ts" '(hydra-text-scale/body :which-key "scale text"))
+    "t" '(:ignore t :which-key "Text")
+    "ts" '(hydra-text-scale/body :which-key "Scale text"))
 #+end_src
 * Flycheck 
 #+begin_src emacs-lisp
@@ -413,7 +410,6 @@ Evil multiedit for multiple cursors.
     (lsp-enable-which-key-integration t))
 #+end_src
 
-  (use-package lsp-pyls)
 LSP UI.
 #+begin_src emacs-lisp
   (use-package lsp-ui
@@ -478,3 +474,12 @@ Python LSP mode.
 (recentf-mode 1)
 (global-set-key (kbd "M-[") 'helm-recentf)
 #+end_src
+* Open init function
+#+begin_src emacs-lisp
+  (defun sergio/open-init ()
+    (interactive)
+    (find-file "~/Documents/src/dotfiles/init-el.org"))
+
+  (sergio/leader-keys
+    "ee" 'sergio/open-init)
+    #+end_src
