@@ -84,6 +84,7 @@ Match parentheses mode.
 #+begin_src emacs-lisp
   (show-paren-mode 1)
 #+end_src
+
 ** Line numbers
 Enable line numbers. We have to avoid using it in some modes.
 #+begin_src emacs-lisp
@@ -111,6 +112,7 @@ Change yes/no to y/n
 #+begin_src emacs-lisp
 (defalias 'yes-or-no-p 'y-or-n-p)
 #+end_src
+
 * Helm mode
 #+begin_src emacs-lisp
   (use-package helm
@@ -149,6 +151,7 @@ Helm themes.
     :config
     (setq which-key-idle-delay 0.2))
 #+end_src
+
 * Doom modeline
 #+begin_src emacs-lisp
     (use-package doom-modeline
@@ -156,11 +159,13 @@ Helm themes.
       :config
       (setq doom-modeline-buffer-encoding nil))
 #+end_src
+
 * Nicer delimeters
 #+begin_src emacs-lisp
   (use-package rainbow-delimiters
     :hook (prog-mode . rainbow-delimiters-mode))
 #+end_src
+
 * Projectile
 #+begin_src emacs-lisp
   (use-package projectile
@@ -194,6 +199,7 @@ Better help.
     ("C-h f" . 'helpful-callable)
     ("C-h v" . 'helpful-variable))
 #+end_src
+
 * Custom menu
 #+begin_src emacs-lisp
   (use-package general
@@ -206,6 +212,7 @@ Better help.
   (sergio/leader-keys
     "e" '(:ignore t :which-key "Emacs"))
 #+end_src
+
 * Undo tree
 #+begin_src emacs-lisp
   (use-package undo-tree
@@ -230,8 +237,7 @@ Better help.
     (sergio/org-font-setup)
     (setq org-latex-pdf-process (list "latexmk -f -pdf %f"))
     (setq org-confirm-babel-evaluate nil)
-    (setq org-latex-caption-above nil)
-  )
+    (setq org-latex-caption-above nil))
 
   (defun sergio/org-mode-visual-fill ()
     (setq visual-fill-column-width 100
@@ -371,6 +377,7 @@ Evil multiedit for multiple cursors.
   :config
   (evil-multiedit-default-keybinds))
 #+end_src
+
 * Text scale with hydra 
 #+begin_src emacs-lisp
   (use-package hydra)
@@ -385,16 +392,19 @@ Evil multiedit for multiple cursors.
     "t" '(:ignore t :which-key "Text")
     "ts" '(hydra-text-scale/body :which-key "Scale text"))
 #+end_src
+
 * Flycheck 
 #+begin_src emacs-lisp
 (use-package flycheck)
 #+end_src
+
 * Pyvenv
 #+begin_src emacs-lisp
   (use-package pyvenv
     :init
     (setenv "WORKON_HOME" "~/.conda/envs"))
 #+end_src
+
 * LSP
 #+begin_src emacs-lisp
   (defun sergio/lsp-mode-setup ()
@@ -443,6 +453,7 @@ C++ LSP mode.
     :ensure nil
     :hook (c++-mode . lsp-deferred))
 #+end_src
+
 * Company
 #+begin_src emacs-lisp
   (use-package company
@@ -477,11 +488,13 @@ C++ LSP mode.
 (use-package evil-nerd-commenter
   :bind ("M-/" . evilnc-comment-or-uncomment-lines))
 #+end_src
+
 * Recent files
 #+begin_src emacs-lisp
 (recentf-mode 1)
 (global-set-key (kbd "M-[") 'helm-recentf)
 #+end_src
+
 * Open init function
 #+begin_src emacs-lisp
   (defun sergio/open-init ()
@@ -491,6 +504,7 @@ C++ LSP mode.
   (sergio/leader-keys
     "ee" 'sergio/open-init)
     #+end_src
+
 * Dired
 #+begin_src emacs-lisp
   (use-package dired
