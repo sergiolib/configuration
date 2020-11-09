@@ -491,3 +491,25 @@ C++ LSP mode.
   (sergio/leader-keys
     "ee" 'sergio/open-init)
     #+end_src
+* Dired
+#+begin_src emacs-lisp
+  (use-package dired
+    :ensure nil
+    :config
+    (setq delete-by-moving-to-trash t))
+#+end_src
+
+** All the icons!
+#+begin_src emacs-lisp
+  (use-package all-the-icons-dired
+    :hook
+    (dired-mode . all-the-icons-dired-mode))
+#+end_src
+
+** Dired open
+#+begin_src emacs-lisp
+      (use-package dired-open
+        :bind
+        (:map dired-mode-map
+              ("M-<down>" . dired-open-xdg)))
+#+end_src
