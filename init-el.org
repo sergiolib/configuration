@@ -172,9 +172,9 @@ Helm themes.
     :bind-keymap 
     ("C-c p" . projectile-command-map)
     :init
-    (when (and (file-directory-p "~/Documents") (file-directory-p "~/Documents/KTH/"))
-      (setq projectile-project-search-path '("~/Documents" "~/Documents/KTH")))
-    (setq projectile-switch-project-action 'projectile-dired))
+    (when (and (file-directory-p "~/Documents") (file-directory-p "~/Documents/KTH/") (file-directory-p "~/exercism"))
+      (setq projectile-project-search-path '("~/Documents" "~/Documents/KTH" "~/exercism"))
+      (setq projectile-switch-project-action 'projectile-dired)))
 #+end_src
 
 Integrate it with helm mode.
