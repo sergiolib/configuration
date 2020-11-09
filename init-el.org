@@ -432,8 +432,16 @@ LSP Helm.
 
 Python LSP mode.
 #+begin_src emacs-lisp
-(use-package python
-  :hook (python-mode . lsp-deferred))
+  (use-package python
+    :ensure nil
+    :hook (python-mode . lsp-deferred))
+#+end_src
+
+C++ LSP mode.
+#+begin_src emacs-lisp
+  (use-package c++-mode
+    :ensure nil
+    :hook (c++-mode . lsp-deferred))
 #+end_src
 * Company
 #+begin_src emacs-lisp
