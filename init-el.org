@@ -513,3 +513,28 @@ C++ LSP mode.
         (:map dired-mode-map
               ("M-<down>" . dired-open-xdg)))
 #+end_src
+
+* Helm describe bindings
+#+begin_src emacs-lisp
+  (use-package helm-descbinds
+    :bind
+    ("C-h b" . helm-descbinds))
+#+end_src
+
+* Spotify
+#+begin_src emacs-lisp
+(use-package helm-spotify-plus)
+#+end_src
+
+* PDF tools
+#+begin_src emacs-lisp
+          (use-package pdf-tools
+            :config
+            (pdf-tools-install t t t))
+#+end_src
+
+* Indent type
+#+begin_src emacs-lisp
+  (setq-default indent-tabs-mode nil)
+  (setq tab-width 4)
+#+end_src
