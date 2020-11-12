@@ -474,24 +474,18 @@ LSP Treemacs.
     :after lsp)
 #+end_src
 
-LSP Helm.
-#+begin_src emacs-lisp
-(use-package helm-lsp
-  :after '(flycheck lsp))
-#+end_src
-
 Python LSP mode.
 #+begin_src emacs-lisp
   (use-package python
     :ensure nil
-    :hook (python-mode . lsp-deferred))
+    :hook (python-mode . lsp))
 #+end_src
 
 C++ LSP mode.
 #+begin_src emacs-lisp
   (use-package c++-mode
     :ensure nil
-    :hook (c++-mode . lsp-deferred))
+    :hook (c++-mode . lsp))
 #+end_src
 
 * Company
