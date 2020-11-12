@@ -546,9 +546,3 @@ C++ LSP mode.
             :config
             (pdf-tools-install t t t))
 #+end_src
-
-* Indent type
-#+begin_src emacs-lisp
-  (setq-default indent-tabs-mode nil)
-  (setq tab-width 4)
-#+end_src
