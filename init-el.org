@@ -452,7 +452,8 @@ Evil multiedit for multiple cursors.
     :commands (lsp lsp-deferred)
     :hook (lsp-mode . sergio/lsp-mode-setup)
     :init
-    (setq lsp-keymap-prefix "C-c l")
+    (sergio/leader-keys
+      "l" '(:keymap lsp-command-map :package lsp-mode :which-key "LSP"))
     :config
     (lsp-enable-which-key-integration t))
 #+end_src
