@@ -93,8 +93,7 @@ Enable line numbers. We have to avoid using it in some modes.
   (dolist (mode '(org-mode-hook
 		  term-mode-hook
 		  shell-mode-hook
-		  eshell-mode-hook
-		  helm-major-mode-hook))
+		  eshell-mode-hook))
     (add-hook mode (lambda () (display-line-numbers-mode 0))))
 #+end_src
 
@@ -113,18 +112,55 @@ Change yes/no to y/n
 (defalias 'yes-or-no-p 'y-or-n-p)
 #+end_src
 
-* Helm mode
+* Ivy
+#+begin_src emacs-lisp
+  (use-package ivy
+    :config
+    (ivy-mode 1)
+    :bind
+    (:map ivy-minibuffer-map
+     ("TAB" . ivy-alt-done)
+     ("C-l" . ivy-alt-done)
+     ("C-j" . ivy-next-line)
+     ("C-k" . ivy-previous-line)
+     :map ivy-switch-buffer-map
+     ("C-k" . ivy-previous-line)
+     ("C-l" . ivy-done)
+     ("C-d" . ivy-switch-buffer-kill)
+     :map ivy-reverse-i-search-map
+     ("C-k" . ivy-previous-line)
+     ("C-d" . ivy-reverse-i-search-kill)))
+#+end_src
+
+Use Ivy for M-x
+#+begin_src emacs-lisp
+  (use-package counsel
+    :bind
+    (("M-x" . counsel-M-x)
+    :map minibuffer-local-map
+    ("C-r" . 'counsel-minibuffer-history))
+    :config
+    (counsel-mode 1))
+#+end_src
+
+Add help to M-x list.
+#+begin_src emacs-lisp
+  (use-package ivy-rich
+    :config
+    (ivy-rich-mode 1))
+#+end_src
+
+* COMMENT Helm mode
 #+begin_src emacs-lisp
   (use-package helm
     :diminish
-    :bind (("M-x" . 'helm-M-x)
-	   ("C-x C-f" . 'helm-find-files)
-	   ("M-o" . 'helm-occur)
-	   ("C-x C-b" . 'helm-buffers-list)
-	   ("C-x b" . 'helm-buffers-list)
-	   ("M-y" . 'helm-show-kill-ring)
-	   :map emacs-lisp-mode-map
-	   ("C-M-i" . 'helm-lisp-completion-at-point))
+    :bind (("C-x C-f" . 'helm-find-files)
+           ("M-o" . 'helm-occur)
+           ("C-x C-b" . 'helm-buffers-list)
+           ("C-x b" . 'helm-buffers-list)
+           ("M-y" . 'helm-show-kill-ring)
+           :map emacs-lisp-mode-map
+           ("C-M-i" . 'helm-lisp-completion-at-point))
     :init
     (helm-mode 1))
 #+end_src
@@ -173,7 +209,7 @@ Helm themes.
     :config
     (projectile-mode)
     :custom
-    (projectile-completion-system 'helm)
+    (projectile-completion-system 'ivy)
     :bind-keymap 
     ("C-c p" . projectile-command-map)
     :init
@@ -182,12 +218,13 @@ Helm themes.
       (setq projectile-switch-project-action 'projectile-dired)))
 #+end_src
 
-Integrate it with helm mode.
+Integrate it with ivy mode.
 #+begin_src emacs-lisp
-  (use-package helm-projectile
-    :after projectile
-    :config
-    (define-key 'projectile-command-map (kbd "/") 'helm-projectile-rg))
+      (use-package counsel-projectile
+        :after projectile
+        :config
+        (counsel-projectile-mode)
+        (define-key 'projectile-command-map (kbd "/") 'counsel-projectile-rg))
 #+end_src
 
 * Helpful
