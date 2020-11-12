@@ -511,14 +511,18 @@ C++ LSP mode.
 
 * Magit
 #+begin_src emacs-lisp
-(use-package magit
-  :bind
-  ("C-x g" . 'magit-status)
-  :custom
-  (magit-display-buffer-function #'magit-display-buffer-same-window-except-diff-v1))
+  (use-package magit
+    :bind
+    ("C-x g" . 'magit-status)
+    :config
+    (sergio/leader-keys
+      "g" '(:ignore t :which-key "Magit")
+      "gg" 'magit-status)
+    :custom
+    (magit-display-buffer-function #'magit-display-buffer-same-window-except-diff-v1))
 
-(use-package evil-magit
-  :after magit)
+  (use-package evil-magit
+    :after magit)
 #+end_src
 
 * Better commenting
