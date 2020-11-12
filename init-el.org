@@ -249,12 +249,6 @@ Better help.
   (sergio/leader-keys
     "e" '(:ignore t :which-key "Emacs"))
 #+end_src
-
-* Undo tree
-#+begin_src emacs-lisp
-  (use-package undo-tree
-    :config
-    (global-undo-tree-mode))
 #+end_src
 
 * Org
@@ -378,6 +372,7 @@ Org ref.
     (setq evil-want-keybinding nil)
     (setq evil-want-C-u-scroll t)
     (setq evil-want-C-i-jump nil)
+    (setq evil-want-fine-undo t)
     :config
     (evil-mode 1)
     (define-key evil-insert-state-map (kbd "C-g") 'evil-normal-state)
