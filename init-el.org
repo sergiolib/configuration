@@ -247,8 +247,13 @@ Better help.
       :global-prefix "C-SPC"))
 
   (sergio/leader-keys
-    "e" '(:ignore t :which-key "Emacs"))
-#+end_src
+    "e" '(:ignore t :which-key "Emacs")
+    "SPC" 'projectile-find-file
+    "x" '(:ignore t :which-key "Terminals")
+    "xe" 'eshell
+    "xt" 'term
+    "xs" 'shell
+    "xv" 'vterm)
 #+end_src
 
 * Org
