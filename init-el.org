@@ -379,6 +379,7 @@ Org ref.
     (setq evil-want-C-u-scroll t)
     (setq evil-want-C-i-jump nil)
     (setq evil-want-fine-undo t)
+    (global-set-key (kbd "C-M-u") 'universal-argument)
     :config
     (evil-mode 1)
     (define-key evil-insert-state-map (kbd "C-g") 'evil-normal-state)
