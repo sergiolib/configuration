@@ -588,3 +588,11 @@ C++ LSP mode.
             :config
             (pdf-tools-install t t t))
 #+end_src
+
+* Switch window
+#+begin_src emacs-lisp
+  (use-package switch-window
+    :bind
+    ("C-x C-o" . switch-window)
+    ("C-x o" . switch-window))
+#+end_src
