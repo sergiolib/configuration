@@ -53,7 +53,7 @@ Custom font.
   (setq sergio/font-size-fixed 120)
   (setq sergio/font-size-variable 120)
 
-  (set-face-attribute 'default nil :font "Bitstream Vera Sans Mono" :height sergio/font-size-fixed)
+  (set-face-attribute 'default nil :font "Fira Code Retina" :height sergio/font-size-fixed)
 
   ;; Set the fixed pitch face
   (set-face-attribute 'fixed-pitch nil :font "Fira Code Retina" :height sergio/font-size-fixed)
