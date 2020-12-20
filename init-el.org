@@ -66,7 +66,7 @@ Set theme.
 #+begin_src emacs-lisp
   (use-package doom-themes
     :config
-    (load-theme 'doom-palenight t))
+    (load-theme 'doom-acario-light t))
 #+end_src
 
 Add battery.
@@ -88,13 +88,14 @@ Match parentheses mode.
 ** Line numbers
 Enable line numbers. We have to avoid using it in some modes.
 #+begin_src emacs-lisp
-  (global-display-line-numbers-mode t)
+    (global-display-line-numbers-mode t)
 
-  (dolist (mode '(org-mode-hook
-		  term-mode-hook
-		  shell-mode-hook
-		  eshell-mode-hook))
-    (add-hook mode (lambda () (display-line-numbers-mode 0))))
+    (dolist (mode '(org-mode-hook
+                    term-mode-hook
+                    shell-mode-hook
+                    eshell-mode-hook
+                    pdf-view-mode))
+      (add-hook mode (lambda () (display-line-numbers-mode 0))))
 #+end_src
 
 Single escape to finalize a command.
@@ -117,20 +118,21 @@ Change yes/no to y/n
   (use-package ivy
     :config
     (ivy-mode 1)
-    :bind
-    (("C-s" . swiper)
-    :map ivy-minibuffer-map
-     ("TAB" . ivy-alt-done)
-     ("C-l" . ivy-alt-done)
-     ("C-j" . ivy-next-line)
-     ("C-k" . ivy-previous-line)
-     :map ivy-switch-buffer-map
-     ("C-k" . ivy-previous-line)
-     ("C-l" . ivy-done)
-     ("C-d" . ivy-switch-buffer-kill)
-     :map ivy-reverse-i-search-map
-     ("C-k" . ivy-previous-line)
-     ("C-d" . ivy-reverse-i-search-kill)))
+    :bind (("C-s" . swiper)
+           :map ivy-minibuffer-map
+           ("TAB" . ivy-alt-done)
+           ("C-l" . ivy-alt-done)
+           ("C-j" . ivy-next-line)
+           ("C-k" . ivy-previous-line)
+           ("C-M-j" . ivy-next-line-and-call)
+           ("C-M-k" . ivy-previous-line-and-call)
+           :map ivy-switch-buffer-map
+           ("C-k" . ivy-previous-line)
+           ("C-l" . ivy-done)
+           ("C-d" . ivy-switch-buffer-kill)
+           :map ivy-reverse-i-search-map
+           ("C-k" . ivy-previous-line)
+           ("C-d" . ivy-reverse-i-search-kill)))
 #+end_src
 
 Use Ivy for M-x
@@ -149,35 +151,6 @@ Add help to M-x list.
   (use-package ivy-rich
     :config
     (ivy-rich-mode 1))
-#+end_src
-
-* COMMENT Helm mode
-#+begin_src emacs-lisp
-  (use-package helm
-    :diminish
-    :bind (("C-x C-f" . 'helm-find-files)
-           ("M-o" . 'helm-occur)
-           ("C-x C-b" . 'helm-buffers-list)
-           ("C-x b" . 'helm-buffers-list)
-           ("M-y" . 'helm-show-kill-ring)
-           :map emacs-lisp-mode-map
-           ("C-M-i" . 'helm-lisp-completion-at-point))
-    :init
-    (helm-mode 1))
-#+end_src
-
-Helm swoop is like swiper.
-
-#+begin_src emacs-lisp
-  (use-package helm-swoop
-    :after evil
-    :config 
-    (define-key evil-normal-state-map (kbd "/") 'helm-swoop))
-#+end_src
-
-Helm themes.
-#+begin_src emacs-lisp
-  (use-package helm-themes)
 #+end_src
 
 * Which key
@@ -211,8 +184,6 @@ Helm themes.
     (projectile-mode)
     :custom
     (projectile-completion-system 'ivy)
-    :bind-keymap 
-    ("C-c p" . projectile-command-map)
     :init
     (when (and (file-directory-p "~/Documents") (file-directory-p "~/Documents/KTH/") (file-directory-p "~/exercism"))
       (setq projectile-project-search-path '("~/Documents" "~/Documents/KTH" "~/exercism"))
@@ -238,9 +209,15 @@ Better help.
     ("C-h v" . 'helpful-variable))
 #+end_src
 
+* Vterm
+#+begin_src emacs-lisp
+  (use-package vterm)
+#+end_src
+
 * Custom menu
 #+begin_src emacs-lisp
   (use-package general
+    :after vterm
     :config
     (general-create-definer sergio/leader-keys
       :keymaps '(normal insert visual emacs)
@@ -250,39 +227,48 @@ Better help.
   (sergio/leader-keys
     "e" '(:ignore t :which-key "Emacs")
     "SPC" 'projectile-find-file
-    "x" '(:ignore t :which-key "Terminals")
+    "x" '(:ignore t :which-key "terminals")
     "xe" 'eshell
     "xt" 'term
     "xs" 'shell
-    "xv" 'vterm)
+    "l" '(:keymap lsp-command-map :package lsp)
+    "xv" 'vterm
+    "p" '(:keymap projectile-command-map :package projectile-mode :which-key "projectile")
+    "." 'counsel-find-file
+    "," 'counsel-switch-buffer
+    "d" 'counsel-dired
+    "f" '(:ignore t :which-key "files")
+    "fr" 'counsel-rg
+    "ff" 'counsel-find-file)
 #+end_src
 
 * Org
 #+begin_src emacs-lisp
-  (defun sergio/org-mode-setup ()
-    (org-indent-mode)
-    (variable-pitch-mode 1)
-    (auto-fill-mode 0)
-    (visual-line-mode 1))
+    (defun sergio/org-mode-setup ()
+      (org-indent-mode)
+      (variable-pitch-mode 1)
+      (auto-fill-mode 0)
+      (visual-line-mode 1))
 
-  (use-package org
-    :ensure org-plus-contrib
-    :hook (org-mode . sergio/org-mode-setup)
-    :config
-    (setq org-ellipsis " ⌄"
-          org-hide-emphasis-markers t)
-    (sergio/org-font-setup)
-    (setq org-latex-pdf-process (list "latexmk -f -pdf %f"))
-    (setq org-confirm-babel-evaluate nil)
-    (setq org-latex-caption-above nil))
+    (use-package org
+      :ensure org-plus-contrib
+      :hook (org-mode . sergio/org-mode-setup)
+      :config
+      (setq org-ellipsis " ⌄"
+            org-hide-emphasis-markers t)
+      (sergio/org-font-setup)
+      (setq org-latex-pdf-process (list "latexmk -f -pdf %f"))
+      (setq org-confirm-babel-evaluate nil)
+      (setq org-latex-caption-above nil)
+      (setq org-return-follows-link t))
 
-  (defun sergio/org-mode-visual-fill ()
-    (setq visual-fill-column-width 100
-          visual-fill-column-center-text t)
-    (visual-fill-column-mode 1))
+    (defun sergio/org-mode-visual-fill ()
+      (setq visual-fill-column-width 100
+            visual-fill-column-center-text t)
+      (visual-fill-column-mode 1))
 
-  (use-package visual-fill-column
-    :hook (org-mode . sergio/org-mode-visual-fill))
+    (use-package visual-fill-column
+      :hook (org-mode . sergio/org-mode-visual-fill))
 #+end_src
 
 Nice heading bullets with org bullets.
@@ -358,7 +344,8 @@ Auto tangle configuration files.
 (add-hook 'org-mode-hook (lambda () (add-hook 'after-save-hook 'sergio/org-babel-tangle-config)))
 #+end_src
 
-Org ref.
+** COMMENT Org ref
+Org ref. Terribly slow.
 #+begin_src emacs-lisp
 (use-package org-ref
   :config
@@ -372,28 +359,28 @@ Org ref.
 
 * Evil
 #+begin_src emacs-lisp
-  (use-package evil
-    :init
-    (setq evil-want-integration t)
-    (setq evil-want-keybinding nil)
-    (setq evil-want-C-u-scroll t)
-    (setq evil-want-C-i-jump nil)
-    (setq evil-want-fine-undo t)
-    (global-set-key (kbd "C-M-u") 'universal-argument)
-    :config
-    (evil-mode 1)
-    (define-key evil-insert-state-map (kbd "C-g") 'evil-normal-state)
-    (define-key evil-insert-state-map (kbd "C-h") 'evil-delete-backward-char-and-join)
+    (use-package evil
+      :init
+      (setq evil-want-integration t)
+      (setq evil-want-keybinding nil)
+      (setq evil-want-C-u-scroll t)
+      (setq evil-want-C-i-jump nil)
+      (setq evil-want-fine-undo t)
+      (global-set-key (kbd "C-M-u") 'universal-argument)
+      :config
+      (evil-mode 1)
+      (define-key evil-insert-state-map (kbd "C-g") 'evil-normal-state)
+      (define-key evil-insert-state-map (kbd "C-h") 'evil-delete-backward-char-and-join)
 
-    ;; Use visual line motions even outside of visual-line-mode buffers
-    (evil-global-set-key 'motion "j" 'evil-next-visual-line)
-    (evil-global-set-key 'motion "k" 'evil-previous-visual-line)
+      ;; Use visual line motions even outside of visual-line-mode buffers
+      (evil-global-set-key 'motion "j" 'evil-next-visual-line)
+      (evil-global-set-key 'motion "k" 'evil-previous-visual-line)
 
-    (define-key evil-normal-state-map (kbd "C-:") 'evil-avy-goto-char)
-    (define-key evil-normal-state-map (kbd "C-'") 'evil-avy-goto-char-2)
-    
-    (evil-set-initial-state 'messages-buffer-mode 'normal)
-    (evil-set-initial-state 'dashboard-mode 'normal))
+      (define-key evil-normal-state-map (kbd "C-:") 'evil-avy-goto-char)
+      (define-key evil-normal-state-map (kbd "C-'") 'evil-avy-goto-char-2)
+
+      (evil-set-initial-state 'messages-buffer-mode 'normal)
+      (evil-set-initial-state 'dashboard-mode 'normal))
 #+end_src
 
 Make escape key quit prompts.
@@ -404,10 +391,10 @@ Make escape key quit prompts.
 
 Evil collection for other packages interoperability with Evil.
 #+begin_src emacs-lisp
-(use-package evil-collection
-  :after evil
-  :config
-  (evil-collection-init))
+  (use-package evil-collection
+    :after evil
+    :config
+    (evil-collection-init))
 #+end_src
 
 Evil multiedit for multiple cursors.
@@ -444,20 +431,37 @@ Evil multiedit for multiple cursors.
     (setenv "WORKON_HOME" "~/.conda/envs"))
 #+end_src
 
+* COMMENT Debugger support (slow)
+
+#+begin_src emacs-lisp
+  (use-package dap-mode)
+#+end_src
+
 * LSP
 #+begin_src emacs-lisp
-  (defun sergio/lsp-mode-setup ()
-    (setq lsp-headerline-breadcrumb-segments '(path-up-to-project file symbols))
-    (lsp-headerline-breadcrumb-mode))
+    (defun sergio/lsp-mode-setup ()
+      (setq lsp-headerline-breadcrumb-segments '(path-up-to-project file symbols))
+      (lsp-headerline-breadcrumb-mode))
 
-  (use-package lsp-mode
-    :commands (lsp lsp-deferred)
-    :hook (lsp-mode . sergio/lsp-mode-setup)
-    :init
-    (sergio/leader-keys
-      "l" '(:keymap lsp-command-map :package lsp-mode :which-key "LSP"))
-    :config
-    (lsp-enable-which-key-integration t))
+    (use-package lsp-mode
+      :commands (lsp lsp-deferred)
+      :config
+      (setq gc-cons-threshold 100000000)
+      (setq read-process-output-max (* 1024 1024)) ;; 1mb
+      (setq lsp-completion-provider :capf)
+      (setq lsp-idle-delay 0.500)
+      :hook
+      ((lsp-mode . sergio/lsp-mode-setup)
+       (lsp-mode . 'lsp-enable-which-key-integration)
+       (lsp-mode . (lambda ()
+                      (let ((lsp-keymap-prefix "<SPC> l"))
+                        (lsp-enable-which-key-integration))))))
+#+end_src
+
+LSP ivy.
+#+begin_src emacs-lisp
+  (use-package lsp-ivy
+    :commands lsp-ivy-workspace-symbol)
 #+end_src
 
 LSP UI.
@@ -476,9 +480,16 @@ LSP Treemacs.
 
 Python LSP mode.
 #+begin_src emacs-lisp
-  (use-package python
-    :ensure nil
-    :hook (python-mode . lsp))
+      (use-package python
+        :ensure nil
+        :hook (python-mode . lsp-deferred)
+        :config
+        (setenv "WORKON_HOME" "~/.conda/envs")
+        ;; (require 'dap-python)
+        ;; :custom
+        ;; (dap-python-executable "python3")
+        ;; (dap-python-debugger 'debugpy)
+        )
 #+end_src
 
 C++ LSP mode.
@@ -488,15 +499,36 @@ C++ LSP mode.
     :hook (c++-mode . lsp))
 #+end_src
 
+Julia LSP mode.
+#+begin_src emacs-lisp
+  (use-package julia-mode
+    :hook (julia-mode . lsp-deferred))
+
+  ;; (use-package lsp-julia
+    ;; :init
+    ;; (setq lsp-julia-package-dir nil)
+    ;; (setq lsp-julia-default-environment "~/.julia/environments/v1.5")
+    ;; (setq lsp-julia-default-depot "~/.julia"))
+#+end_src
+
+* Virtualenvs
+#+begin_src emacs-lisp
+  (use-package pyvenv
+    :config
+    (pyvenv-mode 1))
+#+end_src
+
 * Company
 #+begin_src emacs-lisp
   (use-package company
     :after lsp-mode
-    :hook (lsp-mode . company-mode)
-    :bind ((:map company-active-map
-                 ("<tab>" . company-complete-selection))
-           (:map lsp-mode-map
-                 ("<tab>" . company-indent-or-complete-common)))
+    :hook
+    (lsp-mode . company-mode)
+    (emacs-lisp-mode . company-mode)
+    :bind (:map company-active-map
+                ("<tab>" . company-complete-selection))
+          (:map lsp-mode-map
+                ("<tab>" . company-indent-or-complete-common))
     :custom
     (company-minimum-prefix-length 1)
     (company-idle-delay 0.0))
@@ -516,9 +548,6 @@ C++ LSP mode.
       "gg" 'magit-status)
     :custom
     (magit-display-buffer-function #'magit-display-buffer-same-window-except-diff-v1))
-
-  (use-package evil-magit
-    :after magit)
 #+end_src
 
 * Better commenting
@@ -578,7 +607,7 @@ C++ LSP mode.
 (use-package helm-spotify-plus)
 #+end_src
 
-* PDF tools
+* COMMENT PDF tools (slow)
 #+begin_src emacs-lisp
           (use-package pdf-tools
             :config
@@ -623,4 +652,72 @@ C++ LSP mode.
       (setq eshell-visual-commands '("htop" "zsh" "vim")))
 
     (eshell-git-prompt-use-theme 'powerline))
+#+end_src
+
+* Spotify
+** Spotify.el
+#+begin_src emacs-lisp
+  (use-package spotify
+    :config
+    (setq spotify-oauth2-client-id "804d0f14714745f4a703d355fa1676c6"
+          spotify-oauth2-client-secret "86ec4ddf670a4929883eed9b00dc68ef")
+    (sergio/leader-keys
+      "s" '(:ignore t :which-key "spotify")
+      "si" 'spotify-current))
+#+end_src
+
+** Counsel Spotify
+#+begin_src emacs-lisp
+  (use-package counsel-spotify
+    :init
+    (setq counsel-spotify-client-id "9cedcce0d3634d11aaf48ec416d66f37"
+          counsel-spotify-client-secret "7952a73412044ef29dec8f8926b18d49")
+    :config
+    (sergio/leader-keys
+      "ss" '(:ignore t :which-key "search")
+      "sss" 'counsel-spotify-search-track
+      "ssS" 'counsel-spotify-search-tracks-by-artist
+      "ssA" 'counsel-spotify-search-album
+      "ssa" 'counsel-spotify-search-tracks-by-album
+      "sx" 'counsel-spotify-toggle-play-pause
+      "sn" 'counsel-spotify-next
+      "sp" 'counsel-spotify-previous))
+#+end_src
+
+* COMMENT Elpy
+#+begin_src emacs-lisp
+  (use-package elpy
+    :after flycheck
+    :config
+    (elpy-enable)
+    (setq elpy-modules (delq 'elpy-module-flymake elpy-modules))
+    (add-hook 'elpy-mode-hook 'flycheck-mode))
+#+end_src
+
+* Kill buffers quickly
+#+begin_src emacs-lisp
+  (global-set-key (kbd "C-x C-k") 'kill-this-buffer)
+#+end_src
+
+* Yasnippets
+#+begin_src emacs-lisp
+(use-package yasnippet-snippets)
+#+end_src
+
+* Esup
+#+begin_src emacs-lisp
+    (use-package esup
+      :ensure t
+      ;; To use MELPA Stable use ":pin melpa-stable",
+      :pin melpa
+      :commands (esup)
+      :config
+      (setq esup-depth 0))
+#+end_src
+
+* Tab bar mode
+#+begin_src emacs-lisp
+  (tab-bar-mode 1)
+  (setq tab-bar-close-button-show nil
+        tab-bar-new-button-show nil)
 #+end_src
