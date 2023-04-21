@@ -1,5 +1,9 @@
 #+PROPERTY: header-args :tangle  /home/sliberman/.emacs.d/init.el
 
+* Early file
+#+begin_src emacs-lisp :tangle /home/sliberman/.emacs.d/early-init.el
+(setq package-enable-at-startup nil)
+#+end_src
 * Whole file
 #+begin_src emacs-lisp
 (add-hook 'after-save-hook (lambda () (when (equal (f-filename buffer-file-name) "init.org")
