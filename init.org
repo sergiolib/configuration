@@ -549,15 +549,15 @@ FRAME is the frame where the setting gets done."
 (use-package visual-fill-column
   :hook ((org-mode . sergio/visual-fill)))
 
-(use-package denote
+(use-package org-roam
   :init
-  (setq denote-directory "~/Documents/Notes")
+  (setq org-roam-directory "/home/sliberman/Documents/RoamNotes/")
+  (org-roam-db-autosync-mode 1)
   :general
   (leader
     "n" '(:ignore t :which-key "Notes")
-    "nf" 'denote-open-or-create
-    "nn" 'denote
-    "nl" 'denote-link-or-create))
+    "nf" 'org-roam-node-find))
+
 (setq backup-by-copying t
       delete-old-versions t
       kept-new-versions 6
