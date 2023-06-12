@@ -26,14 +26,14 @@
       (eval-print-last-sexp)))
   (load bootstrap-file nil 'nomessage))
 
+(straight-use-package 'use-package)
+
+(setq straight-use-package-by-default t)
+
 (use-package gcmh
   :straight (gcmh :host github :repo "emacsmirror/gcmh")
   :init
   (gcmh-mode 1))
-
-(setq straight-use-package-by-default t)
-
-(straight-use-package 'use-package)
 
 (auto-save-visited-mode -1)
 (setq auto-save-visited-interval 0.2)
