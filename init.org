@@ -7,6 +7,8 @@
 
 * Init file
 #+begin_src emacs-lisp
+(add-to-list 'exec-path "~/go/bin/")
+
 (add-hook 'after-save-hook (lambda () (when (equal (f-filename buffer-file-name) "init.org")
 					(org-babel-tangle-file "init.org"))))
 
