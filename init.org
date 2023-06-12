@@ -167,14 +167,14 @@
 (setq tab-always-indent 'complete)
 
 (use-package python
-  :bind (:map python-base-mode-map
+  :bind (:map python-mode-map
 	 (("M-<left>" . python-indent-shift-left)
 	  ("M-<right>" . python-indent-shift-right)))
   :hook
-  (python-base-mode . (lambda () (yas-activate-extra-mode 'python-mode)))
-  (python-base-mode . pyvenv-mode)
-  (python-base-mode . pyvenv-tracking-mode)
-  (python-base-mode . which-function-mode))
+  (python-mode . (lambda () (yas-activate-extra-mode 'python-mode)))
+  (python-mode . pyvenv-mode)
+  (python-mode . pyvenv-tracking-mode)
+  (python-mode . which-function-mode))
 
 (use-package embark
   :commands (embark-act embark-dwim embark-bindings)
