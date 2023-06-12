@@ -35,9 +35,6 @@
   :init
   (gcmh-mode 1))
 
-(auto-save-visited-mode -1)
-(setq auto-save-visited-interval 0.2)
-
 (setq calendar-week-start-day 1)
 (setq native-comp-async-report-warnings-errors nil)
 
