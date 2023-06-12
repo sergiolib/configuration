@@ -87,7 +87,7 @@
 
 (use-package modus-themes
   :config
-  (load-theme 'modus-operandi-deuteranopia t)
+  (load-theme 'modus-operandi t)
   :custom
   (modus-themes-common-palette-overrides '((border-mode-line-active unspecified)
 					   (border-mode-line-inactive unspecified)
