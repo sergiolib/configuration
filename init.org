@@ -783,6 +783,24 @@ FRAME is the frame where the setting gets done."
 	 ("C-e" . dap-debug-edit-template)))
 
 (use-package restclient)
+
+(use-package go-mode
+  :init
+  (defun eglot-format-buffer-on-save ()
+    (add-hook 'before-save-hook #'eglot-format-buffer -10 t))
+  (defun set-eglot-workspace-config ()
+    (setq-default eglot-workspace-configuration
+		  '((:gopls .
+		     ((staticcheck . t)
+		      (matcher . "CaseSensitive"))))))
+  :hook
+  (go-mode . (lambda () (setq tab-width 2)))
+  (go-mode . set-eglot-workspace-config)
+  (go-mode . eglot-ensure)
+  (go-mode . eglot-format-buffer-on-save)
+  (go-mode . (lambda () (modify-syntax-entry ?_ "w"))))
+
+(use-package poetry)
 #+end_src
 
 #+RESULTS:
