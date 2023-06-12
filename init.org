@@ -514,6 +514,7 @@ FRAME is the frame where the setting gets done."
 		      ("py" . "src python")
 		      ("ja" . "src java")
 		      ("sql" . "src sql")
+		      ("yaml" . "src yaml")
 		      ("cc" . "src C")))
     (add-to-list 'org-structure-template-alist template))
 
