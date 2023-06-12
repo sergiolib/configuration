@@ -171,6 +171,7 @@
 	 (("M-<left>" . python-indent-shift-left)
 	  ("M-<right>" . python-indent-shift-right)))
   :hook
+  (python-mode . (lambda () (add-hook 'before-save-hook (lambda () (interactive) (when (eglot-managed-p) (eglot-format-buffer))) nil t)))
   (python-mode . (lambda () (yas-activate-extra-mode 'python-mode)))
   (python-mode . pyvenv-mode)
   (python-mode . pyvenv-tracking-mode)
@@ -583,7 +584,6 @@ FRAME is the frame where the setting gets done."
     (setq eldoc-documentation-strategy
 	  'eldoc-documentation-compose-eagerly))
   :config
-  (add-hook 'before-save-hook (lambda () (interactive) (when (eglot-managed-p) (eglot-format-buffer))))
   (set-face-attribute 'eglot-highlight-symbol-face nil :inherit 'bold :underline t)
   ;; (add-to-list 'eglot-server-programs
   ;; 	       `(python-ts-mode . ,(eglot-alternatives
