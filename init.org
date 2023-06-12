@@ -768,6 +768,16 @@ FRAME is the frame where the setting gets done."
   (evil-define-key '(insert normal visual emacs) vterm-mode-map (kbd "<f10>") #'multi-vterm-dedicated-toggle))
 
 (use-package dap-mode
+  :config
+  (setq dap-python-debugger 'debugpy)
+  (defun sergio/config-dap-python ()
+    (require 'dap-python)
+    (dap-mode 1)
+    (dap-auto-configure-mode 1)
+    (dap-ui-mode 1)
+    (dap-ui-controls-mode 1))
+  :hook
+  (python-mode . sergio/config-dap-python)
   :bind (:map project-prefix-map
 	 ("C-d" . dap-debug)
 	 ("C-e" . dap-debug-edit-template)))
