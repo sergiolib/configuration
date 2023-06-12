@@ -103,8 +103,7 @@
   :init
   (vertico-mode 1)
   (setq vertico-cycle t)
-  (unbind-key (kbd "C-m") 'vertico-map)
-  (add-hook 'minibuffer-mode-hook #'(lambda () (pixel-scroll-precision-mode -1))))
+  (unbind-key (kbd "C-m") 'vertico-map))
 
 (use-package vertico-repeat
   :commands (vertico-repeat-save vertico-repeat)
