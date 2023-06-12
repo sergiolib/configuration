@@ -376,7 +376,18 @@ FRAME is the frame where the setting gets done."
   (("<f10>" . 'multi-vterm-dedicated-toggle)))
 
 (leader
-  "p" '(:keymap project-prefix-map :package project :which-key "project"))
+  "p" '(:keymap project-prefix-map :package project :which-key "project")
+  "pt" '((lambda ()
+	   (interactive)
+	   (when (get-buffer "*pytest*")
+	     (kill-buffer "*pytest*"))
+	   (let ((default-directory (poetry-find-project-root)))
+	     (when default-directory
+	       (defun recenter-temp-buffer (process event)
+		 (pop-to-buffer (process-buffer process)) (recenter-top-bottom))
+	       (set-process-sentinel
+		(start-process "pytest" "*pytest*" "poetry" "run" "pytest" ".")
+		'recenter-temp-buffer)))) :which-key "PyTest"))
 
 (setq inhibit-startup-message t)
 (setq system-time-locale "C")
