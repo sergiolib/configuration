@@ -6,13 +6,18 @@
 #+end_src
 
 * Init file
+** Header
 #+begin_src emacs-lisp
-(add-to-list 'exec-path "~/go/bin/")
+;;; package --- Init.el
+;;; Commentary: This is my Emacs configuration. It works with the current bleeding edge Emacs version.
+;;; Code:
+#+end_src
 
+** Configuration
+#+begin_src emacs-lisp
 (add-hook 'after-save-hook (lambda () (when (equal (f-filename buffer-file-name) "init.org")
 					(org-babel-tangle-file "init.org"))))
 
-(defvar native-comp-deferred-compilation-deny-list nil)
 (defvar bootstrap-version)
 (let ((bootstrap-file
        (expand-file-name "straight/repos/straight.el/bootstrap.el" user-emacs-directory))
@@ -30,18 +35,27 @@
 
 (setq straight-use-package-by-default t)
 
-(use-package gcmh
-  :straight (gcmh :host github :repo "emacsmirror/gcmh")
-  :init
-  (gcmh-mode 1))
+(add-to-list 'exec-path "/home/sliberman/bin/omnisharp-linux-x64-net6.0")
+(add-to-list 'exec-path "/home/sliberman/bin/netcoredbg")
 
-(setq calendar-week-start-day 1)
+(defvar native-comp-deferred-compilation-deny-list nil)
+
+(use-package calendar
+  :config
+  (setq calendar-week-start-day 1))
+
 (setq native-comp-async-report-warnings-errors nil)
 
 (use-package undo-tree
   :config
-  (setq undo-tree-history-directory-alist '(("." . "~/.emacs.d/undo-tree-history/")))
-  (global-undo-tree-mode 1))
+  (setq undo-tree-limit 10000000
+	undo-limit 10000000
+	undo-strong-limit 10000000
+	undo-tree-history-directory-alist '(("." . "~/.emacs.d/undo-tree-history/")))
+  (global-undo-tree-mode 1)
+  (defadvice undo-tree-make-history-save-file-name
+      (after undo-tree activate)
+    (setq ad-return-value (concat ad-return-value ".gz"))))
 
 (use-package evil
   :init
@@ -57,7 +71,6 @@
   (evil-want-C-u-scroll t)
   (evil-want-C-d-scroll t)
   (evil-want-C-i-jump t)
-  (evil-want-Y-yank-to-eol t)
   (evil-want-fine-undo t)
   (evil-esc-delay 0.001)
   (evil-auto-indent t)
@@ -154,7 +167,9 @@
 	 ("TAB" . corfu-complete)
 	 ([tab] . corfu-complete)
 	 ("RET" . corfu-complete)
-	 ([ret] . corfu-complete)))
+	 ([ret] . corfu-complete))
+  :config
+  (evil-define-key '(insert normal visual) corfu-map (kbd "C-j") nil))
 
 (use-package kind-icon
   :after corfu
@@ -165,17 +180,6 @@
 
 (setq completion-cycle-threshold 3)
 (setq tab-always-indent 'complete)
-
-(use-package python
-  :bind (:map python-mode-map
-	 (("M-<left>" . python-indent-shift-left)
-	  ("M-<right>" . python-indent-shift-right)))
-  :hook
-  (python-mode . (lambda () (add-hook 'before-save-hook (lambda () (interactive) (when (eglot-managed-p) (eglot-format-buffer))) nil t)))
-  (python-mode . (lambda () (yas-activate-extra-mode 'python-mode)))
-  (python-mode . pyvenv-mode)
-  (python-mode . pyvenv-tracking-mode)
-  (python-mode . which-function-mode))
 
 (use-package embark
   :commands (embark-act embark-dwim embark-bindings)
@@ -206,29 +210,7 @@
   :hook
   (embark-collect-mode . consult-preview-at-point-mode))
 
-(use-package company)
-
-(use-package cape
-  :after yasnippet
-  :init
-  ;; (defalias 'cape-eglot+dabbrev
-  ;;   (cape-super-capf (cape-capf-buster #'eglot-completion-at-point) #'cape-dabbrev))
-  ;; (add-hook 'eglot-completion-mode-hook #'(lambda ()
-  ;; 					    (setq-local completion-at-point-functions '(cape-eglot-dabbrev cape-file))))
-  (defalias 'cape-elisp+dabbrev
-    (cape-super-capf #'elisp-completion-at-point #'cape-dabbrev))
-  (defun sergio/add-completions-lisp-to-hook ()
-    "Adds completions with elisp, dabbrev and cape-file."
-    (setq-local completion-at-point-functions '(cape-elisp+dabbrev cape-file)))
-  (defun sergio/add-completions-eglot-to-hook ()
-    "Adds completions with eglot, dabbrev and cape-file."
-    (setq-local completion-at-point-functions '(cape-eglot+dabbrev cape-file))
-    )
-  (add-hook 'lisp-data-mode-hook #'sergio/add-completions-lisp-to-hook)
-  (add-hook 'emacs-lisp-mode-hook #'sergio/add-completions-lisp-to-hook)
-					;(add-hook 'eglot-managed-mode-hook #'sergio/add-completions-eglot-to-hook)
-  )
-
+(use-package cape)
 
 (use-package which-key
   :init
@@ -237,23 +219,6 @@
 (leader
   "e" '(:ignore t :which-key "Emacs configuration")
   "ee" '((lambda () (interactive) (find-file "~/Documents/src/dotfiles/init.org")) :which-key "Open init file"))
-
-(use-package eshell
-  :commands (eshell)
-  :config
-  (add-hook 'eshell-mode-hook
-	    #'(lambda ()
-		(setq-local corfu-auto nil)
-		(corfu-mode)))
-  (defun corfu-send-shell (&rest _)
-    "Send completion candidate when inside comint/eshell."
-    (cond
-     ((and (derived-mode-p 'eshell-mode) (fboundp 'eshell-send-input))
-      (eshell-send-input))
-     ((and (derived-mode-p 'comint-mode)  (fboundp 'comint-send-input))
-      (comint-send-input))))
-
-  (advice-add #'corfu-insert :after #'corfu-send-shell))
 
 (global-display-line-numbers-mode 1)
 (setq display-line-numbers-type 'relative)
@@ -276,11 +241,6 @@ FRAME is the frame where the setting gets done."
   (set-face-attribute 'variable-pitch nil :family "Cantarell" :height 130)
   (remove-hook 'after-make-frame-functions 'set-window-faces))
 
-;; Here I wanted to make the manuals' mode in Emacs have variable
-;; fonts by default, but it looks horrible so I removed it
-;; (add-hook 'Info-mode-hook (lambda ()
-;; 			    (display-line-numbers-mode -1)
-;; 			    (face-remap-add-relative 'default 'variable-pitch)))
 (add-hook 'Info-mode-hook (lambda ()
 			    (display-line-numbers-mode -1)))
 
@@ -319,10 +279,6 @@ FRAME is the frame where the setting gets done."
 
 (column-number-mode 1)
 
-(setq global-auto-revert-non-file-buffers 1)
-(global-auto-revert-mode 1)
-(setq-default global-auto-revert-ignore-modes '(vterm-mode Buffer-menu-mode))
-
 (setq display-time-default-load-average nil)
 (setq display-time-24hr-format t)
 (setq display-time-day-and-date t)
@@ -331,20 +287,13 @@ FRAME is the frame where the setting gets done."
 
 (display-battery-mode 1)
 
-(defun sergio/consult-ripgrep-on-project ()
-  (interactive)
-  (let ((dir (project-root (project-current))))
-    (consult-ripgrep dir)))
-
 (use-package consult
   :bind (
 	 ("C-x f" . consult-find)
 	 ("C-s" . consult-line)
 	 (:map minibuffer-local-map
 	  ("C-r" . consult-history)
-	  ("C-x b" . consult-buffer))
-	 (:map project-prefix-map
-	  ("r" . sergio/consult-ripgrep-on-project)))
+	  ("C-x b" . consult-buffer)))
   :general (leader
 	     "et" 'consult-theme
 	     "o" 'consult-outline)
@@ -361,33 +310,17 @@ FRAME is the frame where the setting gets done."
 
 (use-package vterm
   :config
+  (setq vterm-shell "/usr/bin/bash")
   (evil-set-initial-state 'vterm-mode 'normal)
   :general
   (leader
     "x" '(:ignore t :which-key "Terminals")
     "xx" 'vterm
     "xv" 'vterm-other-window
-    "v" '(:ignore t :which-key "VTerms")
-    "vv" 'multi-vterm-dedicated-toggle
-    "vn" 'multi-vterm
-    "vl" 'multi-vterm-next
-    "vh" 'multi-vterm-prev)
-  :bind
-  (("<f10>" . 'multi-vterm-dedicated-toggle)))
+    "v" '(:ignore t :which-key "VTerms")))
 
 (leader
-  "p" '(:keymap project-prefix-map :package project :which-key "project")
-  "pt" '((lambda ()
-	   (interactive)
-	   (when (get-buffer "*pytest*")
-	     (kill-buffer "*pytest*"))
-	   (let ((default-directory (poetry-find-project-root)))
-	     (when default-directory
-	       (defun recenter-temp-buffer (process event)
-		 (pop-to-buffer (process-buffer process)) (recenter-top-bottom))
-	       (set-process-sentinel
-		(start-process "pytest" "*pytest*" "poetry" "run" "pytest" ".")
-		'recenter-temp-buffer)))) :which-key "PyTest"))
+  "p" '(:keymap project-prefix-map :package project :which-key "project"))
 
 (setq inhibit-startup-message t)
 (setq system-time-locale "C")
@@ -398,13 +331,9 @@ FRAME is the frame where the setting gets done."
 
 (put 'python-shell-extra-pythonpaths 'safe-local-variable (lambda (_) t))
 
-(use-package cmake-mode
-  :mode ("\\.cmake\\'" . cmake-mode))
-
 (use-package dockerfile-mode
   :mode ("\\.dockerfile\\'" . dockerfile-mode))
 
-;; Unbind suspend frame hotkey
 (unbind-key (kbd "C-x C-z") global-map)
 
 (use-package helpful
@@ -420,7 +349,7 @@ FRAME is the frame where the setting gets done."
 (use-package docker
   :init
   (setq docker-run-async-with-buffer-function 'docker-run-async-with-buffer-vterm)
-  (setq docker-compose-command "docker compose")
+  (setq docker-compose-command "podman-compose")
   :general
   (leader
     "d" '(:ignore t :which-key "Containers")
@@ -438,9 +367,10 @@ FRAME is the frame where the setting gets done."
   :custom
   (evil-multiedit-use-symbols nil))
 
-(setenv "WORKON_HOME" "/home/sliberman/envs/")
 (use-package pyvenv
   :commands (pyvenv-mode pyvenv-tracking-mode))
+
+(use-package poetry)
 
 (leader "er" 'revert-buffer)
 
@@ -452,6 +382,281 @@ FRAME is the frame where the setting gets done."
   (define-key evil-normal-state-map (kbd "g c") 'avy-goto-char))
 
 (global-set-key (kbd "C-x C-k") 'kill-this-buffer)
+
+(defun sergio/visual-fill ()
+  (setq visual-fill-column-width 120
+	visual-fill-column-center-text t
+	visual-fill-column-fringes-outside-margins nil)
+  (visual-fill-column-mode 1))
+
+(use-package visual-fill-column
+  :hook ((org-mode . sergio/visual-fill)))
+
+(use-package org-roam
+  :init
+  (setq org-roam-directory "/home/sliberman/Documents/RoamNotes/")
+  (org-roam-db-autosync-mode 1)
+  :general
+  (leader
+    "n" '(:ignore t :which-key "Notes")
+    "nf" 'org-roam-node-find))
+
+(setq backup-by-copying t
+      delete-old-versions t
+      kept-new-versions 6
+      kept-old-versions 2
+      version-control t
+      backup-directory-alist '(("." . "~/.emacs.d/backups")))
+
+;; (use-package flyspell
+;;   :hook
+;;   (org-mode . flyspell-mode))
+
+(use-package eglot
+  :commands (eglot eglot-ensure)
+  :preface
+  (defun mp-eglot-eldoc ()
+    (setq eldoc-documentation-strategy
+	  'eldoc-documentation-compose-eagerly))
+  :config
+  (add-to-list 'eglot-server-programs
+	       `(terraform-mode "terraform-ls" "serve"))
+  (add-to-list 'eglot-server-programs
+	       `(python-base-mode . ,(eglot-alternatives
+				      `("pylsp" "pyls" ("pyright-langserver" "--stdio") "jedi-language-server"))))
+  (set-face-attribute 'eglot-highlight-symbol-face nil :inherit 'bold :underline t)
+  (add-hook 'eglot-managed-mode-hook 'mp-eglot-eldoc)
+  (global-set-key (kbd "C-<down-mouse-1>") #'xref-find-definitions-at-mouse)
+  (global-set-key (kbd "C-S-<down-mouse-1>") #'xref-find-references-at-mouse)
+  (global-set-key (kbd "<mouse-9>") #'xref-go-forward)
+  (global-set-key (kbd "<mouse-8>") #'xref-go-back)
+  :general (leader
+	     "l" '(:ignore t :which-key "LSP")
+	     "lr" 'eglot-rename
+	     "l=" 'eglot-format-buffer
+	     "la" 'eglot-code-actions
+	     "lg" '(:ignore t :which-key "Go to")
+	     "le" 'flymake-show-buffer-diagnostics))
+
+(use-package python
+  :init
+  (add-hook 'python-mode-hook 'eglot-ensure)
+  :config
+  (setq-default eglot-workspace-configuration
+		'(:pylsp
+		  (:plugins
+		   (:black
+		    (:enabled t
+		     :line_length 120)
+		    :yapf
+		    (:enabled :json-false)
+		    :isort
+		    (:enabled t)
+		    :autopep8
+		    (:enabled t)
+		    :pycodestyle
+		    (:enabled :json-false)
+		    :mccabe
+		    (:enabled :json-false)
+		    :pyflakes
+		    (:enabled :json-false)
+		    :pylint
+		    (:enabled t)
+		    :flake8
+		    (:enabled t)
+		    :pydocstyle
+		    (:enabled t
+		     :convention "google"))
+		   :configurationSources
+		   ["flake8"])))
+  :bind (:map python-mode-map
+	 (("M-<left>" . python-indent-shift-left)
+	  ("M-<right>" . python-indent-shift-right)))
+  :hook
+  (python-mode . poetry-venv-workon)
+  (python-mode . (lambda () (require 'dap-python)))
+  (python-mode . (lambda () (add-hook 'before-save-hook (lambda () (interactive) (when (eglot-managed-p) (eglot-format-buffer))) nil t)))
+  (python-mode . (lambda () (yas-activate-extra-mode 'python-mode)))
+  (python-mode . which-function-mode))
+
+(load-file "~/.emacs.d/fix_keywords_align.el")
+
+;; Indent the buffer in emacs-lisp mode and lisp-data mode
+(defun sergio/add-indent-to-hook ()
+  "Add indent to before save hook."
+  (add-hook 'before-save-hook (lambda ()
+				(interactive)
+				(save-excursion
+				  (indent-region (point-min) (point-max)))) nil t))
+
+(use-package terraform-mode
+  :init
+  (add-hook 'terraform-mode-hook 'eglot-ensure))
+
+(add-hook 'emacs-lisp-mode-hook 'flymake-mode)
+(add-hook 'emacs-lisp-mode-hook 'sergio/add-indent-to-hook)
+(add-hook 'lisp-data-mode-hook 'sergio/add-indent-to-hook)
+
+(use-package markdown-mode)
+
+(use-package web-mode
+  :init
+  (add-hook 'web-mode-hook 'eglot-ensure)
+  :mode (("\\.ts\\'" . web-mode)
+	 ("\\.js\\'" . web-mode)
+	 ("\\.mjs\\'" . web-mode)
+	 ("\\.tsx\\'" . web-mode)
+	 ("\\.svelte\\'" . web-mode)
+	 ("\\.jsx\\'" . web-mode))
+  :config
+  (add-to-list 'eglot-server-programs '(web-mode "svelteserver" "--stdio"))
+  (setq web-mode-content-types-alist '(("jsx" . "\\.js[x]?\\'"))
+	web-mode-engines-alist '(("svelte"  . "\\.svelte\\.")))
+  (setq web-mode-markup-indent-offset 2)
+  (add-hook 'web-mode-hook (lambda () (setq-local tab-width 2))))
+
+(use-package emacs
+  :after eglot
+  :config
+  (add-to-list 'eglot-server-programs '(js-json-mode "vscode-json-languageserver" "--stdio"))
+  (add-hook 'js-mode-hook (lambda () (setq-local tab-width 2)))
+  :mode ("\\.js\\'" . js-mode))
+
+(use-package dired
+  :straight nil
+  :init
+  (add-hook 'dired-mode-hook 'dired-hide-details-mode))
+
+(use-package ede
+  :config
+  (global-ede-mode t))
+
+(use-package project
+  :config
+  (defun sergio/project-rg ()
+    (interactive)
+    (let ((default-directory (project-root (project-current))))
+      (consult-ripgrep default-directory)))
+  (define-key project-prefix-map "r" 'sergio/project-rg)
+  (add-to-list 'project-switch-commands (list 'sergio/project-rg "Ripgrep"))
+
+  (defun sergio/project-magit ()
+    (interactive)
+    (let ((default-directory (project-root (project-current))))
+      (magit-status)))
+  (define-key project-prefix-map "m" 'sergio/project-magit)
+  (add-to-list 'project-switch-commands (list 'sergio/project-magit "Magit"))
+
+  (setq project-find-functions (list #'project-try-ede #'project-try-vc))
+  (add-to-list 'project-switch-commands (list 'project-switch-to-buffer "List buffers")))
+
+(use-package yasnippet
+  :general
+  (yas-minor-mode-map
+   :states 'insert
+   "TAB" 'nil)
+  :hook
+  (prog-mode . yas-minor-mode))
+
+(use-package yasnippet-snippets)
+
+(use-package dashboard
+  :init
+  (dashboard-setup-startup-hook)
+  (setq initial-buffer-choice (lambda () (get-buffer-create "*dashboard*")))
+  :config
+  (dashboard-setup-startup-hook))
+
+(use-package eldoc
+  :init
+  (setq eldoc-documentation-strategy 'eldoc-documentation-compose-eagerly)
+  (add-to-list 'display-buffer-alist
+	       '("^\\*eldoc for" display-buffer-at-bottom
+		 (window-height . 4))))
+
+(defun mp-flycheck-eldoc (callback &rest _ignored)
+  "Print flycheck messages at point by calling CALLBACK."
+  (when-let ((flycheck-errors (and flycheck-mode (flycheck-overlay-errors-at (point)))))
+    (mapc
+     (lambda (err)
+       (funcall callback
+		(format "%s: %s"
+			(let ((level (flycheck-error-level err)))
+			  (pcase level
+			    ('info (propertize "I" 'face 'flycheck-error-list-info))
+			    ('error (propertize "E" 'face 'flycheck-error-list-error))
+			    ('warning (propertize "W" 'face 'flycheck-error-list-warning))
+			    (_ level)))
+			(flycheck-error-message err))
+		:thing (or (flycheck-error-id err)
+			   (flycheck-error-group err))
+		:face 'font-lock-doc-face))
+     flycheck-errors)))
+
+;; (setq safe-local-variable-values '((pyvenv-activate)
+;; 				   (pyvenv-workon)))
+(electric-pair-mode 1)
+
+(leader
+  "f" '(:ignore t :which-key "Files")
+  "ff" 'find-file
+  "fo" 'find-file-other-window)
+
+(defun safe-local-variable-p (sym val)
+  t)
+
+;; (use-package importmagic)
+
+(use-package nerd-icons)
+(defun nerd-icons--web-mode-icon (&rest arg-overrides)
+  "Get icon for a `web-mode' buffer with ARG-OVERRIDES."
+  (all-the-icons--web-mode nil arg-overrides))
+
+;; (use-package multi-vterm
+;;   :config
+;;   (add-hook 'vterm-mode-hook
+;; 	    (lambda ()
+;; 	      (setq-local evil-insert-state-cursor 'box)
+;; 	      (evil-insert-state)))
+;;   (define-key vterm-mode-map [return] #'vterm-send-return)
+;;   (setq multi-vterm-dedicated-window-height-percent 30)
+
+;;   (setq vterm-keymap-exceptions nil)
+;;   (evil-define-key '(insert normal visual emacs) vterm-mode-map (kbd "<f10>") #'multi-vterm-dedicated-toggle))
+
+(use-package dap-mode
+  :config
+  (setq dap-python-debugger 'debugpy)
+  (setq dap-auto-configure-features '(sessions locals controls tooltip repl))
+  (dap-auto-configure-mode 1)
+  :bind (:map project-prefix-map
+	 ("C-d" . nil)
+	 ("C-d C-d" . dap-debug)
+	 ("C-d d" . dap-debug)
+	 ("C-d k" . dap-delete-all-sessions)
+	 ("C-d e" . dap-debug-edit-template))
+  (:map dap-mode-map
+   ;; ("C-S-<f5>" . dap-debug-restart)
+   ;; ("S-<f5>" . dap-disconnect)
+   ;; ("<f5>" . dap-continue)
+   ;; ("<f10>" . dap-next)
+   ;; ("<f11>" . dap-step-in)
+   ;; ("<f12>" . dap-step-out)
+   )
+  :init
+  (defun sergio/set-pointer-arrow ()
+    (interactive)
+    (setq-local x-pointer-shape x-pointer-top-left-arrow)
+    (set-mouse-color "black"))
+  :hook
+  (treemacs-mode . sergio/set-pointer-arrow))
+
+(pixel-scroll-mode 1)
+
+(use-package restclient
+  :commands (restclient-mode))
+
+(use-package ob-restclient)
 
 (use-package org
   :config
@@ -527,6 +732,7 @@ FRAME is the frame where the setting gets done."
 		      ("ja" . "src java")
 		      ("sql" . "src sql")
 		      ("yaml" . "src yaml")
+		      ("rest" . "src restclient")
 		      ("cc" . "src C")))
     (add-to-list 'org-structure-template-alist template))
 
@@ -539,6 +745,7 @@ FRAME is the frame where the setting gets done."
      (C . t)
      (sql . t)
      (java . t)
+     (restclient . t)
      (python . t)))
 
   (push '("conf-unix" . conf-unix) org-src-lang-modes)
@@ -552,266 +759,56 @@ FRAME is the frame where the setting gets done."
   ;; (setq org-bullets-face-name 'bullets)
   (setq org-bullets-bullet-list '("◉" "○" "✸" "✿")))
 
-(defun sergio/visual-fill ()
-  (setq visual-fill-column-width 120
-	visual-fill-column-center-text t
-	visual-fill-column-fringes-outside-margins nil)
-  (visual-fill-column-mode 1))
+(add-hook 'prog-mode 'electric-indent-mode)
 
-(use-package visual-fill-column
-  :hook ((org-mode . sergio/visual-fill)))
+(size-indication-mode 1)
 
-(use-package org-roam
+(use-package csharp-mode
   :init
-  (setq org-roam-directory "/home/sliberman/Documents/RoamNotes/")
-  (org-roam-db-autosync-mode 1)
+  (add-hook 'csharp-mode-hook 'eglot-ensure)
+  (add-hook 'csharp-mode 'dap-mode)
+  (add-hook 'csharp-mode #'(lambda () (require 'dap-netcore)))
   :general
-  (leader
-    "n" '(:ignore t :which-key "Notes")
-    "nf" 'org-roam-node-find))
-
-(setq backup-by-copying t
-      delete-old-versions t
-      kept-new-versions 6
-      kept-old-versions 2
-      version-control t
-      backup-directory-alist '(("." . "~/.emacs.d/backups")))
-
-(use-package flyspell
-  :hook
-  (org-mode . flyspell-mode))
-
-(use-package treemacs
-  :general
-  (leader "eb" 'treemacs)
-  :config
-  (setq treemacs-follow-mode t))
-
-(use-package terraform-mode)
-
-(use-package eglot
-  :preface
-  (defun mp-eglot-eldoc ()
-    (setq eldoc-documentation-strategy
-	  'eldoc-documentation-compose-eagerly))
-  :config
-  (set-face-attribute 'eglot-highlight-symbol-face nil :inherit 'bold :underline t)
-  ;; (add-to-list 'eglot-server-programs
-  ;; 	       `(python-ts-mode . ,(eglot-alternatives
-  ;; 				    `("pylsp" "pyls" ("pyright-langserver" "--stdio") "jedi-language-server"))))
-  (add-to-list 'eglot-server-programs '(web-mode "svelteserver" "--stdio"))
-  (add-to-list 'eglot-server-programs '(js-json-mode "vscode-json-languageserver" "--stdio"))
-  (add-to-list 'eglot-server-programs
-	       `(terraform-mode "terraform-ls" "serve"))
-  (setq-default eglot-workspace-configuration '(:pylsp
-						(:plugins
-						 (:black
-						  (:enabled t
-						   :line_length 120)
-						  :yapf
-						  (:enabled :json-false)
-						  :isort
-						  (:enabled t)
-						  :autopep8
-						  (:enabled t)
-						  :pycodestyle
-						  (:enabled :json-false)
-						  :mccabe
-						  (:enabled :json-false)
-						  :pyflakes
-						  (:enabled :json-false)
-						  :pylint
-						  (:enabled t)
-						  :flake8
-						  (:enabled t)
-						  :pydocstyle
-						  (:enabled t
-						   :convention "google"))
-						 :configurationSources
-						 ["flake8"])))
-  :hook
-  (python-mode . eglot-ensure)
-  (web-mode . eglot-ensure)
-  (terraform-mode . eglot-ensure)
-  (eglot-managed-mode . mp-eglot-eldoc)
-  :general (leader
-	     "l" '(:ignore t :which-key "LSP")
-	     "lr" 'eglot-rename
-	     "l=" 'eglot-format-buffer
-	     "la" 'eglot-code-actions
-	     "lg" '(:ignore t :which-key "Go to")
-	     "le" 'flymake-show-buffer-diagnostics)
-  :bind
-  ("C-<down-mouse-1>" . #'xref-find-definitions-at-mouse)
-  ("C-S-<down-mouse-1>" . #'xref-find-references-at-mouse)
-  ("<mouse-9>" . #'xref-go-forward)
-  ("<mouse-8>" . #'xref-go-back))
-
-(load-file "~/.emacs.d/fix_keywords_align.el")
-
-;; Indent the buffer in emacs-lisp mode and lisp-data mode
-;; (defun sergio/add-indent-to-hook ()
-;;   "Add indent to before save hook."
-;;   (add-hook 'before-save-hook (lambda ()
-;; 				(interactive)
-;; 				(save-excursion
-;; 				  (indent-region (point-min) (point-max)))) nil t))
-
-(add-hook 'emacs-lisp-mode-hook 'flymake-mode)
-;; (add-hook 'emacs-lisp-mode-hook 'sergio/add-indent-to-hook)
-;; (add-hook 'lisp-data-mode-hook 'sergio/add-indent-to-hook)
-
-;; (add-to-ordered-list 'eldoc-documentation-functions 'flymake-eldoc-function 1)
-
-(use-package markdown-mode)
-;; (use-package svelte-mode
-;;   :config
-;;   (add-hook 'svelte-mode-hook (lambda () (setq-local tab-width 2)))
-;;   (add-hook 'svelte-mode-hook 'eglot-ensure))
-
-(use-package web-mode
-  :mode (("\\.ts\\'" . web-mode)
-	 ("\\.js\\'" . web-mode)
-	 ("\\.mjs\\'" . web-mode)
-	 ("\\.tsx\\'" . web-mode)
-	 ("\\.svelte\\'" . web-mode)
-	 ("\\.jsx\\'" . web-mode))
-  :config
-  (setq web-mode-content-types-alist '(("jsx" . "\\.js[x]?\\'"))
-	web-mode-engines-alist '(("svelte"  . "\\.svelte\\.")))
-  (setq web-mode-markup-indent-offset 2)
-  (add-hook 'web-mode-hook (lambda () (setq-local tab-width 2))))
-
-(use-package emacs
-  :config
-  (add-hook 'js-mode-hook (lambda () (setq-local tab-width 2)))
-  :mode ("\\.js\\'" . js-mode))
-
-(use-package dired
-  :straight nil
-  :init
-  (add-hook 'dired-mode-hook 'dired-hide-details-mode))
-
-(use-package ede
-  :config
-  (global-ede-mode t))
-
-(use-package project
-  :config
-  (setq project-find-functions (list #'project-try-ede #'project-try-vc))
-  (add-to-list 'project-switch-commands (list 'project-switch-to-buffer "List buffers"))
-  (add-to-list 'project-switch-commands (list (lambda () (interactive)
-						(let ((default-directory (project-root (project-current))))
-						  (magit-status))) "Magit" "m")))
-
-(use-package yasnippet
-  :general
-  (yas-minor-mode-map
-   :states 'insert
-   "TAB" 'nil)
-  :hook
-  (prog-mode . yas-minor-mode))
-
-(use-package yasnippet-snippets)
-
-(use-package dashboard
-  :init
-  (dashboard-setup-startup-hook)
-  (setq initial-buffer-choice (lambda () (get-buffer-create "*dashboard*")))
-  :config
-  (dashboard-setup-startup-hook))
-
-(use-package eldoc
-  :init
-  (setq eldoc-documentation-strategy 'eldoc-documentation-compose-eagerly)
-  (add-to-list 'display-buffer-alist
-	       '("^\\*eldoc for" display-buffer-at-bottom
-		 (window-height . 4))))
-
-(defun mp-flycheck-eldoc (callback &rest _ignored)
-  "Print flycheck messages at point by calling CALLBACK."
-  (when-let ((flycheck-errors (and flycheck-mode (flycheck-overlay-errors-at (point)))))
-    (mapc
-     (lambda (err)
-       (funcall callback
-		(format "%s: %s"
-			(let ((level (flycheck-error-level err)))
-			  (pcase level
-			    ('info (propertize "I" 'face 'flycheck-error-list-info))
-			    ('error (propertize "E" 'face 'flycheck-error-list-error))
-			    ('warning (propertize "W" 'face 'flycheck-error-list-warning))
-			    (_ level)))
-			(flycheck-error-message err))
-		:thing (or (flycheck-error-id err)
-			   (flycheck-error-group err))
-		:face 'font-lock-doc-face))
-     flycheck-errors)))
-
-(setq safe-local-variable-values '((pyvenv-activate)
-				   (pyvenv-workon)))
-(electric-pair-mode 1)
-
-(leader
-  "f" '(:ignore t :which-key "Files")
-  "ff" 'find-file
-  "fo" 'find-file-other-window)
-
-(defun safe-local-variable-p (sym val)
-  t)
-
-(use-package importmagic)
-
-(use-package nerd-icons)
-(defun nerd-icons--web-mode-icon (&rest arg-overrides)
-  "Get icon for a `web-mode' buffer with ARG-OVERRIDES."
-  (all-the-icons--web-mode nil arg-overrides))
+  (leader "C-d" 'dap-debug))
 
 (use-package multi-vterm
+  :bind
+  ("<f5>" . multi-vterm-dedicated-toggle)
   :config
+  (setq multi-vterm-dedicated-window-height-percent 20)
   (add-hook 'vterm-mode-hook
 	    (lambda ()
 	      (setq-local evil-insert-state-cursor 'box)
 	      (evil-insert-state)))
-  (define-key vterm-mode-map [return] #'vterm-send-return)
-  (setq multi-vterm-dedicated-window-height-percent 30)
-
+  (define-key vterm-mode-map [return]                      #'vterm-send-return)
   (setq vterm-keymap-exceptions nil)
-  (evil-define-key '(insert normal visual emacs) vterm-mode-map (kbd "<f10>") #'multi-vterm-dedicated-toggle))
+  (evil-define-key '(insert normal visual) vterm-mode-map (kbd "<f5>")      #'multi-vterm-dedicated-toggle)
+  (evil-define-key 'insert vterm-mode-map (kbd "C-e")      #'vterm--self-insert)
+  (evil-define-key 'insert vterm-mode-map (kbd "C-f")      #'vterm--self-insert)
+  (evil-define-key 'insert vterm-mode-map (kbd "C-a")      #'vterm--self-insert)
+  (evil-define-key 'insert vterm-mode-map (kbd "C-v")      #'vterm--self-insert)
+  (evil-define-key 'insert vterm-mode-map (kbd "C-b")      #'vterm--self-insert)
+  (evil-define-key 'insert vterm-mode-map (kbd "C-w")      #'vterm--self-insert)
+  (evil-define-key 'insert vterm-mode-map (kbd "C-u")      #'vterm--self-insert)
+  (evil-define-key 'insert vterm-mode-map (kbd "C-d")      #'vterm--self-insert)
+  (evil-define-key 'insert vterm-mode-map (kbd "C-n")      #'vterm--self-insert)
+  (evil-define-key 'insert vterm-mode-map (kbd "C-m")      #'vterm--self-insert)
+  (evil-define-key 'insert vterm-mode-map (kbd "C-p")      #'vterm--self-insert)
+  (evil-define-key 'insert vterm-mode-map (kbd "C-j")      #'vterm--self-insert)
+  (evil-define-key 'insert vterm-mode-map (kbd "C-k")      #'vterm--self-insert)
+  (evil-define-key 'insert vterm-mode-map (kbd "C-r")      #'vterm--self-insert)
+  (evil-define-key 'insert vterm-mode-map (kbd "C-t")      #'vterm--self-insert)
+  (evil-define-key 'insert vterm-mode-map (kbd "C-g")      #'vterm--self-insert)
+  (evil-define-key 'insert vterm-mode-map (kbd "C-c")      #'vterm--self-insert)
+  (evil-define-key 'insert vterm-mode-map (kbd "C-SPC")    #'vterm--self-insert)
+  (evil-define-key 'normal vterm-mode-map (kbd "C-d")      #'vterm--self-insert)
+  (evil-define-key 'normal vterm-mode-map (kbd ",c")       #'multi-vterm)
+  (evil-define-key 'normal vterm-mode-map (kbd ",n")       #'multi-vterm-next)
+  (evil-define-key 'normal vterm-mode-map (kbd ",p")       #'multi-vterm-prev)
+  (evil-define-key 'normal vterm-mode-map (kbd "i")        #'evil-insert-resume)
+  (evil-define-key 'normal vterm-mode-map (kbd "o")        #'evil-insert-resume)
+  (evil-define-key 'normal vterm-mode-map (kbd "<return>") #'evil-insert-resume))
 
-(use-package dap-mode
-  :config
-  (setq dap-python-debugger 'debugpy)
-  (defun sergio/config-dap-python ()
-    (require 'dap-python)
-    (dap-mode 1)
-    (dap-auto-configure-mode 1)
-    (dap-ui-mode 1)
-    (dap-ui-controls-mode 1))
-  :hook
-  (python-mode . sergio/config-dap-python)
-  :bind (:map project-prefix-map
-	 ("C-d" . dap-debug)
-	 ("C-e" . dap-debug-edit-template)))
-
-(use-package restclient)
-
-(use-package go-mode
-  :init
-  (defun eglot-format-buffer-on-save ()
-    (add-hook 'before-save-hook #'eglot-format-buffer -10 t))
-  (defun set-eglot-workspace-config ()
-    (setq-default eglot-workspace-configuration
-		  '((:gopls .
-		     ((staticcheck . t)
-		      (matcher . "CaseSensitive"))))))
-  :hook
-  (go-mode . (lambda () (setq tab-width 2)))
-  (go-mode . set-eglot-workspace-config)
-  (go-mode . eglot-ensure)
-  (go-mode . eglot-format-buffer-on-save)
-  (go-mode . (lambda () (modify-syntax-entry ?_ "w"))))
-
-(use-package poetry)
+(setq tab-line-exclude-modes '(vterm-mode))
+(global-tab-line-mode 1)
 #+end_src
-
-#+RESULTS:
