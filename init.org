@@ -3,20 +3,29 @@
 * Early file
 #+begin_src emacs-lisp :tangle /home/sliberman/.emacs.d/early-init.el
 (setq package-enable-at-startup nil)
-#+end_src
+(tool-bar-mode -1)
+(scroll-bar-mode -1)
+(menu-bar-mode -1)
 
-* Init file
-** Header
-#+begin_src emacs-lisp
-;;; package --- Init.el
-;;; Commentary: This is my Emacs configuration. It works with the current bleeding edge Emacs version.
-;;; Code:
-#+end_src
+(defvar native-comp-deferred-compilation-deny-list nil)
 
-** Configuration
-#+begin_src emacs-lisp
-(add-hook 'after-save-hook (lambda () (when (equal (f-filename buffer-file-name) "init.org")
-					(org-babel-tangle-file "init.org"))))
+(setq initial-scratch-message "")
+
+(column-number-mode 1)
+
+(defun set-window-faces (frame)
+  "Set font families and sizes for all frames.
+FRAME is the frame where the setting gets done."
+  (set-face-attribute 'default nil :family "JetBrains Mono" :height 120)
+  (set-face-attribute 'fixed-pitch nil :family "JetBrains Mono" :height 120)
+  (set-face-attribute 'variable-pitch nil :family "Cantarell" :height 130)
+  (remove-hook 'after-make-frame-functions 'set-window-faces))
+
+(if (and (boundp 'server-process)
+	 (processp server-process)
+	 (server-running-p))
+    (add-hook 'after-make-frame-functions #'set-window-faces)
+  (set-window-faces nil))
 
 (defvar bootstrap-version)
 (let ((bootstrap-file
@@ -35,10 +44,41 @@
 
 (setq straight-use-package-by-default t)
 
+(use-package modus-themes
+  :config
+  (load-theme 'modus-operandi t)
+  :custom
+  (modus-themes-common-palette-overrides '((border-mode-line-active unspecified)
+					   (border-mode-line-inactive unspecified)
+					   (bg-mode-line-active bg-blue-intense)
+					   (fg-mode-line-active fg-main))))
+
+(use-package doom-modeline
+  :init
+  (doom-modeline-mode 1)
+  :config
+  (setq doom-modeline-buffer-encoding nil)
+  (setq doom-modeline-modal-icon nil)
+  (setq doom-modeline-env-version t))
+
+(use-package all-the-icons)
+#+end_src
+
+* Init file
+** Header
+#+begin_src emacs-lisp
+;;; package --- Init.el
+;;; Commentary: This is my Emacs configuration. It works with the current bleeding edge Emacs version.
+;;; Code:
+#+end_src
+
+** Configuration
+#+begin_src emacs-lisp
+(add-hook 'after-save-hook (lambda () (when (equal (f-filename buffer-file-name) "init.org")
+					(org-babel-tangle-file "init.org"))))
+
 (add-to-list 'exec-path "/home/sliberman/bin/omnisharp-linux-x64-net6.0")
 (add-to-list 'exec-path "/home/sliberman/bin/netcoredbg")
-
-(defvar native-comp-deferred-compilation-deny-list nil)
 
 (use-package calendar
   :config
@@ -97,19 +137,6 @@
 (use-package evil-surround
   :init
   (global-evil-surround-mode 1))
-
-(use-package modus-themes
-  :config
-  (load-theme 'modus-operandi t)
-  :custom
-  (modus-themes-common-palette-overrides '((border-mode-line-active unspecified)
-					   (border-mode-line-inactive unspecified)
-					   (bg-mode-line-active bg-blue-intense)
-					   (fg-mode-line-active fg-main))))
-
-(tool-bar-mode -1)
-(scroll-bar-mode -1)
-(menu-bar-mode -1)
 
 (use-package vertico
   :straight (vertico :files (:defaults "extensions/*.el"))
@@ -233,22 +260,8 @@
 		pdf-view-mode-hook))
   (add-hook mode #'(lambda () (display-line-numbers-mode 0))))
 
-(defun set-window-faces (frame)
-  "Set font families and sizes for all frames.
-FRAME is the frame where the setting gets done."
-  (set-face-attribute 'default nil :family "JetBrains Mono" :height 120)
-  (set-face-attribute 'fixed-pitch nil :family "JetBrains Mono" :height 120)
-  (set-face-attribute 'variable-pitch nil :family "Cantarell" :height 130)
-  (remove-hook 'after-make-frame-functions 'set-window-faces))
-
 (add-hook 'Info-mode-hook (lambda ()
 			    (display-line-numbers-mode -1)))
-
-(if (and (boundp 'server-process)
-	 (processp server-process)
-	 (server-running-p))
-    (add-hook 'after-make-frame-functions #'set-window-faces)
-  (set-window-faces nil))
 
 (leader
   "t" '(:ignore t :which-key "Tabs")
@@ -258,26 +271,12 @@ FRAME is the frame where the setting gets done."
   "tn" 'tab-new
   "tk" 'tab-close)
 
-(use-package doom-modeline
-  :init
-  (doom-modeline-mode 1)
-  :config
-  (setq doom-modeline-buffer-encoding nil)
-  (setq doom-modeline-modal-icon nil)
-  (setq doom-modeline-env-version t))
-
-(use-package all-the-icons)
-
 (use-package rainbow-delimiters
   :hook (prog-mode . rainbow-delimiters-mode))
 
 (show-paren-mode 1)
 (setq show-paren-style 'expression)
 (setq show-paren-when-point-inside-paren nil)
-
-(setq initial-scratch-message "")
-
-(column-number-mode 1)
 
 (setq display-time-default-load-average nil)
 (setq display-time-24hr-format t)
@@ -368,6 +367,41 @@ FRAME is the frame where the setting gets done."
   (evil-multiedit-use-symbols nil))
 
 (use-package pyvenv
+  :config
+  (defun sergio/setup-python-eglot-workspace ()
+    (interactive)
+    )
+  (add-hook 'pyvenv-post-activate-hooks #'(lambda ()
+					    (setq eglot-workspace-configuration
+                                                  `(:pylsp
+                                                    (:plugins
+                                                     (:black
+                                                      (:enabled t
+                                                       :line_length 120)
+                                                      :yapf
+                                                      (:enabled :json-false)
+                                                      :isort
+                                                      (:enabled t)
+                                                      :autopep8
+                                                      (:enabled t)
+                                                      :pycodestyle
+                                                      (:enabled :json-false)
+                                                      :mccabe
+                                                      (:enabled :json-false)
+                                                      :pyflakes
+                                                      (:enabled :json-false)
+                                                      :pylint
+                                                      (:enabled t)
+                                                      :flake8
+                                                      (:enabled t)
+                                                      :pydocstyle
+                                                      (:enabled t
+                                                       :convention "google")
+                                                      :jedi
+                                                      (:environment ,(f-expand pyvenv-virtual-env)))
+                                                     :configurationSources
+                                                     ["flake8"])))) 1)
+  (add-hook 'pyvenv-post-activate-hooks 'eglot-ensure 2)
   :commands (pyvenv-mode pyvenv-tracking-mode))
 
 (use-package poetry)
@@ -413,7 +447,6 @@ FRAME is the frame where the setting gets done."
 ;;   (org-mode . flyspell-mode))
 
 (use-package eglot
-  :commands (eglot eglot-ensure)
   :preface
   (defun mp-eglot-eldoc ()
     (setq eldoc-documentation-strategy
@@ -440,44 +473,15 @@ FRAME is the frame where the setting gets done."
 
 (use-package python
   :init
-  (add-hook 'python-mode-hook 'eglot-ensure)
-  :config
-  (setq-default eglot-workspace-configuration
-		'(:pylsp
-		  (:plugins
-		   (:black
-		    (:enabled t
-		     :line_length 120)
-		    :yapf
-		    (:enabled :json-false)
-		    :isort
-		    (:enabled t)
-		    :autopep8
-		    (:enabled t)
-		    :pycodestyle
-		    (:enabled :json-false)
-		    :mccabe
-		    (:enabled :json-false)
-		    :pyflakes
-		    (:enabled :json-false)
-		    :pylint
-		    (:enabled t)
-		    :flake8
-		    (:enabled t)
-		    :pydocstyle
-		    (:enabled t
-		     :convention "google"))
-		   :configurationSources
-		   ["flake8"])))
   :bind (:map python-mode-map
 	 (("M-<left>" . python-indent-shift-left)
 	  ("M-<right>" . python-indent-shift-right)))
-  :hook
-  (python-mode . poetry-venv-workon)
-  (python-mode . (lambda () (require 'dap-python)))
-  (python-mode . (lambda () (add-hook 'before-save-hook (lambda () (interactive) (when (eglot-managed-p) (eglot-format-buffer))) nil t)))
-  (python-mode . (lambda () (yas-activate-extra-mode 'python-mode)))
-  (python-mode . which-function-mode))
+  :config
+  (add-hook 'python-mode-hook 'poetry-venv-workon -100 nil)
+  (add-hook 'python-mode-hook #'(lambda () (require 'dap-python)))
+  (add-hook 'python-mode-hook #'(lambda () (add-hook 'before-save-hook (lambda () (interactive) (when (eglot-managed-p) (eglot-format-buffer))) nil t)))
+  (add-hook 'python-mode-hook #'(lambda () (yas-activate-extra-mode 'python-mode)))
+  (add-hook 'python-mode-hook 'which-function-mode))
 
 (load-file "~/.emacs.d/fix_keywords_align.el")
 
@@ -809,6 +813,10 @@ FRAME is the frame where the setting gets done."
   (evil-define-key 'normal vterm-mode-map (kbd "o")        #'evil-insert-resume)
   (evil-define-key 'normal vterm-mode-map (kbd "<return>") #'evil-insert-resume))
 
-(setq tab-line-exclude-modes '(vterm-mode))
-(global-tab-line-mode 1)
+(tab-bar-mode 1)
+
+(xterm-mouse-mode 1)
+
+(use-package lispy
+  :commands (lispy-mode))
 #+end_src
