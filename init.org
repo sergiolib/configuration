@@ -1,6 +1,10 @@
 #+PROPERTY: header-args :tangle  /home/sliberman/.emacs.d/init.el
+#+STARTUP: content
 
 * Early file
+:PROPERTIES:
+:VISIBILITY: folded
+:END:
 #+begin_src emacs-lisp :tangle /home/sliberman/.emacs.d/early-init.el
 (setq package-enable-at-startup nil)
 (tool-bar-mode -1)
@@ -62,10 +66,20 @@ FRAME is the frame where the setting gets done."
   (setq doom-modeline-env-version t))
 
 (use-package all-the-icons)
+
+(use-package nerd-icons
+  :config
+  (defun nerd-icons--web-mode-icon (&rest arg-overrides)
+    "Get icon for a `web-mode' buffer with ARG-OVERRIDES."
+    (all-the-icons--web-mode nil arg-overrides)))
+
 #+end_src
 
 * Init file
 ** Header
+:PROPERTIES:
+:VISIBILITY: folded
+:END:
 #+begin_src emacs-lisp
 ;;; package --- Init.el
 ;;; Commentary: This is my Emacs configuration. It works with the current bleeding edge Emacs version.
@@ -73,6 +87,9 @@ FRAME is the frame where the setting gets done."
 #+end_src
 
 ** Configuration
+:PROPERTIES:
+:VISIBILITY: all
+:END:
 #+begin_src emacs-lisp
 (add-hook 'after-save-hook (lambda () (when (equal (f-filename buffer-file-name) "init.org")
 					(org-babel-tangle-file "init.org"))))
@@ -368,9 +385,6 @@ FRAME is the frame where the setting gets done."
 
 (use-package pyvenv
   :config
-  (defun sergio/setup-python-eglot-workspace ()
-    (interactive)
-    )
   (add-hook 'pyvenv-post-activate-hooks #'(lambda ()
 					    (setq eglot-workspace-configuration
                                                   `(:pylsp
@@ -544,6 +558,15 @@ FRAME is the frame where the setting gets done."
   (define-key project-prefix-map "r" 'sergio/project-rg)
   (add-to-list 'project-switch-commands (list 'sergio/project-rg "Ripgrep"))
 
+  (setq project-switch-commands (remove '(project-vc-dir "VC-Dir") project-switch-commands))
+
+  (defun sergio/project-poetry ()
+    (interactive)
+    (let ((default-directory (project-root (project-current))))
+      (poetry)))
+  (define-key project-prefix-map "v" 'sergio/project-poetry)
+  (add-to-list 'project-switch-commands (list 'sergio/project-poetry "Poetry"))
+
   (defun sergio/project-magit ()
     (interactive)
     (let ((default-directory (project-root (project-current))))
@@ -564,12 +587,12 @@ FRAME is the frame where the setting gets done."
 
 (use-package yasnippet-snippets)
 
-(use-package dashboard
-  :init
-  (dashboard-setup-startup-hook)
-  (setq initial-buffer-choice (lambda () (get-buffer-create "*dashboard*")))
-  :config
-  (dashboard-setup-startup-hook))
+;; (use-package dashboard
+;;   :init
+;;   (dashboard-setup-startup-hook)
+;;   (setq initial-buffer-choice (lambda () (get-buffer-create "*dashboard*")))
+;;   :config
+;;   (dashboard-setup-startup-hook))
 
 (use-package eldoc
   :init
@@ -610,11 +633,6 @@ FRAME is the frame where the setting gets done."
   t)
 
 ;; (use-package importmagic)
-
-(use-package nerd-icons)
-(defun nerd-icons--web-mode-icon (&rest arg-overrides)
-  "Get icon for a `web-mode' buffer with ARG-OVERRIDES."
-  (all-the-icons--web-mode nil arg-overrides))
 
 ;; (use-package multi-vterm
 ;;   :config
@@ -819,4 +837,7 @@ FRAME is the frame where the setting gets done."
 
 (use-package lispy
   :commands (lispy-mode))
+
+(global-auto-revert-mode 1)
+(setq global-auto-revert-non-file-buffers t)
 #+end_src
