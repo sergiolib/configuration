@@ -47,7 +47,6 @@ FRAME is the frame where the setting gets done."
 (straight-use-package 'use-package)
 
 (setq straight-use-package-by-default t)
-(setq use-package-verbose t)
 
 (use-package modus-themes
   :config
