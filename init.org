@@ -47,6 +47,7 @@ FRAME is the frame where the setting gets done."
 (straight-use-package 'use-package)
 
 (setq straight-use-package-by-default t)
+(setq use-package-verbose t)
 
 (use-package modus-themes
   :config
@@ -102,58 +103,6 @@ FRAME is the frame where the setting gets done."
   (setq calendar-week-start-day 1))
 
 (setq native-comp-async-report-warnings-errors nil)
-
-(use-package undo-tree
-  :config
-  (setq undo-tree-limit 10000000
-	undo-limit 10000000
-	undo-strong-limit 10000000
-	undo-tree-history-directory-alist '(("." . "~/.emacs.d/undo-tree-history/")))
-  (global-undo-tree-mode 1)
-  (defadvice undo-tree-make-history-save-file-name
-      (after undo-tree activate)
-    (setq ad-return-value (concat ad-return-value ".gz"))))
-
-(use-package evil
-  :init
-  (setq evil-want-keybinding nil)
-  (evil-mode 1)
-  (define-key evil-insert-state-map (kbd "C-g") 'evil-normal-state)
-  (define-key evil-insert-state-map (kbd "C-p") nil)
-  (define-key evil-insert-state-map (kbd "C-n") nil)
-  (global-set-key (kbd "C-M-u") 'universal-argument)
-  :custom
-  (evil-undo-system 'undo-tree)
-  (evil-want-integration t)
-  (evil-want-C-u-scroll t)
-  (evil-want-C-d-scroll t)
-  (evil-want-C-i-jump t)
-  (evil-want-fine-undo t)
-  (evil-esc-delay 0.001)
-  (evil-auto-indent t)
-  (evil-jumps-cross-buffers nil)
-  (evil-symbol-word-search t))
-
-(use-package general
-  :init
-  (general-create-definer leader
-    :keymaps '(normal insert visual emacs)
-    :prefix "SPC"
-    :global-prefix "C-SPC"))
-
-(use-package evil-collection
-  :init
-  (evil-collection-init)
-  :general
-  (leader
-    "<" 'evil-collection-consult-mark
-    "y" 'consult-yank-from-kill-ring
-    "," 'consult-recent-file
-    "r" 'consult-register))
-
-(use-package evil-surround
-  :init
-  (global-evil-surround-mode 1))
 
 (use-package vertico
   :straight (vertico :files (:defaults "extensions/*.el"))
@@ -212,8 +161,9 @@ FRAME is the frame where the setting gets done."
 	 ([tab] . corfu-complete)
 	 ("RET" . corfu-complete)
 	 ([ret] . corfu-complete))
-  :config
-  (evil-define-key '(insert normal visual) corfu-map (kbd "C-j") nil))
+  ;; :config
+  ;; (evil-define-key '(insert normal visual) corfu-map (kbd "C-j") nil)
+  )
 
 (use-package kind-icon
   :after corfu
@@ -232,10 +182,11 @@ FRAME is the frame where the setting gets done."
   (minibuffer-depth-indicate-mode 1)
   (dolist (map (list corfu-map
 		     minibuffer-mode-map
-		     evil-insert-state-map
-		     evil-normal-state-map
-		     evil-visual-state-map
-		     evil-emacs-state-map))
+		     ;; evil-insert-state-map
+		     ;; evil-normal-state-map
+		     ;; evil-visual-state-map
+		     ;; evil-emacs-state-map
+		     ))
     (define-key map (kbd "C-.") 'embark-act)
     (define-key map (kbd "M-.") 'embark-dwim)
     (define-key map (kbd "C-h B") 'embark-bindings))
@@ -260,9 +211,7 @@ FRAME is the frame where the setting gets done."
   :init
   (which-key-mode 1))
 
-(leader
-  "e" '(:ignore t :which-key "Emacs configuration")
-  "ee" '((lambda () (interactive) (find-file "~/Documents/src/dotfiles/init.org")) :which-key "Open init file"))
+(global-set-key (kbd "C-c e e") #'(lambda () (interactive) (find-file "~/Documents/src/configuration/init.org")))
 
 (global-display-line-numbers-mode 1)
 (setq display-line-numbers-type 'relative)
@@ -280,14 +229,6 @@ FRAME is the frame where the setting gets done."
 (add-hook 'Info-mode-hook (lambda ()
 			    (display-line-numbers-mode -1)))
 
-(leader
-  "t" '(:ignore t :which-key "Tabs")
-  "tr" 'tab-rename
-  "th" 'tab-previous
-  "tl" 'tab-next
-  "tn" 'tab-new
-  "tk" 'tab-close)
-
 (use-package rainbow-delimiters
   :hook (prog-mode . rainbow-delimiters-mode))
 
@@ -304,39 +245,25 @@ FRAME is the frame where the setting gets done."
 (display-battery-mode 1)
 
 (use-package consult
-  :bind (
-	 ("C-x f" . consult-find)
-	 ("C-s" . consult-line)
+  :bind (("C-x f" . consult-find)
+	 ;("C-s" . consult-line)
 	 (:map minibuffer-local-map
 	  ("C-r" . consult-history)
-	  ("C-x b" . consult-buffer)))
-  :general (leader
-	     "et" 'consult-theme
-	     "o" 'consult-outline)
+	  ("C-x b" . consult-buffer))
+	 ("C-c e t" . consult-theme)
+	 ("C-c o" . consult-outline))
   :config
   (consult-customize consult-theme :preview-key '(:debounce 0.5 any)))
 
 (winner-mode 1)
 
-(use-package magit
-  :general
-  (leader
-    "g" '(:ignore t :which-key "git")
-    "gg" 'magit-status))
-
 (use-package vterm
+  :commands (vterm vterm-other-window)
   :config
   (setq vterm-shell "/usr/bin/bash")
-  (evil-set-initial-state 'vterm-mode 'normal)
-  :general
-  (leader
-    "x" '(:ignore t :which-key "Terminals")
-    "xx" 'vterm
-    "xv" 'vterm-other-window
-    "v" '(:ignore t :which-key "VTerms")))
-
-(leader
-  "p" '(:keymap project-prefix-map :package project :which-key "project"))
+  :bind
+  (("C-c x x" . 'vterm)
+   ("C-c x v" . 'vterm-other-window)))
 
 (setq inhibit-startup-message t)
 (setq system-time-locale "C")
@@ -363,25 +290,9 @@ FRAME is the frame where the setting gets done."
   :mode ("\\.yml\\'" . yaml-mode))
 
 (use-package docker
+  :commands (docker docker-compose)
   :init
-  (setq docker-run-async-with-buffer-function 'docker-run-async-with-buffer-vterm)
-  (setq docker-compose-command "podman-compose")
-  :general
-  (leader
-    "d" '(:ignore t :which-key "Containers")
-    "dd" 'docker
-    "dc" 'docker-compose))
-
-(use-package evil-nerd-commenter
-  :bind
-  ("M-/" . evilnc-comment-or-uncomment-lines))
-
-(use-package evil-multiedit
-  :config
-  (evil-multiedit-default-keybinds)
-  (unbind-key (kbd "<insert-state> RET") 'evil-multiedit-mode-map)
-  :custom
-  (evil-multiedit-use-symbols nil))
+  (setq docker-run-async-with-buffer-function 'docker-run-async-with-buffer-vterm))
 
 (use-package pyvenv
   :config
@@ -418,16 +329,18 @@ FRAME is the frame where the setting gets done."
   (add-hook 'pyvenv-post-activate-hooks 'eglot-ensure 2)
   :commands (pyvenv-mode pyvenv-tracking-mode))
 
-(use-package poetry)
+(use-package poetry
+  :commands (poetry poetry-venv-workon))
 
-(leader "er" 'revert-buffer)
+(global-set-key (kbd "C-c r") 'revert-buffer)
 
 (recentf-mode 1)
 
 (use-package avy
   :commands (avy-goto-char)
-  :init
-  (define-key evil-normal-state-map (kbd "g c") 'avy-goto-char))
+  ;; :init
+  ;; (define-key evil-normal-state-map (kbd "g c") 'avy-goto-char)
+  )
 
 (global-set-key (kbd "C-x C-k") 'kill-this-buffer)
 
@@ -441,13 +354,12 @@ FRAME is the frame where the setting gets done."
   :hook ((org-mode . sergio/visual-fill)))
 
 (use-package org-roam
+  :commands (org-roam-node-find)
   :init
-  (setq org-roam-directory "/home/sliberman/Documents/RoamNotes/")
+  (setq org-roam-directory "/home/sliberman/Documents/Google Drive/RoamNotes/")
   (org-roam-db-autosync-mode 1)
-  :general
-  (leader
-    "n" '(:ignore t :which-key "Notes")
-    "nf" 'org-roam-node-find))
+  :bind
+  ("C-c n" . 'org-roam-node-find))
 
 (setq backup-by-copying t
       delete-old-versions t
@@ -461,6 +373,7 @@ FRAME is the frame where the setting gets done."
 ;;   (org-mode . flyspell-mode))
 
 (use-package eglot
+  :commands (eglot eglot-ensure)
   :preface
   (defun mp-eglot-eldoc ()
     (setq eldoc-documentation-strategy
@@ -477,16 +390,12 @@ FRAME is the frame where the setting gets done."
   (global-set-key (kbd "C-S-<down-mouse-1>") #'xref-find-references-at-mouse)
   (global-set-key (kbd "<mouse-9>") #'xref-go-forward)
   (global-set-key (kbd "<mouse-8>") #'xref-go-back)
-  :general (leader
-	     "l" '(:ignore t :which-key "LSP")
-	     "lr" 'eglot-rename
-	     "l=" 'eglot-format-buffer
-	     "la" 'eglot-code-actions
-	     "lg" '(:ignore t :which-key "Go to")
-	     "le" 'flymake-show-buffer-diagnostics))
+  :bind (("C-c l r" . 'eglot-rename)
+	 ("C-c l =" . 'eglot-format-buffer)
+	 ("C-c l a" . 'eglot-code-actions)
+	 ("C-c l e" . 'flymake-show-buffer-diagnostics)))
 
 (use-package python
-  :init
   :bind (:map python-mode-map
 	 (("M-<left>" . python-indent-shift-left)
 	  ("M-<right>" . python-indent-shift-right)))
@@ -495,7 +404,8 @@ FRAME is the frame where the setting gets done."
   (add-hook 'python-mode-hook #'(lambda () (require 'dap-python)))
   (add-hook 'python-mode-hook #'(lambda () (add-hook 'before-save-hook (lambda () (interactive) (when (eglot-managed-p) (eglot-format-buffer))) nil t)))
   (add-hook 'python-mode-hook #'(lambda () (yas-activate-extra-mode 'python-mode)))
-  (add-hook 'python-mode-hook 'which-function-mode))
+  (add-hook 'python-mode-hook 'which-function-mode)
+  :mode ("\\.py$" . python-mode))
 
 (load-file "~/.emacs.d/fix_keywords_align.el")
 
@@ -509,7 +419,9 @@ FRAME is the frame where the setting gets done."
 
 (use-package terraform-mode
   :init
-  (add-hook 'terraform-mode-hook 'eglot-ensure))
+  (add-hook 'terraform-mode-hook 'eglot-ensure)
+  :mode
+  ("\\.tf$" . terraform-mode))
 
 (add-hook 'emacs-lisp-mode-hook 'flymake-mode)
 (add-hook 'emacs-lisp-mode-hook 'sergio/add-indent-to-hook)
@@ -577,23 +489,6 @@ FRAME is the frame where the setting gets done."
   (setq project-find-functions (list #'project-try-ede #'project-try-vc))
   (add-to-list 'project-switch-commands (list 'project-switch-to-buffer "List buffers")))
 
-(use-package yasnippet
-  :general
-  (yas-minor-mode-map
-   :states 'insert
-   "TAB" 'nil)
-  :hook
-  (prog-mode . yas-minor-mode))
-
-(use-package yasnippet-snippets)
-
-;; (use-package dashboard
-;;   :init
-;;   (dashboard-setup-startup-hook)
-;;   (setq initial-buffer-choice (lambda () (get-buffer-create "*dashboard*")))
-;;   :config
-;;   (dashboard-setup-startup-hook))
-
 (use-package eldoc
   :init
   (setq eldoc-documentation-strategy 'eldoc-documentation-compose-eagerly)
@@ -624,27 +519,7 @@ FRAME is the frame where the setting gets done."
 ;; 				   (pyvenv-workon)))
 (electric-pair-mode 1)
 
-(leader
-  "f" '(:ignore t :which-key "Files")
-  "ff" 'find-file
-  "fo" 'find-file-other-window)
-
-(defun safe-local-variable-p (sym val)
-  t)
-
-;; (use-package importmagic)
-
-;; (use-package multi-vterm
-;;   :config
-;;   (add-hook 'vterm-mode-hook
-;; 	    (lambda ()
-;; 	      (setq-local evil-insert-state-cursor 'box)
-;; 	      (evil-insert-state)))
-;;   (define-key vterm-mode-map [return] #'vterm-send-return)
-;;   (setq multi-vterm-dedicated-window-height-percent 30)
-
-;;   (setq vterm-keymap-exceptions nil)
-;;   (evil-define-key '(insert normal visual emacs) vterm-mode-map (kbd "<f10>") #'multi-vterm-dedicated-toggle))
+(defun safe-local-variable-p (sym val) t)
 
 (use-package dap-mode
   :config
@@ -652,19 +527,12 @@ FRAME is the frame where the setting gets done."
   (setq dap-auto-configure-features '(sessions locals controls tooltip repl))
   (dap-auto-configure-mode 1)
   :bind (:map project-prefix-map
-	 ("C-d" . nil)
-	 ("C-d C-d" . dap-debug)
-	 ("C-d d" . dap-debug)
-	 ("C-d k" . dap-delete-all-sessions)
-	 ("C-d e" . dap-debug-edit-template))
-  (:map dap-mode-map
-   ;; ("C-S-<f5>" . dap-debug-restart)
-   ;; ("S-<f5>" . dap-disconnect)
-   ;; ("<f5>" . dap-continue)
-   ;; ("<f10>" . dap-next)
-   ;; ("<f11>" . dap-step-in)
-   ;; ("<f12>" . dap-step-out)
-   )
+	 ("C-c C-d C-d" . dap-debug)
+	 ("C-c C-d d" . dap-debug)
+	 ("C-c C-d k" . dap-delete-all-sessions)
+	 ("C-c C-d C-k" . dap-delete-all-sessions)
+	 ("C-c C-d e" . dap-debug-edit-template)
+	 ("C-c C-d C-e" . dap-debug-edit-template))
   :init
   (defun sergio/set-pointer-arrow ()
     (interactive)
@@ -678,10 +546,11 @@ FRAME is the frame where the setting gets done."
 (use-package restclient
   :commands (restclient-mode))
 
-(use-package ob-restclient)
+(use-package ob-restclient
+  :after org)
 
 (use-package org
-  :config
+  :init
   (defun sergio/org-font-setup ()
     ;; Set faces for heading levels
     (dolist (face '((org-level-1 . 2.0)
@@ -717,7 +586,6 @@ FRAME is the frame where the setting gets done."
   (org-src-window-setup 'current-window)
   (org-edit-src-content-indentation 0)
   (org-M-RET-may-split-line '((default)))
-  ;; (org-export-in-background nil)
   (org-odt-preferred-output-format "docx")
   :hook
   (org-mode . url-handler-mode)
@@ -725,29 +593,10 @@ FRAME is the frame where the setting gets done."
   (org-mode . (lambda () (variable-pitch-mode 1)))
   (org-mode . org-indent-mode)
   (org-mode . sergio/org-font-setup)
-  (org-mode . (lambda () (setq-local evil-auto-indent nil)))
   :config
   (setq org-indent-indentation-per-level 2)
-  (defun evil-org-insert-state-in-edit-buffer (fun &rest args)
-    "Bind `evil-default-state' to `insert' before calling FUN with ARGS."
-    (let ((evil-default-state 'insert)
-	  ;; Force insert state
-	  evil-emacs-state-modes
-	  evil-normal-state-modes
-	  evil-motion-state-modes
-	  evil-visual-state-modes
-	  evil-operator-state-modes
-	  evil-replace-state-modes)
-      (apply fun args)
-      (evil-refresh-cursor)))
-
-  (advice-add 'org-babel-do-key-sequence-in-edit-buffer
-	      :around #'evil-org-insert-state-in-edit-buffer)
-
   (require 'ox-md)
-
   (require 'org-tempo)
-
   (dolist (template '(("sh" . "src shell")
 		      ("el" . "src emacs-lisp")
 		      ("py" . "src python")
@@ -771,14 +620,17 @@ FRAME is the frame where the setting gets done."
      (python . t)))
 
   (push '("conf-unix" . conf-unix) org-src-lang-modes)
-  :mode ("\\.org\\'" . org-mode))
+  :mode ("\\.org$" . org-mode)
+  :commands (org-store-link org-agenda org-capture))
+
+(global-set-key (kbd "C-c l") #'org-store-link)
+(global-set-key (kbd "C-c a") #'org-agenda)
+(global-set-key (kbd "C-c c") #'org-capture)
 
 (use-package org-bullets
   :hook
   (org-mode . org-bullets-mode)
   :config
-  ;; (defface bullets '((default . (:family "Font Awesome 6 Free"))) "Face for the bullets in org mode")
-  ;; (setq org-bullets-face-name 'bullets)
   (setq org-bullets-bullet-list '("◉" "○" "✸" "✿")))
 
 (add-hook 'prog-mode 'electric-indent-mode)
@@ -790,46 +642,48 @@ FRAME is the frame where the setting gets done."
   (add-hook 'csharp-mode-hook 'eglot-ensure)
   (add-hook 'csharp-mode 'dap-mode)
   (add-hook 'csharp-mode #'(lambda () (require 'dap-netcore)))
-  :general
-  (leader "C-d" 'dap-debug))
+  :bind
+  ("C-c d" . 'dap-debug)
+  :mode ("\\.cs$" . csharp-mode))
 
 (use-package multi-vterm
   :bind
   ("<f5>" . multi-vterm-dedicated-toggle)
   :config
   (setq multi-vterm-dedicated-window-height-percent 20)
-  (add-hook 'vterm-mode-hook
-	    (lambda ()
-	      (setq-local evil-insert-state-cursor 'box)
-	      (evil-insert-state)))
-  (define-key vterm-mode-map [return]                      #'vterm-send-return)
-  (setq vterm-keymap-exceptions nil)
-  (evil-define-key '(insert normal visual) vterm-mode-map (kbd "<f5>")      #'multi-vterm-dedicated-toggle)
-  (evil-define-key 'insert vterm-mode-map (kbd "C-e")      #'vterm--self-insert)
-  (evil-define-key 'insert vterm-mode-map (kbd "C-f")      #'vterm--self-insert)
-  (evil-define-key 'insert vterm-mode-map (kbd "C-a")      #'vterm--self-insert)
-  (evil-define-key 'insert vterm-mode-map (kbd "C-v")      #'vterm--self-insert)
-  (evil-define-key 'insert vterm-mode-map (kbd "C-b")      #'vterm--self-insert)
-  (evil-define-key 'insert vterm-mode-map (kbd "C-w")      #'vterm--self-insert)
-  (evil-define-key 'insert vterm-mode-map (kbd "C-u")      #'vterm--self-insert)
-  (evil-define-key 'insert vterm-mode-map (kbd "C-d")      #'vterm--self-insert)
-  (evil-define-key 'insert vterm-mode-map (kbd "C-n")      #'vterm--self-insert)
-  (evil-define-key 'insert vterm-mode-map (kbd "C-m")      #'vterm--self-insert)
-  (evil-define-key 'insert vterm-mode-map (kbd "C-p")      #'vterm--self-insert)
-  (evil-define-key 'insert vterm-mode-map (kbd "C-j")      #'vterm--self-insert)
-  (evil-define-key 'insert vterm-mode-map (kbd "C-k")      #'vterm--self-insert)
-  (evil-define-key 'insert vterm-mode-map (kbd "C-r")      #'vterm--self-insert)
-  (evil-define-key 'insert vterm-mode-map (kbd "C-t")      #'vterm--self-insert)
-  (evil-define-key 'insert vterm-mode-map (kbd "C-g")      #'vterm--self-insert)
-  (evil-define-key 'insert vterm-mode-map (kbd "C-c")      #'vterm--self-insert)
-  (evil-define-key 'insert vterm-mode-map (kbd "C-SPC")    #'vterm--self-insert)
-  (evil-define-key 'normal vterm-mode-map (kbd "C-d")      #'vterm--self-insert)
-  (evil-define-key 'normal vterm-mode-map (kbd ",c")       #'multi-vterm)
-  (evil-define-key 'normal vterm-mode-map (kbd ",n")       #'multi-vterm-next)
-  (evil-define-key 'normal vterm-mode-map (kbd ",p")       #'multi-vterm-prev)
-  (evil-define-key 'normal vterm-mode-map (kbd "i")        #'evil-insert-resume)
-  (evil-define-key 'normal vterm-mode-map (kbd "o")        #'evil-insert-resume)
-  (evil-define-key 'normal vterm-mode-map (kbd "<return>") #'evil-insert-resume))
+  ;; (add-hook 'vterm-mode-hook
+  ;; 	    (lambda ()
+  ;; 	      (setq-local evil-insert-state-cursor 'box)
+  ;; 	      (evil-insert-state)))
+  ;; (define-key vterm-mode-map [return]                      #'vterm-send-return)
+  ;; (setq vterm-keymap-exceptions nil)
+  ;; (evil-define-key '(insert normal visual) vterm-mode-map (kbd "<f5>")      #'multi-vterm-dedicated-toggle)
+  ;; (evil-define-key 'insert vterm-mode-map (kbd "C-e")      #'vterm--self-insert)
+  ;; (evil-define-key 'insert vterm-mode-map (kbd "C-f")      #'vterm--self-insert)
+  ;; (evil-define-key 'insert vterm-mode-map (kbd "C-a")      #'vterm--self-insert)
+  ;; (evil-define-key 'insert vterm-mode-map (kbd "C-v")      #'vterm--self-insert)
+  ;; (evil-define-key 'insert vterm-mode-map (kbd "C-b")      #'vterm--self-insert)
+  ;; (evil-define-key 'insert vterm-mode-map (kbd "C-w")      #'vterm--self-insert)
+  ;; (evil-define-key 'insert vterm-mode-map (kbd "C-u")      #'vterm--self-insert)
+  ;; (evil-define-key 'insert vterm-mode-map (kbd "C-d")      #'vterm--self-insert)
+  ;; (evil-define-key 'insert vterm-mode-map (kbd "C-n")      #'vterm--self-insert)
+  ;; (evil-define-key 'insert vterm-mode-map (kbd "C-m")      #'vterm--self-insert)
+  ;; (evil-define-key 'insert vterm-mode-map (kbd "C-p")      #'vterm--self-insert)
+  ;; (evil-define-key 'insert vterm-mode-map (kbd "C-j")      #'vterm--self-insert)
+  ;; (evil-define-key 'insert vterm-mode-map (kbd "C-k")      #'vterm--self-insert)
+  ;; (evil-define-key 'insert vterm-mode-map (kbd "C-r")      #'vterm--self-insert)
+  ;; (evil-define-key 'insert vterm-mode-map (kbd "C-t")      #'vterm--self-insert)
+  ;; (evil-define-key 'insert vterm-mode-map (kbd "C-g")      #'vterm--self-insert)
+  ;; (evil-define-key 'insert vterm-mode-map (kbd "C-c")      #'vterm--self-insert)
+  ;; (evil-define-key 'insert vterm-mode-map (kbd "C-SPC")    #'vterm--self-insert)
+  ;; (evil-define-key 'normal vterm-mode-map (kbd "C-d")      #'vterm--self-insert)
+  ;; (evil-define-key 'normal vterm-mode-map (kbd ",c")       #'multi-vterm)
+  ;; (evil-define-key 'normal vterm-mode-map (kbd ",n")       #'multi-vterm-next)
+  ;; (evil-define-key 'normal vterm-mode-map (kbd ",p")       #'multi-vterm-prev)
+  ;; (evil-define-key 'normal vterm-mode-map (kbd "i")        #'evil-insert-resume)
+  ;; (evil-define-key 'normal vterm-mode-map (kbd "o")        #'evil-insert-resume)
+  ;; (evil-define-key 'normal vterm-mode-map (kbd "<return>") #'evil-insert-resume)
+  )
 
 (tab-bar-mode 1)
 
@@ -840,4 +694,196 @@ FRAME is the frame where the setting gets done."
 
 (global-auto-revert-mode 1)
 (setq global-auto-revert-non-file-buffers t)
+
+(use-package codespaces
+  :commands (codespaces-connect)
+  :config (codespaces-setup)
+  :bind ("C-c S" . #'codespaces-connect))
+
+(setq vc-handled-backends '(Git))
+
+(windmove-default-keybindings '(ctrl meta))
+
+(use-package magit
+  :bind ("C-x g" . magit-status))
 #+end_src
+
+* Fix keywords alignment
+#+BEGIN_SRC emacs-lisp :tangle /home/sliberman/.emacs.d/fix_keywords_align.el
+  (advice-add #'calculate-lisp-indent :override #'void~calculate-lisp-indent)
+
+  (defun void~calculate-lisp-indent (&optional parse-start)
+    "Add better indentation for quoted and backquoted lists."
+    ;; This line because `calculate-lisp-indent-last-sexp` was defined with `defvar` 
+    ;; with it's value ommited, marking it special and only defining it locally. So  
+    ;; if you don't have this, you'll get a void variable error.
+    (defvar calculate-lisp-indent-last-sexp)
+    (save-excursion
+      (beginning-of-line)
+      (let ((indent-point (point))
+            state
+            ;; setting this to a number inhibits calling hook
+            (desired-indent nil)
+            (retry t)
+            calculate-lisp-indent-last-sexp containing-sexp)
+        (cond ((or (markerp parse-start) (integerp parse-start))
+               (goto-char parse-start))
+              ((null parse-start) (beginning-of-defun))
+              (t (setq state parse-start)))
+        (unless state
+          ;; Find outermost containing sexp
+          (while (< (point) indent-point)
+            (setq state (parse-partial-sexp (point) indent-point 0))))
+        ;; Find innermost containing sexp
+        (while (and retry
+                    state
+                    (> (elt state 0) 0))
+          (setq retry nil)
+          (setq calculate-lisp-indent-last-sexp (elt state 2))
+          (setq containing-sexp (elt state 1))
+          ;; Position following last unclosed open.
+          (goto-char (1+ containing-sexp))
+          ;; Is there a complete sexp since then?
+          (if (and calculate-lisp-indent-last-sexp
+                   (> calculate-lisp-indent-last-sexp (point)))
+              ;; Yes, but is there a containing sexp after that?
+              (let ((peek (parse-partial-sexp calculate-lisp-indent-last-sexp
+                                              indent-point 0)))
+                (if (setq retry (car (cdr peek))) (setq state peek)))))
+        (if retry
+            nil
+          ;; Innermost containing sexp found
+          (goto-char (1+ containing-sexp))
+          (if (not calculate-lisp-indent-last-sexp)
+              ;; indent-point immediately follows open paren.
+              ;; Don't call hook.
+              (setq desired-indent (current-column))
+            ;; Find the start of first element of containing sexp.
+            (parse-partial-sexp (point) calculate-lisp-indent-last-sexp 0 t)
+            (cond ((looking-at "\\s(")
+                   ;; First element of containing sexp is a list.
+                   ;; Indent under that list.
+                   )
+                  ((> (save-excursion (forward-line 1) (point))
+                      calculate-lisp-indent-last-sexp)
+                   ;; This is the first line to start within the containing sexp.
+                   ;; It's almost certainly a function call.
+                   (if (or
+                        ;; Containing sexp has nothing before this line
+                        ;; except the first element. Indent under that element.
+                        (= (point) calculate-lisp-indent-last-sexp)
+
+                        ;; First sexp after `containing-sexp' is a keyword. This
+                        ;; condition is more debatable. It's so that I can have
+                        ;; unquoted plists in macros. It assumes that you won't
+                        ;; make a function whose name is a keyword.
+                        ;; (when-let (char-after (char-after (1+ containing-sexp)))
+                        ;;   (char-equal char-after ?:))
+
+                        ;; Check for quotes or backquotes around.
+                        (let* ((positions (elt state 9))
+                               (last (car (last positions)))
+                               (rest (reverse (butlast positions)))
+                               (any-quoted-p nil)
+                               (point nil))
+                          (or
+                           (when-let (char (char-before last))
+                             (or (char-equal char ?')
+                                 (char-equal char ?`)))
+                           (progn
+                             (while (and rest (not any-quoted-p))
+                               (setq point (pop rest))
+                               (setq any-quoted-p
+                                     (or
+                                      (when-let (char (char-before point))
+                                        (or (char-equal char ?')
+                                            (char-equal char ?`)))
+                                      (save-excursion
+                                        (goto-char (1+ point))
+                                        (looking-at-p
+                                         "\\(?:back\\)?quote[\t\n\f\s]+(")))))
+                             any-quoted-p))))
+                       ;; Containing sexp has nothing before this line
+                       ;; except the first element.  Indent under that element.
+                       nil
+                     ;; Skip the first element, find start of second (the first
+                     ;; argument of the function call) and indent under.
+                     (progn (forward-sexp 1)
+                            (parse-partial-sexp (point)
+                                                calculate-lisp-indent-last-sexp
+                                                0 t)))
+                   (backward-prefix-chars))
+                  (t
+                   ;; Indent beneath first sexp on same line as
+                   ;; `calculate-lisp-indent-last-sexp'.  Again, it's
+                   ;; almost certainly a function call.
+                   (goto-char calculate-lisp-indent-last-sexp)
+                   (beginning-of-line)
+                   (parse-partial-sexp (point) calculate-lisp-indent-last-sexp
+                                       0 t)
+                   (backward-prefix-chars)))))
+        ;; Point is at the point to indent under unless we are inside a string.
+        ;; Call indentation hook except when overridden by lisp-indent-offset
+        ;; or if the desired indentation has already been computed.
+        (let ((normal-indent (current-column)))
+          (cond ((elt state 3)
+                 ;; Inside a string, don't change indentation.
+                 nil)
+                ((and (integerp lisp-indent-offset) containing-sexp)
+                 ;; Indent by constant offset
+                 (goto-char containing-sexp)
+                 (+ (current-column) lisp-indent-offset))
+                ;; in this case calculate-lisp-indent-last-sexp is not nil
+                (calculate-lisp-indent-last-sexp
+                 (or
+                  ;; try to align the parameters of a known function
+                  (and lisp-indent-function
+                       (not retry)
+                       (funcall lisp-indent-function indent-point state))
+                  ;; If the function has no special alignment
+                  ;; or it does not apply to this argument,
+                  ;; try to align a constant-symbol under the last
+                  ;; preceding constant symbol, if there is such one of
+                  ;; the last 2 preceding symbols, in the previous
+                  ;; uncommented line.
+                  (and (save-excursion
+                         (goto-char indent-point)
+                         (skip-chars-forward " \t")
+                         (looking-at ":"))
+                       ;; The last sexp may not be at the indentation
+                       ;; where it begins, so find that one, instead.
+                       (save-excursion
+                         (goto-char calculate-lisp-indent-last-sexp)
+                         ;; Handle prefix characters and whitespace
+                         ;; following an open paren.  (Bug#1012)
+                         (backward-prefix-chars)
+                         (while (not (or (looking-back "^[ \t]*\\|([ \t]+"
+                                                       (line-beginning-position))
+                                         (and containing-sexp
+                                              (>= (1+ containing-sexp) (point)))))
+                           (forward-sexp -1)
+                           (backward-prefix-chars))
+                         (setq calculate-lisp-indent-last-sexp (point)))
+                       (> calculate-lisp-indent-last-sexp
+                          (save-excursion
+                            (goto-char (1+ containing-sexp))
+                            (parse-partial-sexp (point) calculate-lisp-indent-last-sexp 0 t)
+                            (point)))
+                       (let ((parse-sexp-ignore-comments t)
+                             indent)
+                         (goto-char calculate-lisp-indent-last-sexp)
+                         (or (and (looking-at ":")
+                                  (setq indent (current-column)))
+                             (and (< (line-beginning-position)
+                                     (prog2 (backward-sexp) (point)))
+                                  (looking-at ":")
+                                  (setq indent (current-column))))
+                         indent))
+                  ;; another symbols or constants not preceded by a constant
+                  ;; as defined above.
+                  normal-indent))
+                ;; in this case calculate-lisp-indent-last-sexp is nil
+                (desired-indent)
+                (t
+                 normal-indent))))))
+#+END_SRC
