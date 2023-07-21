@@ -156,13 +156,10 @@ FRAME is the frame where the setting gets done."
 	corfu-quit-no-match 'separator)
 
   :bind (:map corfu-map
-	 ("TAB" . corfu-complete)
-	 ([tab] . corfu-complete)
-	 ("RET" . corfu-complete)
-	 ([ret] . corfu-complete))
-  ;; :config
-  ;; (evil-define-key '(insert normal visual) corfu-map (kbd "C-j") nil)
-  )
+	      ("TAB" . corfu-complete)
+	      ([tab] . corfu-complete)
+	      ("RET" . corfu-complete)
+	      ([ret] . corfu-complete)))
 
 (use-package kind-icon
   :after corfu
@@ -179,13 +176,7 @@ FRAME is the frame where the setting gets done."
   :init
   (setq enable-recursive-minibuffers t)
   (minibuffer-depth-indicate-mode 1)
-  (dolist (map (list corfu-map
-		     minibuffer-mode-map
-		     ;; evil-insert-state-map
-		     ;; evil-normal-state-map
-		     ;; evil-visual-state-map
-		     ;; evil-emacs-state-map
-		     ))
+  (dolist (map (list corfu-map minibuffer-mode-map))
     (define-key map (kbd "C-.") 'embark-act)
     (define-key map (kbd "M-.") 'embark-dwim)
     (define-key map (kbd "C-h B") 'embark-bindings))
@@ -245,10 +236,9 @@ FRAME is the frame where the setting gets done."
 
 (use-package consult
   :bind (("C-x f" . consult-find)
-	 ;("C-s" . consult-line)
 	 (:map minibuffer-local-map
-	  ("C-r" . consult-history)
-	  ("C-x b" . consult-buffer))
+	       ("C-r" . consult-history)
+	       ("C-x b" . consult-buffer))
 	 ("C-c e t" . consult-theme)
 	 ("C-c o" . consult-outline))
   :config
@@ -297,34 +287,34 @@ FRAME is the frame where the setting gets done."
   :config
   (add-hook 'pyvenv-post-activate-hooks #'(lambda ()
 					    (setq eglot-workspace-configuration
-                                                  `(:pylsp
-                                                    (:plugins
-                                                     (:black
-                                                      (:enabled t
-                                                       :line_length 120)
-                                                      :yapf
-                                                      (:enabled :json-false)
-                                                      :isort
-                                                      (:enabled t)
-                                                      :autopep8
-                                                      (:enabled t)
-                                                      :pycodestyle
-                                                      (:enabled :json-false)
-                                                      :mccabe
-                                                      (:enabled :json-false)
-                                                      :pyflakes
-                                                      (:enabled :json-false)
-                                                      :pylint
-                                                      (:enabled t)
-                                                      :flake8
-                                                      (:enabled t)
-                                                      :pydocstyle
-                                                      (:enabled t
-                                                       :convention "google")
-                                                      :jedi
-                                                      (:environment ,(f-expand pyvenv-virtual-env)))
-                                                     :configurationSources
-                                                     ["flake8"])))) 1)
+					     `(:pylsp
+					       (:plugins
+						(:black
+						 (:enabled t
+						  :line_length 120)
+						 :yapf
+						 (:enabled :json-false)
+						 :isort
+						 (:enabled t)
+						 :autopep8
+						 (:enabled t)
+						 :pycodestyle
+						 (:enabled :json-false)
+						 :mccabe
+						 (:enabled :json-false)
+						 :pyflakes
+						 (:enabled :json-false)
+						 :pylint
+						 (:enabled t)
+						 :flake8
+						 (:enabled t)
+						 :pydocstyle
+						 (:enabled t
+						  :convention "google")
+						 :jedi
+						 (:environment ,(f-expand pyvenv-virtual-env)))
+						:configurationSources
+						["flake8"])))) 1)
   (add-hook 'pyvenv-post-activate-hooks 'eglot-ensure 2)
   :commands (pyvenv-mode pyvenv-tracking-mode))
 
@@ -333,13 +323,8 @@ FRAME is the frame where the setting gets done."
 
 (global-set-key (kbd "C-c r") 'revert-buffer)
 
-(recentf-mode 1)
-
 (use-package avy
-  :commands (avy-goto-char)
-  ;; :init
-  ;; (define-key evil-normal-state-map (kbd "g c") 'avy-goto-char)
-  )
+  :commands (avy-goto-char))
 
 (global-set-key (kbd "C-x C-k") 'kill-this-buffer)
 
@@ -356,6 +341,7 @@ FRAME is the frame where the setting gets done."
   :commands (org-roam-node-find)
   :init
   (setq org-roam-directory "/home/sliberman/Documents/Google Drive/RoamNotes/")
+  :config
   (org-roam-db-autosync-mode 1)
   :bind
   ("C-c n" . 'org-roam-node-find))
@@ -366,10 +352,6 @@ FRAME is the frame where the setting gets done."
       kept-old-versions 2
       version-control t
       backup-directory-alist '(("." . "~/.emacs.d/backups")))
-
-;; (use-package flyspell
-;;   :hook
-;;   (org-mode . flyspell-mode))
 
 (use-package eglot
   :commands (eglot eglot-ensure)
@@ -396,13 +378,12 @@ FRAME is the frame where the setting gets done."
 
 (use-package python
   :bind (:map python-mode-map
-	 (("M-<left>" . python-indent-shift-left)
-	  ("M-<right>" . python-indent-shift-right)))
+	      (("M-<left>" . python-indent-shift-left)
+	       ("M-<right>" . python-indent-shift-right)))
   :config
   (add-hook 'python-mode-hook 'poetry-venv-workon -100 nil)
   (add-hook 'python-mode-hook #'(lambda () (require 'dap-python)))
   (add-hook 'python-mode-hook #'(lambda () (add-hook 'before-save-hook (lambda () (interactive) (when (eglot-managed-p) (eglot-format-buffer))) nil t)))
-  (add-hook 'python-mode-hook #'(lambda () (yas-activate-extra-mode 'python-mode)))
   (add-hook 'python-mode-hook 'which-function-mode)
   :mode ("\\.py$" . python-mode))
 
@@ -514,8 +495,6 @@ FRAME is the frame where the setting gets done."
 		:face 'font-lock-doc-face))
      flycheck-errors)))
 
-;; (setq safe-local-variable-values '((pyvenv-activate)
-;; 				   (pyvenv-workon)))
 (electric-pair-mode 1)
 
 (defun safe-local-variable-p (sym val) t)
@@ -526,12 +505,12 @@ FRAME is the frame where the setting gets done."
   (setq dap-auto-configure-features '(sessions locals controls tooltip repl))
   (dap-auto-configure-mode 1)
   :bind (:map project-prefix-map
-	 ("C-c C-d C-d" . dap-debug)
-	 ("C-c C-d d" . dap-debug)
-	 ("C-c C-d k" . dap-delete-all-sessions)
-	 ("C-c C-d C-k" . dap-delete-all-sessions)
-	 ("C-c C-d e" . dap-debug-edit-template)
-	 ("C-c C-d C-e" . dap-debug-edit-template))
+	      ("C-c C-d C-d" . dap-debug)
+	      ("C-c C-d d" . dap-debug)
+	      ("C-c C-d k" . dap-delete-all-sessions)
+	      ("C-c C-d C-k" . dap-delete-all-sessions)
+	      ("C-c C-d e" . dap-debug-edit-template)
+	      ("C-c C-d C-e" . dap-debug-edit-template))
   :init
   (defun sergio/set-pointer-arrow ()
     (interactive)
@@ -637,52 +616,18 @@ FRAME is the frame where the setting gets done."
 (size-indication-mode 1)
 
 (use-package csharp-mode
+  :straight nil
   :init
   (add-hook 'csharp-mode-hook 'eglot-ensure)
   (add-hook 'csharp-mode 'dap-mode)
   (add-hook 'csharp-mode #'(lambda () (require 'dap-netcore)))
-  :bind
-  ("C-c d" . 'dap-debug)
   :mode ("\\.cs$" . csharp-mode))
 
 (use-package multi-vterm
   :bind
   ("<f5>" . multi-vterm-dedicated-toggle)
   :config
-  (setq multi-vterm-dedicated-window-height-percent 20)
-  ;; (add-hook 'vterm-mode-hook
-  ;; 	    (lambda ()
-  ;; 	      (setq-local evil-insert-state-cursor 'box)
-  ;; 	      (evil-insert-state)))
-  ;; (define-key vterm-mode-map [return]                      #'vterm-send-return)
-  ;; (setq vterm-keymap-exceptions nil)
-  ;; (evil-define-key '(insert normal visual) vterm-mode-map (kbd "<f5>")      #'multi-vterm-dedicated-toggle)
-  ;; (evil-define-key 'insert vterm-mode-map (kbd "C-e")      #'vterm--self-insert)
-  ;; (evil-define-key 'insert vterm-mode-map (kbd "C-f")      #'vterm--self-insert)
-  ;; (evil-define-key 'insert vterm-mode-map (kbd "C-a")      #'vterm--self-insert)
-  ;; (evil-define-key 'insert vterm-mode-map (kbd "C-v")      #'vterm--self-insert)
-  ;; (evil-define-key 'insert vterm-mode-map (kbd "C-b")      #'vterm--self-insert)
-  ;; (evil-define-key 'insert vterm-mode-map (kbd "C-w")      #'vterm--self-insert)
-  ;; (evil-define-key 'insert vterm-mode-map (kbd "C-u")      #'vterm--self-insert)
-  ;; (evil-define-key 'insert vterm-mode-map (kbd "C-d")      #'vterm--self-insert)
-  ;; (evil-define-key 'insert vterm-mode-map (kbd "C-n")      #'vterm--self-insert)
-  ;; (evil-define-key 'insert vterm-mode-map (kbd "C-m")      #'vterm--self-insert)
-  ;; (evil-define-key 'insert vterm-mode-map (kbd "C-p")      #'vterm--self-insert)
-  ;; (evil-define-key 'insert vterm-mode-map (kbd "C-j")      #'vterm--self-insert)
-  ;; (evil-define-key 'insert vterm-mode-map (kbd "C-k")      #'vterm--self-insert)
-  ;; (evil-define-key 'insert vterm-mode-map (kbd "C-r")      #'vterm--self-insert)
-  ;; (evil-define-key 'insert vterm-mode-map (kbd "C-t")      #'vterm--self-insert)
-  ;; (evil-define-key 'insert vterm-mode-map (kbd "C-g")      #'vterm--self-insert)
-  ;; (evil-define-key 'insert vterm-mode-map (kbd "C-c")      #'vterm--self-insert)
-  ;; (evil-define-key 'insert vterm-mode-map (kbd "C-SPC")    #'vterm--self-insert)
-  ;; (evil-define-key 'normal vterm-mode-map (kbd "C-d")      #'vterm--self-insert)
-  ;; (evil-define-key 'normal vterm-mode-map (kbd ",c")       #'multi-vterm)
-  ;; (evil-define-key 'normal vterm-mode-map (kbd ",n")       #'multi-vterm-next)
-  ;; (evil-define-key 'normal vterm-mode-map (kbd ",p")       #'multi-vterm-prev)
-  ;; (evil-define-key 'normal vterm-mode-map (kbd "i")        #'evil-insert-resume)
-  ;; (evil-define-key 'normal vterm-mode-map (kbd "o")        #'evil-insert-resume)
-  ;; (evil-define-key 'normal vterm-mode-map (kbd "<return>") #'evil-insert-resume)
-  )
+  (setq multi-vterm-dedicated-window-height-percent 20))
 
 (tab-bar-mode 1)
 
@@ -694,17 +639,27 @@ FRAME is the frame where the setting gets done."
 (global-auto-revert-mode 1)
 (setq global-auto-revert-non-file-buffers t)
 
-(use-package codespaces
-  :commands (codespaces-connect)
-  :config (codespaces-setup)
-  :bind ("C-c S" . #'codespaces-connect))
-
 (setq vc-handled-backends '(Git))
 
 (windmove-default-keybindings '(ctrl meta))
 
 (use-package magit
   :bind ("C-x g" . magit-status))
+
+(use-package json-mode
+  :mode ("\\.json$" . json-mode))
+
+(use-package codespaces
+  :config
+  (codespaces-setup)
+  (add-to-list 'tramp-remote-path 'tramp-own-remote-path)
+  (setq tramp-ssh-controlmaster-options "")
+  :bind ("C-c S" . #'codespaces-connect))
+
+(recentf-mode 1)
+
+(use-package forge
+  :after magit)
 #+end_src
 
 * Fix keywords alignment
