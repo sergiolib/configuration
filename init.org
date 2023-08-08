@@ -180,6 +180,7 @@ FRAME is the frame where the setting gets done."
     (define-key map (kbd "C-.") 'embark-act)
     (define-key map (kbd "M-.") 'embark-dwim)
     (define-key map (kbd "C-h B") 'embark-bindings))
+  (global-set-key (kbd "C-.") 'embark-act)
   :custom
   (embark-prompter 'embark-keymap-prompter)
   (embark-quit-after-action '((t . nil)))
@@ -204,7 +205,7 @@ FRAME is the frame where the setting gets done."
 (global-set-key (kbd "C-c e e") #'(lambda () (interactive) (find-file "~/Documents/src/configuration/init.org")))
 
 (global-display-line-numbers-mode 1)
-(setq display-line-numbers-type 'relative)
+;; (setq display-line-numbers-type 'relative)
 
 (dolist (mode '(org-mode-hook
 		term-mode-hook
@@ -236,11 +237,13 @@ FRAME is the frame where the setting gets done."
 
 (use-package consult
   :bind (("C-x f" . consult-find)
-	 (:map minibuffer-local-map
-	       ("C-r" . consult-history)
-	       ("C-x b" . consult-buffer))
+	 ("C-x b" . consult-buffer)
+	 ("C-x C-b" . consult-buffer)
 	 ("C-c e t" . consult-theme)
-	 ("C-c o" . consult-outline))
+	 ("C-x ," . consult-recent-file)
+	 ("C-c o" . consult-outline)
+	 (:map minibuffer-local-map
+	       ("C-r" . consult-history)))
   :config
   (consult-customize consult-theme :preview-key '(:debounce 0.5 any)))
 
@@ -371,7 +374,9 @@ FRAME is the frame where the setting gets done."
   (global-set-key (kbd "C-S-<down-mouse-1>") #'xref-find-references-at-mouse)
   (global-set-key (kbd "<mouse-9>") #'xref-go-forward)
   (global-set-key (kbd "<mouse-8>") #'xref-go-back)
-  :bind (("C-c l r" . 'eglot-rename)
+  :bind (("C-c l <f2>" . 'eglot-rename)
+	 ("C-c l r" . 'xref-find-references)
+	 ("C-c l d" . 'xref-find-definitions)
 	 ("C-c l =" . 'eglot-format-buffer)
 	 ("C-c l a" . 'eglot-code-actions)
 	 ("C-c l e" . 'flymake-show-buffer-diagnostics)))
@@ -403,7 +408,6 @@ FRAME is the frame where the setting gets done."
   :mode
   ("\\.tf$" . terraform-mode))
 
-(add-hook 'emacs-lisp-mode-hook 'flymake-mode)
 (add-hook 'emacs-lisp-mode-hook 'sergio/add-indent-to-hook)
 (add-hook 'lisp-data-mode-hook 'sergio/add-indent-to-hook)
 
@@ -519,8 +523,6 @@ FRAME is the frame where the setting gets done."
   :hook
   (treemacs-mode . sergio/set-pointer-arrow))
 
-(pixel-scroll-mode 1)
-
 (use-package restclient
   :commands (restclient-mode))
 
@@ -541,20 +543,26 @@ FRAME is the frame where the setting gets done."
 		    (org-level-8 . 1.0)))
       (set-face-attribute (car face) nil :height (cdr face)))
     ;; Ensure that anything that should be fixed-pitch in Org files appears that way
-    (set-face-attribute 'org-block nil    :foreground nil :inherit 'fixed-pitch)
-    (set-face-attribute 'org-table nil    :inherit 'fixed-pitch)
-    (set-face-attribute 'org-formula nil  :inherit 'fixed-pitch)
-    (set-face-attribute 'org-code nil     :inherit '(shadow fixed-pitch))
-    (set-face-attribute 'org-table nil    :inherit '(shadow fixed-pitch))
-    (set-face-attribute 'org-verbatim nil :inherit '(shadow fixed-pitch))
-    (set-face-attribute 'org-special-keyword nil :inherit '(font-lock-comment-face fixed-pitch))
-    (set-face-attribute 'org-meta-line nil :inherit '(font-lock-comment-face variable-pitch))
-    (set-face-attribute 'org-checkbox nil  :inherit 'fixed-pitch)
-    (set-face-attribute 'line-number nil :inherit 'fixed-pitch)
-    (set-face-attribute 'line-number-current-line nil :inherit 'fixed-pitch)
-    (setq org-todo-keywords
-	  (quote ((sequence "TODO(t)" "|" "ABANDONED(b)" "DONE(d)"))))
+    ;; (set-face-attribute 'org-block nil    :foreground nil :inherit 'fixed-pitch)
+    ;; (set-face-attribute 'org-table nil    :inherit 'fixed-pitch)
+    ;; (set-face-attribute 'org-formula nil  :inherit 'fixed-pitch)
+    ;; (set-face-attribute 'org-code nil     :inherit '(shadow fixed-pitch))
+    ;; (set-face-attribute 'org-table nil    :inherit '(shadow fixed-pitch))
+    ;; (set-face-attribute 'org-verbatim nil :inherit '(shadow fixed-pitch))
+    ;; (set-face-attribute 'org-special-keyword nil :inherit '(font-lock-comment-face fixed-pitch))
+    ;; (set-face-attribute 'org-checkbox nil  :inherit 'fixed-pitch)
+    ;; (set-face-attribute 'line-number nil :inherit 'fixed-pitch)
+    ;; (set-face-attribute 'line-number-current-line nil :inherit 'fixed-pitch)
+    (setq org-todo-keywords (quote ((sequence "TODO(t)" "|" "ABANDONED(b)" "DONE(d)"))))
     (setq org-log-done t))
+  (defun sergio/check-cell ()
+    (interactive)
+    (let ((cell (org-table-get-field)))
+      (if (string-match "[[:graph:]]" cell)
+          (org-table-blank-field)
+	(insert "X")
+	(org-table-align))
+      (org-table-next-row)))
   :custom
   (org-ellipsis " ▼")
   (org-latex-pdf-process (list "latexmk -f -pdf %f"))
@@ -568,9 +576,9 @@ FRAME is the frame where the setting gets done."
   :hook
   (org-mode . url-handler-mode)
   (org-mode . visual-line-mode)
-  (org-mode . (lambda () (variable-pitch-mode 1)))
   (org-mode . org-indent-mode)
   (org-mode . sergio/org-font-setup)
+  (org-mode . org-modern-mode)
   :config
   (setq org-indent-indentation-per-level 2)
   (require 'ox-md)
@@ -601,15 +609,11 @@ FRAME is the frame where the setting gets done."
   :mode ("\\.org$" . org-mode)
   :commands (org-store-link org-agenda org-capture))
 
-(global-set-key (kbd "C-c l") #'org-store-link)
-(global-set-key (kbd "C-c a") #'org-agenda)
-(global-set-key (kbd "C-c c") #'org-capture)
+(global-set-key (kbd "C-c C-l") #'org-store-link)
+(global-set-key (kbd "C-c C-a") #'org-agenda)
+(global-set-key (kbd "C-c C->") #'org-capture)
 
-(use-package org-bullets
-  :hook
-  (org-mode . org-bullets-mode)
-  :config
-  (setq org-bullets-bullet-list '("◉" "○" "✸" "✿")))
+(use-package org-modern)
 
 (add-hook 'prog-mode 'electric-indent-mode)
 
@@ -619,8 +623,10 @@ FRAME is the frame where the setting gets done."
   :straight nil
   :init
   (add-hook 'csharp-mode-hook 'eglot-ensure)
-  (add-hook 'csharp-mode 'dap-mode)
-  (add-hook 'csharp-mode #'(lambda () (require 'dap-netcore)))
+  (add-hook 'csharp-mode-hook 'dap-mode)
+  (add-hook 'csharp-mode-hook #'(lambda () (require 'dap-netcore)))
+  (add-hook 'csharp-mode-hook #'(lambda () (c-set-style "awk")))
+  (add-hook 'csharp-mode-hook #'(lambda () (setq-local tab-width 2)))
   :mode ("\\.cs$" . csharp-mode))
 
 (use-package multi-vterm
