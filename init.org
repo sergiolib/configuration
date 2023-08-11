@@ -614,7 +614,7 @@ FRAME is the frame where the setting gets done."
 
 (add-hook 'prog-mode 'electric-indent-mode)
 
-(size-indication-mode 1)
+(size-indication-mode -1)
 
 (use-package move-text
   :bind
