@@ -704,6 +704,8 @@ FRAME is the frame where the setting gets done."
 
 (global-unset-key (kbd "C-z"))
 
+(use-package fixmee)
+
 (setq backup-directory-alist
       `((".*" . "~/.emacs-saves")))
 (setq auto-save-file-name-transforms
