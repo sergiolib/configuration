@@ -710,6 +710,16 @@ FRAME is the frame where the setting gets done."
       `((".*" . "~/.emacs-saves")))
 (setq auto-save-file-name-transforms
       `((".*" "~/.emacs-saves" t)))
+
+(use-package expand-region
+  :bind
+  ("C-=" . er/expand-region))
+
+(use-package multiple-cursors
+  :bind
+  ("C-<" . mc/mark-next-like-this)
+  ("C->" . mc/mark-previous-like-this)
+  ("C-c M-<" . mc/mark-all-like-this))
 #+end_src
 
 * Fix keywords alignment
