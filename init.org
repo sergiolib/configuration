@@ -28,7 +28,6 @@
 FRAME is the frame where the setting gets done."
   (set-face-attribute 'default nil :family "JetBrains Mono" :height 120)
   (set-face-attribute 'fixed-pitch nil :family "JetBrains Mono" :height 120)
-  (set-face-attribute 'variable-pitch nil :family "Cantarell" :height 130)
   (remove-hook 'after-make-frame-functions 'set-window-faces))
 
 (if (and (boundp 'server-process)
@@ -100,7 +99,7 @@ FRAME is the frame where the setting gets done."
 (add-hook 'after-save-hook (lambda () (when (equal (f-filename buffer-file-name) "init.org")
 					(org-babel-tangle-file "init.org"))))
 
-(add-to-list 'exec-path "/home/sliberman/bin/omnisharp-linux-x64-net6.0")
+(add-to-list 'exec-path "/home/sliberman/bin/omnisharp")
 (add-to-list 'exec-path "/home/sliberman/bin/netcoredbg")
 
 (use-package calendar
@@ -156,19 +155,16 @@ FRAME is the frame where the setting gets done."
   :init
   (global-corfu-mode 1)
   (setq corfu-auto t
-	corfu-auto-delay 0
-	corfu-auto-prefix 1
+	corfu-auto-delay 0.2
+	corfu-auto-prefix 3
 	corfu-preview-current t
 	corfu-quit-no-match 'separator)
 
   :bind (:map corfu-map
-	 ("TAB" . corfu-complete)
-	 ([tab] . corfu-complete)
-	 ("RET" . corfu-complete)
-	 ([ret] . corfu-complete))
-  ;; :config
-  ;; (evil-define-key '(insert normal visual) corfu-map (kbd "C-j") nil)
-  )
+	      ("TAB" . corfu-complete)
+	      ([tab] . corfu-complete)
+	      ("RET" . corfu-complete)
+	      ([ret] . corfu-complete)))
 
 (use-package kind-icon
   :after corfu
@@ -185,16 +181,11 @@ FRAME is the frame where the setting gets done."
   :init
   (setq enable-recursive-minibuffers t)
   (minibuffer-depth-indicate-mode 1)
-  (dolist (map (list corfu-map
-		     minibuffer-mode-map
-		     ;; evil-insert-state-map
-		     ;; evil-normal-state-map
-		     ;; evil-visual-state-map
-		     ;; evil-emacs-state-map
-		     ))
+  (dolist (map (list corfu-map minibuffer-mode-map))
     (define-key map (kbd "C-.") 'embark-act)
     (define-key map (kbd "M-.") 'embark-dwim)
     (define-key map (kbd "C-h B") 'embark-bindings))
+  (global-set-key (kbd "C-.") 'embark-act)
   :custom
   (embark-prompter 'embark-keymap-prompter)
   (embark-quit-after-action '((t . nil)))
@@ -219,7 +210,7 @@ FRAME is the frame where the setting gets done."
 (global-set-key (kbd "C-c e e") #'(lambda () (interactive) (find-file "~/Documents/src/configuration/init.org")))
 
 (global-display-line-numbers-mode 1)
-(setq display-line-numbers-type 'relative)
+;; (setq display-line-numbers-type 'relative)
 
 (dolist (mode '(org-mode-hook
 		term-mode-hook
@@ -251,12 +242,13 @@ FRAME is the frame where the setting gets done."
 
 (use-package consult
   :bind (("C-x f" . consult-find)
-	 ;("C-s" . consult-line)
-	 (:map minibuffer-local-map
-	  ("C-r" . consult-history)
-	  ("C-x b" . consult-buffer))
+	 ("C-x b" . consult-buffer)
+	 ("C-x C-b" . consult-buffer)
 	 ("C-c e t" . consult-theme)
-	 ("C-c o" . consult-outline))
+	 ("C-x ," . consult-recent-file)
+	 ("C-c o" . consult-outline)
+	 (:map minibuffer-local-map
+	       ("C-r" . consult-history)))
   :config
   (consult-customize consult-theme :preview-key '(:debounce 0.5 any)))
 
@@ -303,34 +295,34 @@ FRAME is the frame where the setting gets done."
   :config
   (add-hook 'pyvenv-post-activate-hooks #'(lambda ()
 					    (setq eglot-workspace-configuration
-                                                  `(:pylsp
-                                                    (:plugins
-                                                     (:black
-                                                      (:enabled t
-                                                       :line_length 120)
-                                                      :yapf
-                                                      (:enabled :json-false)
-                                                      :isort
-                                                      (:enabled t)
-                                                      :autopep8
-                                                      (:enabled t)
-                                                      :pycodestyle
-                                                      (:enabled :json-false)
-                                                      :mccabe
-                                                      (:enabled :json-false)
-                                                      :pyflakes
-                                                      (:enabled :json-false)
-                                                      :pylint
-                                                      (:enabled t)
-                                                      :flake8
-                                                      (:enabled t)
-                                                      :pydocstyle
-                                                      (:enabled t
-                                                       :convention "google")
-                                                      :jedi
-                                                      (:environment ,(f-expand pyvenv-virtual-env)))
-                                                     :configurationSources
-                                                     ["flake8"])))) 1)
+					     `(:pylsp
+					       (:plugins
+						(:black
+						 (:enabled t
+						  :line_length 120)
+						 :yapf
+						 (:enabled :json-false)
+						 :isort
+						 (:enabled t)
+						 :autopep8
+						 (:enabled t)
+						 :pycodestyle
+						 (:enabled :json-false)
+						 :mccabe
+						 (:enabled :json-false)
+						 :pyflakes
+						 (:enabled :json-false)
+						 :pylint
+						 (:enabled t)
+						 :flake8
+						 (:enabled t)
+						 :pydocstyle
+						 (:enabled t
+						  :convention "google")
+						 :jedi
+						 (:environment ,(f-expand pyvenv-virtual-env)))
+						:configurationSources
+						["flake8"])))) 1)
   (add-hook 'pyvenv-post-activate-hooks 'eglot-ensure 2)
   :commands (pyvenv-mode pyvenv-tracking-mode))
 
@@ -339,13 +331,8 @@ FRAME is the frame where the setting gets done."
 
 (global-set-key (kbd "C-c r") 'revert-buffer)
 
-(recentf-mode 1)
-
 (use-package avy
-  :commands (avy-goto-char)
-  ;; :init
-  ;; (define-key evil-normal-state-map (kbd "g c") 'avy-goto-char)
-  )
+  :commands (avy-goto-char))
 
 (global-set-key (kbd "C-x C-k") 'kill-this-buffer)
 
@@ -362,6 +349,7 @@ FRAME is the frame where the setting gets done."
   :commands (org-roam-node-find)
   :init
   (setq org-roam-directory "/home/sliberman/Documents/Google Drive/RoamNotes/")
+  :config
   (org-roam-db-autosync-mode 1)
   :bind
   ("C-c n" . 'org-roam-node-find))
@@ -372,10 +360,6 @@ FRAME is the frame where the setting gets done."
       kept-old-versions 2
       version-control t
       backup-directory-alist '(("." . "~/.emacs.d/backups")))
-
-;; (use-package flyspell
-;;   :hook
-;;   (org-mode . flyspell-mode))
 
 (use-package eglot
   :commands (eglot eglot-ensure)
@@ -402,13 +386,12 @@ FRAME is the frame where the setting gets done."
 
 (use-package python
   :bind (:map python-mode-map
-	 (("M-<left>" . python-indent-shift-left)
-	  ("M-<right>" . python-indent-shift-right)))
+	      (("M-<left>" . python-indent-shift-left)
+	       ("M-<right>" . python-indent-shift-right)))
   :config
   (add-hook 'python-mode-hook 'poetry-venv-workon -100 nil)
   (add-hook 'python-mode-hook #'(lambda () (require 'dap-python)))
   (add-hook 'python-mode-hook #'(lambda () (add-hook 'before-save-hook (lambda () (interactive) (when (eglot-managed-p) (eglot-format-buffer))) nil t)))
-  (add-hook 'python-mode-hook #'(lambda () (yas-activate-extra-mode 'python-mode)))
   (add-hook 'python-mode-hook 'which-function-mode)
   :mode ("\\.py$" . python-mode))
 
@@ -428,7 +411,6 @@ FRAME is the frame where the setting gets done."
   :mode
   ("\\.tf$" . terraform-mode))
 
-(add-hook 'emacs-lisp-mode-hook 'flymake-mode)
 (add-hook 'emacs-lisp-mode-hook 'sergio/add-indent-to-hook)
 (add-hook 'lisp-data-mode-hook 'sergio/add-indent-to-hook)
 
@@ -520,8 +502,6 @@ FRAME is the frame where the setting gets done."
 		:face 'font-lock-doc-face))
      flycheck-errors)))
 
-;; (setq safe-local-variable-values '((pyvenv-activate)
-;; 				   (pyvenv-workon)))
 (electric-pair-mode 1)
 
 (defun safe-local-variable-p (sym val) t)
@@ -532,12 +512,12 @@ FRAME is the frame where the setting gets done."
   (setq dap-auto-configure-features '(sessions locals controls tooltip repl))
   (dap-auto-configure-mode 1)
   :bind (:map project-prefix-map
-	 ("C-c C-d C-d" . dap-debug)
-	 ("C-c C-d d" . dap-debug)
-	 ("C-c C-d k" . dap-delete-all-sessions)
-	 ("C-c C-d C-k" . dap-delete-all-sessions)
-	 ("C-c C-d e" . dap-debug-edit-template)
-	 ("C-c C-d C-e" . dap-debug-edit-template))
+	      ("C-c C-d C-d" . dap-debug)
+	      ("C-c C-d d" . dap-debug)
+	      ("C-c C-d k" . dap-delete-all-sessions)
+	      ("C-c C-d C-k" . dap-delete-all-sessions)
+	      ("C-c C-d e" . dap-debug-edit-template)
+	      ("C-c C-d C-e" . dap-debug-edit-template))
   :init
   (defun sergio/set-pointer-arrow ()
     (interactive)
@@ -545,8 +525,6 @@ FRAME is the frame where the setting gets done."
     (set-mouse-color "black"))
   :hook
   (treemacs-mode . sergio/set-pointer-arrow))
-
-(pixel-scroll-mode 1)
 
 (use-package restclient
   :commands (restclient-mode))
@@ -568,20 +546,26 @@ FRAME is the frame where the setting gets done."
 		    (org-level-8 . 1.0)))
       (set-face-attribute (car face) nil :height (cdr face)))
     ;; Ensure that anything that should be fixed-pitch in Org files appears that way
-    (set-face-attribute 'org-block nil    :foreground nil :inherit 'fixed-pitch)
-    (set-face-attribute 'org-table nil    :inherit 'fixed-pitch)
-    (set-face-attribute 'org-formula nil  :inherit 'fixed-pitch)
-    (set-face-attribute 'org-code nil     :inherit '(shadow fixed-pitch))
-    (set-face-attribute 'org-table nil    :inherit '(shadow fixed-pitch))
-    (set-face-attribute 'org-verbatim nil :inherit '(shadow fixed-pitch))
-    (set-face-attribute 'org-special-keyword nil :inherit '(font-lock-comment-face fixed-pitch))
-    (set-face-attribute 'org-meta-line nil :inherit '(font-lock-comment-face variable-pitch))
-    (set-face-attribute 'org-checkbox nil  :inherit 'fixed-pitch)
-    (set-face-attribute 'line-number nil :inherit 'fixed-pitch)
-    (set-face-attribute 'line-number-current-line nil :inherit 'fixed-pitch)
-    (setq org-todo-keywords
-	  (quote ((sequence "TODO(t)" "|" "ABANDONED(b)" "DONE(d)"))))
+    ;; (set-face-attribute 'org-block nil    :foreground nil :inherit 'fixed-pitch)
+    ;; (set-face-attribute 'org-table nil    :inherit 'fixed-pitch)
+    ;; (set-face-attribute 'org-formula nil  :inherit 'fixed-pitch)
+    ;; (set-face-attribute 'org-code nil     :inherit '(shadow fixed-pitch))
+    ;; (set-face-attribute 'org-table nil    :inherit '(shadow fixed-pitch))
+    ;; (set-face-attribute 'org-verbatim nil :inherit '(shadow fixed-pitch))
+    ;; (set-face-attribute 'org-special-keyword nil :inherit '(font-lock-comment-face fixed-pitch))
+    ;; (set-face-attribute 'org-checkbox nil  :inherit 'fixed-pitch)
+    ;; (set-face-attribute 'line-number nil :inherit 'fixed-pitch)
+    ;; (set-face-attribute 'line-number-current-line nil :inherit 'fixed-pitch)
+    (setq org-todo-keywords (quote ((sequence "TODO(t)" "|" "ABANDONED(b)" "DONE(d)"))))
     (setq org-log-done t))
+  (defun sergio/check-cell ()
+    (interactive)
+    (let ((cell (org-table-get-field)))
+      (if (string-match "[[:graph:]]" cell)
+          (org-table-blank-field)
+	(insert "X")
+	(org-table-align))
+      (org-table-next-row)))
   :custom
   (org-ellipsis " ▼")
   (org-latex-pdf-process (list "latexmk -f -pdf %f"))
@@ -595,9 +579,9 @@ FRAME is the frame where the setting gets done."
   :hook
   (org-mode . url-handler-mode)
   (org-mode . visual-line-mode)
-  (org-mode . (lambda () (variable-pitch-mode 1)))
   (org-mode . org-indent-mode)
   (org-mode . sergio/org-font-setup)
+  (org-mode . org-modern-mode)
   :config
   (setq org-indent-indentation-per-level 2)
   (require 'ox-md)
@@ -628,67 +612,37 @@ FRAME is the frame where the setting gets done."
   :mode ("\\.org$" . org-mode)
   :commands (org-store-link org-agenda org-capture))
 
-(global-set-key (kbd "C-c l") #'org-store-link)
-(global-set-key (kbd "C-c a") #'org-agenda)
-(global-set-key (kbd "C-c c") #'org-capture)
+(global-set-key (kbd "C-c C-l") #'org-store-link)
+(global-set-key (kbd "C-c C-a") #'org-agenda)
+(global-set-key (kbd "C-c C->") #'org-capture)
 
-(use-package org-bullets
-  :hook
-  (org-mode . org-bullets-mode)
-  :config
-  (setq org-bullets-bullet-list '("◉" "○" "✸" "✿")))
+(use-package org-modern)
 
 (add-hook 'prog-mode 'electric-indent-mode)
 
-(size-indication-mode 1)
+(size-indication-mode -1)
+
+(use-package move-text
+  :bind
+  ("M-<up>" . move-text-up)
+  ("M-<down>" . move-text-down))
 
 (use-package csharp-mode
+  :straight nil
   :init
-  (add-hook 'csharp-mode-hook 'eglot-ensure)
-  (add-hook 'csharp-mode 'dap-mode)
-  (add-hook 'csharp-mode #'(lambda () (require 'dap-netcore)))
-  :bind
-  ("C-c d" . 'dap-debug)
-  :mode ("\\.cs$" . csharp-mode))
+  (add-hook 'csharp-ts-mode-hook 'eglot-ensure)
+  (add-hook 'csharp-ts-mode-hook 'dap-mode)
+  (add-hook 'csharp-ts-mode-hook #'(lambda () (require 'dap-netcore)))
+  ;;(add-hook 'csharp-ts-mode-hook #'(lambda () (c-set-style "awk")))
+  (add-hook 'csharp-ts-mode-hook #'(lambda () (setq-local tab-width 4)))
+  :config
+  :mode ("\\.cs$" . csharp-ts-mode))
 
 (use-package multi-vterm
   :bind
   ("<f5>" . multi-vterm-dedicated-toggle)
   :config
-  (setq multi-vterm-dedicated-window-height-percent 20)
-  ;; (add-hook 'vterm-mode-hook
-  ;; 	    (lambda ()
-  ;; 	      (setq-local evil-insert-state-cursor 'box)
-  ;; 	      (evil-insert-state)))
-  ;; (define-key vterm-mode-map [return]                      #'vterm-send-return)
-  ;; (setq vterm-keymap-exceptions nil)
-  ;; (evil-define-key '(insert normal visual) vterm-mode-map (kbd "<f5>")      #'multi-vterm-dedicated-toggle)
-  ;; (evil-define-key 'insert vterm-mode-map (kbd "C-e")      #'vterm--self-insert)
-  ;; (evil-define-key 'insert vterm-mode-map (kbd "C-f")      #'vterm--self-insert)
-  ;; (evil-define-key 'insert vterm-mode-map (kbd "C-a")      #'vterm--self-insert)
-  ;; (evil-define-key 'insert vterm-mode-map (kbd "C-v")      #'vterm--self-insert)
-  ;; (evil-define-key 'insert vterm-mode-map (kbd "C-b")      #'vterm--self-insert)
-  ;; (evil-define-key 'insert vterm-mode-map (kbd "C-w")      #'vterm--self-insert)
-  ;; (evil-define-key 'insert vterm-mode-map (kbd "C-u")      #'vterm--self-insert)
-  ;; (evil-define-key 'insert vterm-mode-map (kbd "C-d")      #'vterm--self-insert)
-  ;; (evil-define-key 'insert vterm-mode-map (kbd "C-n")      #'vterm--self-insert)
-  ;; (evil-define-key 'insert vterm-mode-map (kbd "C-m")      #'vterm--self-insert)
-  ;; (evil-define-key 'insert vterm-mode-map (kbd "C-p")      #'vterm--self-insert)
-  ;; (evil-define-key 'insert vterm-mode-map (kbd "C-j")      #'vterm--self-insert)
-  ;; (evil-define-key 'insert vterm-mode-map (kbd "C-k")      #'vterm--self-insert)
-  ;; (evil-define-key 'insert vterm-mode-map (kbd "C-r")      #'vterm--self-insert)
-  ;; (evil-define-key 'insert vterm-mode-map (kbd "C-t")      #'vterm--self-insert)
-  ;; (evil-define-key 'insert vterm-mode-map (kbd "C-g")      #'vterm--self-insert)
-  ;; (evil-define-key 'insert vterm-mode-map (kbd "C-c")      #'vterm--self-insert)
-  ;; (evil-define-key 'insert vterm-mode-map (kbd "C-SPC")    #'vterm--self-insert)
-  ;; (evil-define-key 'normal vterm-mode-map (kbd "C-d")      #'vterm--self-insert)
-  ;; (evil-define-key 'normal vterm-mode-map (kbd ",c")       #'multi-vterm)
-  ;; (evil-define-key 'normal vterm-mode-map (kbd ",n")       #'multi-vterm-next)
-  ;; (evil-define-key 'normal vterm-mode-map (kbd ",p")       #'multi-vterm-prev)
-  ;; (evil-define-key 'normal vterm-mode-map (kbd "i")        #'evil-insert-resume)
-  ;; (evil-define-key 'normal vterm-mode-map (kbd "o")        #'evil-insert-resume)
-  ;; (evil-define-key 'normal vterm-mode-map (kbd "<return>") #'evil-insert-resume)
-  )
+  (setq multi-vterm-dedicated-window-height-percent 20))
 
 (tab-bar-mode 1)
 
@@ -700,17 +654,78 @@ FRAME is the frame where the setting gets done."
 (global-auto-revert-mode 1)
 (setq global-auto-revert-non-file-buffers t)
 
-(use-package codespaces
-  :commands (codespaces-connect)
-  :config (codespaces-setup)
-  :bind ("C-c S" . #'codespaces-connect))
-
 (setq vc-handled-backends '(Git))
 
 (windmove-default-keybindings '(ctrl meta))
 
 (use-package magit
   :bind ("C-x g" . magit-status))
+
+(use-package json-mode
+  :mode ("\\.json$" . json-mode))
+
+(use-package codespaces
+  :config
+  (codespaces-setup)
+  (add-to-list 'tramp-remote-path 'tramp-own-remote-path)
+  (setq tramp-ssh-controlmaster-options "")
+  :bind ("C-c S" . #'codespaces-connect))
+
+(recentf-mode 1)
+
+(use-package forge
+  :after magit)
+
+(use-package savehist
+  :init
+  (savehist-mode 1))
+
+(use-package saveplace
+  :init
+  (save-place-mode 1))
+
+(setq treesit-language-source-alist
+   '((bash "https://github.com/tree-sitter/tree-sitter-bash")
+     (cmake "https://github.com/uyha/tree-sitter-cmake")
+     (c-sharp "https://github.com/tree-sitter/tree-sitter-c-sharp")
+     (css "https://github.com/tree-sitter/tree-sitter-css")
+     (elisp "https://github.com/Wilfred/tree-sitter-elisp")
+     (go "https://github.com/tree-sitter/tree-sitter-go")
+     (html "https://github.com/tree-sitter/tree-sitter-html")
+     (javascript "https://github.com/tree-sitter/tree-sitter-javascript" "master" "src")
+     (json "https://github.com/tree-sitter/tree-sitter-json")
+     (make "https://github.com/alemuller/tree-sitter-make")
+     (markdown "https://github.com/ikatyang/tree-sitter-markdown")
+     (python "https://github.com/tree-sitter/tree-sitter-python")
+     (toml "https://github.com/tree-sitter/tree-sitter-toml")
+     (tsx "https://github.com/tree-sitter/tree-sitter-typescript" "master" "tsx/src")
+     (typescript "https://github.com/tree-sitter/tree-sitter-typescript" "master" "typescript/src")
+     (yaml "https://github.com/ikatyang/tree-sitter-yaml")))
+
+(use-package yasnippet
+  :hook
+  (prog-mode . yas-minor-mode))
+
+(use-package yasnippet-snippets)
+
+(global-unset-key (kbd "C-z"))
+
+(use-package fixmee)
+
+(setq backup-directory-alist
+      `((".*" . "~/.emacs-saves")))
+(setq auto-save-file-name-transforms
+      `((".*" "~/.emacs-saves" t)))
+
+(use-package expand-region
+  :bind
+  ("C-=" . er/expand-region))
+
+(use-package multiple-cursors
+  :bind
+  ("C-<" . mc/mark-next-like-this)
+  ("C->" . mc/mark-previous-like-this)
+  ("C-c M-<" . mc/mark-all-like-this))
 
 (use-package ox-moderncv
   :straight (org-cv :host gitlab :repo "Titan-C/org-cv"))
