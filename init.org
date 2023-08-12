@@ -705,6 +705,9 @@ FRAME is the frame where the setting gets done."
 
 (use-package magit
   :bind ("C-x g" . magit-status))
+
+(use-package ox-moderncv
+  :straight (org-cv :host gitlab :repo "Titan-C/org-cv"))
 #+end_src
 
 * Fix keywords alignment
