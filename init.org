@@ -94,8 +94,9 @@ FRAME is the frame where the setting gets done."
 :VISIBILITY: all
 :END:
 #+begin_src emacs-lisp
-(add-hook 'after-save-hook (lambda () (when (equal (f-filename buffer-file-name) "init.org")
-                                        (org-babel-tangle-file "init.org"))))
+(add-hook 'after-save-hook
+	  (lambda () (when (equal (f-filename buffer-file-name) "init.org")
+		       (org-babel-tangle-file "init.org"))))
 
 (add-to-list 'exec-path "/home/sliberman/bin/netcoredbg")
 
@@ -375,12 +376,13 @@ FRAME is the frame where the setting gets done."
       version-control t
       backup-directory-alist '(("." . "~/.emacs.d/backups")))
 
+(defun mp-eglot-eldoc ()
+  (setq eldoc-documentation-strategy
+	'eldoc-documentation-compose-eagerly))
+
 (use-package eglot
   :commands (eglot eglot-ensure)
   :preface
-  (defun mp-eglot-eldoc ()
-    (setq eldoc-documentation-strategy
-          'eldoc-documentation-compose-eagerly))
   :config
   (add-to-list 'eglot-server-programs
                `(terraform-mode "terraform-ls" "serve"))
@@ -512,7 +514,8 @@ FRAME is the frame where the setting gets done."
   (setq eldoc-documentation-strategy 'eldoc-documentation-compose-eagerly)
   (add-to-list 'display-buffer-alist
                '("^\\*eldoc for" display-buffer-at-bottom
-                 (window-height . 4))))
+                 (window-height . 4)))
+  (global-eldoc-mode 1))
 
 (defun mp-flycheck-eldoc (callback &rest _ignored)
   "Print flycheck messages at point by calling CALLBACK."
@@ -648,11 +651,18 @@ FRAME is the frame where the setting gets done."
 (use-package lsp-mode
   :init
   (setq lsp-keymap-prefix "C-c l")
+  :config
+  (defun lsp--prepend-prefix (mappings)
+    (->> mappings
+	 (-partition 2)
+	 (-mapcat (-lambda ((key description))
+		    (list (concat "SPC l" " " key)
+			  description)))))
   :custom
   (lsp-completion-provider :none)
-  :hook ((lsp-mode . eldoc-mode)
-         (csharp-ts-mode . lsp)
-         (lsp-mode . lsp-enable-which-key-integration)))
+  :hook ((csharp-ts-mode . lsp)
+         (lsp-mode . lsp-enable-which-key-integration)
+	 (lsp-mode . mp-eglot-eldoc)))
 
 (use-package lsp-ui
   :commands (lsp-ui-mode)
@@ -781,6 +791,9 @@ FRAME is the frame where the setting gets done."
 
 (leader-def
   "p" '(:keymap project-prefix-map :wk "Projects"))
+
+(leader-def
+  "l" '(:keymap lsp-command-map :wk "LSP" :package lsp-mode))
 
 (use-package evil-nerd-commenter
   :config
