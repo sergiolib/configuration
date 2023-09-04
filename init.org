@@ -33,8 +33,8 @@ FRAME is the frame where the setting gets done."
   (remove-hook 'after-make-frame-functions 'set-window-faces))
 
 (if (and (boundp 'server-process)
-	 (processp server-process)
-	 (server-running-p))
+         (processp server-process)
+         (server-running-p))
     (add-hook 'after-make-frame-functions #'set-window-faces)
   (set-window-faces nil))
 
@@ -44,9 +44,9 @@ FRAME is the frame where the setting gets done."
       (bootstrap-version 6))
   (unless (file-exists-p bootstrap-file)
     (with-current-buffer
-	(url-retrieve-synchronously
-	 "https://raw.githubusercontent.com/radian-software/straight.el/develop/install.el"
-	 'silent 'inhibit-cookies)
+        (url-retrieve-synchronously
+         "https://raw.githubusercontent.com/radian-software/straight.el/develop/install.el"
+         'silent 'inhibit-cookies)
       (goto-char (point-max))
       (eval-print-last-sexp)))
   (load bootstrap-file nil 'nomessage))
@@ -95,7 +95,7 @@ FRAME is the frame where the setting gets done."
 :END:
 #+begin_src emacs-lisp
 (add-hook 'after-save-hook (lambda () (when (equal (f-filename buffer-file-name) "init.org")
-					(org-babel-tangle-file "init.org"))))
+                                        (org-babel-tangle-file "init.org"))))
 
 (add-to-list 'exec-path "/home/sliberman/bin/netcoredbg")
 
@@ -134,12 +134,12 @@ FRAME is the frame where the setting gets done."
 (use-package orderless
   :config
   (setq completion-styles '(orderless basic)
-	completion-category-defaults nil
-	completion-category-overrides '((file (styles partial-completion)))
-	completion-ignore-case t)
+        completion-category-defaults nil
+        completion-category-overrides '((file (styles partial-completion)))
+        completion-ignore-case t)
   (defun orderless-fast-dispatch (word index total)
     (and (= index 0) (= total 1) (length< word 4)
-	 `(orderless-regexp . ,(concat "^" (regexp-quote word)))))
+         `(orderless-regexp . ,(concat "^" (regexp-quote word)))))
 
   (orderless-define-completion-style orderless-fast
     (orderless-style-dispatchers '(orderless-fast-dispatch))
@@ -153,20 +153,20 @@ FRAME is the frame where the setting gets done."
   (marginalia-mode 1))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;; (use-package corfu				   ;;
-;;   :init					   ;;
-;;   (global-corfu-mode 1)			   ;;
-;;   (setq corfu-auto t				   ;;
-;; 	corfu-auto-delay 0.2			   ;;
-;; 	corfu-auto-prefix 3			   ;;
-;; 	corfu-preview-current t			   ;;
-;; 	corfu-quit-no-match 'separator)		   ;;
-;; 						   ;;
-;;   :bind (:map corfu-map			   ;;
-;; 	      ("TAB" . corfu-complete)		   ;;
-;; 	      ([tab] . corfu-complete)		   ;;
-;; 	      ("RET" . corfu-complete)		   ;;
-;; 	      ([ret] . corfu-complete)))	   ;;
+;; (use-package corfu                              ;;
+;;   :init                                         ;;
+;;   (global-corfu-mode 1)                         ;;
+;;   (setq corfu-auto t                            ;;
+;;      corfu-auto-delay 0.2                       ;;
+;;      corfu-auto-prefix 3                        ;;
+;;      corfu-preview-current t                    ;;
+;;      corfu-quit-no-match 'separator)            ;;
+;;                                                 ;;
+;;   :bind (:map corfu-map                         ;;
+;;            ("TAB" . corfu-complete)             ;;
+;;            ([tab] . corfu-complete)             ;;
+;;            ("RET" . corfu-complete)             ;;
+;;            ([ret] . corfu-complete)))           ;;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 (use-package corfu
@@ -180,10 +180,10 @@ FRAME is the frame where the setting gets done."
   ;; Use TAB for cycling, default is `corfu-complete'.
   :bind
   (:map corfu-map
-	("TAB" . corfu-next)
-	([tab] . corfu-next)
-	("S-TAB" . corfu-previous)
-	([backtab] . corfu-previous))
+        ("TAB" . corfu-next)
+        ([tab] . corfu-next)
+        ("S-TAB" . corfu-previous)
+        ([backtab] . corfu-previous))
 
   :init
   (global-corfu-mode))
@@ -213,9 +213,9 @@ FRAME is the frame where the setting gets done."
   (embark-quit-after-action '((t . nil)))
   :config
   (add-to-list 'display-buffer-alist
-	       '("\\`\\*Embark Collect \\(Live\\|Completions\\)\\*"
-		 nil
-		 (window-parameters (mode-line-format . none)))))
+               '("\\`\\*Embark Collect \\(Live\\|Completions\\)\\*"
+                 nil
+                 (window-parameters (mode-line-format . none)))))
 
 (use-package embark-consult
   :after (embark consult)
@@ -233,18 +233,18 @@ FRAME is the frame where the setting gets done."
 (setq display-line-numbers-type 'relative)
 
 (dolist (mode '(org-mode-hook
-		term-mode-hook
-		shell-mode-hook
-		eshell-mode-hook
-		vterm-mode-hook
-		treemacs-mode-hook
-		inferior-python-mode-hook
-		pdf-view-mode-hook
-		compilation-mode-hook))
+                term-mode-hook
+                shell-mode-hook
+                eshell-mode-hook
+                vterm-mode-hook
+                treemacs-mode-hook
+                inferior-python-mode-hook
+                pdf-view-mode-hook
+                compilation-mode-hook))
   (add-hook mode #'(lambda () (display-line-numbers-mode 0))))
 
 (add-hook 'Info-mode-hook (lambda ()
-			    (display-line-numbers-mode -1)))
+                            (display-line-numbers-mode -1)))
 
 (use-package rainbow-delimiters
   :hook (prog-mode . rainbow-delimiters-mode))
@@ -263,14 +263,14 @@ FRAME is the frame where the setting gets done."
 
 (use-package consult
   :bind (("C-s" . consult-line)
-	 ("C-x f" . consult-find)
-	 ("C-x b" . consult-buffer)
-	 ("C-x C-b" . consult-buffer)
-	 ("C-c e t" . consult-theme)
-	 ("C-x ," . consult-recent-file)
-	 ("C-c o" . consult-outline)
-	 (:map minibuffer-local-map
-	       ("C-r" . consult-history)))
+         ("C-x f" . consult-find)
+         ("C-x b" . consult-buffer)
+         ("C-x C-b" . consult-buffer)
+         ("C-c e t" . consult-theme)
+         ("C-x ," . consult-recent-file)
+         ("C-c o" . consult-outline)
+         (:map minibuffer-local-map
+               ("C-r" . consult-history)))
   :config
   (consult-customize consult-theme :preview-key '(:debounce 0.5 any)))
 
@@ -316,35 +316,35 @@ FRAME is the frame where the setting gets done."
 (use-package pyvenv
   :config
   (add-hook 'pyvenv-post-activate-hooks #'(lambda ()
-					    (setq eglot-workspace-configuration
-					     `(:pylsp
-					       (:plugins
-						(:black
-						 (:enabled t
-						  :line_length 120)
-						 :yapf
-						 (:enabled :json-false)
-						 :isort
-						 (:enabled t)
-						 :autopep8
-						 (:enabled t)
-						 :pycodestyle
-						 (:enabled :json-false)
-						 :mccabe
-						 (:enabled :json-false)
-						 :pyflakes
-						 (:enabled :json-false)
-						 :pylint
-						 (:enabled t)
-						 :flake8
-						 (:enabled t)
-						 :pydocstyle
-						 (:enabled t
-						  :convention "google")
-						 :jedi
-						 (:environment ,(f-expand pyvenv-virtual-env)))
-						:configurationSources
-						["flake8"])))) 1)
+                                            (setq eglot-workspace-configuration
+                                             `(:pylsp
+                                               (:plugins
+                                                (:black
+                                                 (:enabled t
+                                                  :line_length 120)
+                                                 :yapf
+                                                 (:enabled :json-false)
+                                                 :isort
+                                                 (:enabled t)
+                                                 :autopep8
+                                                 (:enabled t)
+                                                 :pycodestyle
+                                                 (:enabled :json-false)
+                                                 :mccabe
+                                                 (:enabled :json-false)
+                                                 :pyflakes
+                                                 (:enabled :json-false)
+                                                 :pylint
+                                                 (:enabled t)
+                                                 :flake8
+                                                 (:enabled t)
+                                                 :pydocstyle
+                                                 (:enabled t
+                                                  :convention "google")
+                                                 :jedi
+                                                 (:environment ,(f-expand pyvenv-virtual-env)))
+                                                :configurationSources
+                                                ["flake8"])))) 1)
   (add-hook 'pyvenv-post-activate-hooks 'eglot-ensure 2)
   :commands (pyvenv-mode pyvenv-tracking-mode))
 
@@ -380,13 +380,13 @@ FRAME is the frame where the setting gets done."
   :preface
   (defun mp-eglot-eldoc ()
     (setq eldoc-documentation-strategy
-	  'eldoc-documentation-compose-eagerly))
+          'eldoc-documentation-compose-eagerly))
   :config
   (add-to-list 'eglot-server-programs
-	       `(terraform-mode "terraform-ls" "serve"))
+               `(terraform-mode "terraform-ls" "serve"))
   (add-to-list 'eglot-server-programs
-	       `(python-base-mode . ,(eglot-alternatives
-				      `("pylsp" "pyls" ("pyright-langserver" "--stdio") "jedi-language-server"))))
+               `(python-base-mode . ,(eglot-alternatives
+                                      `("pylsp" "pyls" ("pyright-langserver" "--stdio") "jedi-language-server"))))
   (set-face-attribute 'eglot-highlight-symbol-face nil :inherit 'bold :underline t)
   (add-hook 'eglot-managed-mode-hook 'mp-eglot-eldoc)
   (global-set-key (kbd "C-<down-mouse-1>") #'xref-find-definitions-at-mouse)
@@ -403,39 +403,39 @@ FRAME is the frame where the setting gets done."
     ;;                  (current-buffer) version eglot--versioned-identifier))
     (atomic-change-group
       (let* ((change-group (prepare-change-group))
-	     (howmany (length edits))
-	     (reporter (make-progress-reporter
-			(format "[eglot] applying %s edits to `%s'..."
-				howmany (current-buffer))
-			0 howmany))
-	     (done 0))
-	(mapc (pcase-lambda (`(,newText ,beg . ,end))
-		(let ((source (current-buffer)))
-		  (with-temp-buffer
-		    (insert newText)
-		    (let ((temp (current-buffer)))
-		      (with-current-buffer source
-			(save-excursion
-			  (save-restriction
-			    (narrow-to-region beg end)
-			    (replace-buffer-contents temp)))
-			(eglot--reporter-update reporter (cl-incf done)))))))
-	      (mapcar (eglot--lambda ((TextEdit) range newText)
-				     (cons newText (eglot--range-region range 'markers)))
-		      (reverse edits)))
-	(undo-amalgamate-change-group change-group)
-	(progress-reporter-done reporter))))
+             (howmany (length edits))
+             (reporter (make-progress-reporter
+                        (format "[eglot] applying %s edits to `%s'..."
+                                howmany (current-buffer))
+                        0 howmany))
+             (done 0))
+        (mapc (pcase-lambda (`(,newText ,beg . ,end))
+                (let ((source (current-buffer)))
+                  (with-temp-buffer
+                    (insert newText)
+                    (let ((temp (current-buffer)))
+                      (with-current-buffer source
+                        (save-excursion
+                          (save-restriction
+                            (narrow-to-region beg end)
+                            (replace-buffer-contents temp)))
+                        (eglot--reporter-update reporter (cl-incf done)))))))
+              (mapcar (eglot--lambda ((TextEdit) range newText)
+                                     (cons newText (eglot--range-region range 'markers)))
+                      (reverse edits)))
+        (undo-amalgamate-change-group change-group)
+        (progress-reporter-done reporter))))
   :bind (
-	 ;; ("C-c l r" . 'eglot-rename)
-	 ;; ("C-c l =" . 'eglot-format-buffer)
-	 ;; ("C-c l a" . 'eglot-code-actions)
-	 ;; ("C-c l e" . 'flymake-show-buffer-diagnostics)
-	 ))
+         ;; ("C-c l r" . 'eglot-rename)
+         ;; ("C-c l =" . 'eglot-format-buffer)
+         ;; ("C-c l a" . 'eglot-code-actions)
+         ;; ("C-c l e" . 'flymake-show-buffer-diagnostics)
+         ))
 
 (use-package python
   :bind (:map python-mode-map
-	      (("M-<left>" . python-indent-shift-left)
-	       ("M-<right>" . python-indent-shift-right)))
+              (("M-<left>" . python-indent-shift-left)
+               ("M-<right>" . python-indent-shift-right)))
   :config
   (add-hook 'python-mode-hook #'(lambda () (require 'dap-python)))
   (add-hook 'python-mode-hook #'(lambda () (add-hook 'before-save-hook (lambda () (interactive) (when (eglot-managed-p) (eglot-format-buffer))) nil t)))
@@ -448,9 +448,9 @@ FRAME is the frame where the setting gets done."
 (defun sergio/add-indent-to-hook ()
   "Add indent to before save hook."
   (add-hook 'before-save-hook (lambda ()
-				(interactive)
-				(save-excursion
-				  (indent-region (point-min) (point-max)))) nil t))
+                                (interactive)
+                                (save-excursion
+                                  (indent-region (point-min) (point-max)))) nil t))
 
 (use-package terraform-mode
   :init
@@ -511,8 +511,8 @@ FRAME is the frame where the setting gets done."
   :init
   (setq eldoc-documentation-strategy 'eldoc-documentation-compose-eagerly)
   (add-to-list 'display-buffer-alist
-	       '("^\\*eldoc for" display-buffer-at-bottom
-		 (window-height . 4))))
+               '("^\\*eldoc for" display-buffer-at-bottom
+                 (window-height . 4))))
 
 (defun mp-flycheck-eldoc (callback &rest _ignored)
   "Print flycheck messages at point by calling CALLBACK."
@@ -520,17 +520,17 @@ FRAME is the frame where the setting gets done."
     (mapc
      (lambda (err)
        (funcall callback
-		(format "%s: %s"
-			(let ((level (flycheck-error-level err)))
-			  (pcase level
-			    ('info (propertize "I" 'face 'flycheck-error-list-info))
-			    ('error (propertize "E" 'face 'flycheck-error-list-error))
-			    ('warning (propertize "W" 'face 'flycheck-error-list-warning))
-			    (_ level)))
-			(flycheck-error-message err))
-		:thing (or (flycheck-error-id err)
-			   (flycheck-error-group err))
-		:face 'font-lock-doc-face))
+                (format "%s: %s"
+                        (let ((level (flycheck-error-level err)))
+                          (pcase level
+                            ('info (propertize "I" 'face 'flycheck-error-list-info))
+                            ('error (propertize "E" 'face 'flycheck-error-list-error))
+                            ('warning (propertize "W" 'face 'flycheck-error-list-warning))
+                            (_ level)))
+                        (flycheck-error-message err))
+                :thing (or (flycheck-error-id err)
+                           (flycheck-error-group err))
+                :face 'font-lock-doc-face))
      flycheck-errors)))
 
 (electric-pair-mode 1)
@@ -543,12 +543,12 @@ FRAME is the frame where the setting gets done."
   (setq dap-auto-configure-features '(sessions locals controls tooltip repl))
   (dap-auto-configure-mode 1)
   :bind (:map project-prefix-map
-	      ("C-c C-d C-d" . dap-debug)
-	      ("C-c C-d d" . dap-debug)
-	      ("C-c C-d k" . dap-delete-all-sessions)
-	      ("C-c C-d C-k" . dap-delete-all-sessions)
-	      ("C-c C-d e" . dap-debug-edit-template)
-	      ("C-c C-d C-e" . dap-debug-edit-template))
+              ("C-c C-d C-d" . dap-debug)
+              ("C-c C-d d" . dap-debug)
+              ("C-c C-d k" . dap-delete-all-sessions)
+              ("C-c C-d C-k" . dap-delete-all-sessions)
+              ("C-c C-d e" . dap-debug-edit-template)
+              ("C-c C-d C-e" . dap-debug-edit-template))
   :init
   (defun sergio/set-pointer-arrow ()
     (interactive)
@@ -571,9 +571,9 @@ FRAME is the frame where the setting gets done."
     (interactive)
     (let ((cell (org-table-get-field)))
       (if (string-match "[[:graph:]]" cell)
-	  (org-table-blank-field)
-	(insert "X")
-	(org-table-align))
+          (org-table-blank-field)
+        (insert "X")
+        (org-table-align))
       (org-table-next-row)))
   :custom
   (org-ellipsis " ▼")
@@ -587,23 +587,23 @@ FRAME is the frame where the setting gets done."
   (org-edit-src-content-indentation 0)
   (org-M-RET-may-split-line '((default)))
   (org-odt-preferred-output-format "docx")
+  (org-startup-indented t)
   :hook
   (org-mode . url-handler-mode)
   (org-mode . visual-line-mode)
-  (org-mode . org-indent-mode)
   (org-mode . org-modern-mode)
   :config
   (setq org-indent-indentation-per-level 2)
   (require 'ox-md)
   (require 'org-tempo)
   (dolist (template '(("sh" . "src shell")
-		      ("el" . "src emacs-lisp")
-		      ("py" . "src python")
-		      ("ja" . "src java")
-		      ("sql" . "src sql")
-		      ("yaml" . "src yaml")
-		      ("rest" . "src restclient")
-		      ("cc" . "src C")))
+                      ("el" . "src emacs-lisp")
+                      ("py" . "src python")
+                      ("ja" . "src java")
+                      ("sql" . "src sql")
+                      ("yaml" . "src yaml")
+                      ("rest" . "src restclient")
+                      ("cc" . "src C")))
     (add-to-list 'org-structure-template-alist template))
 
   ;; Babel languages.
@@ -650,13 +650,13 @@ FRAME is the frame where the setting gets done."
   (setq lsp-keymap-prefix "C-c l")
   :custom
   (lsp-completion-provider :none)
-  :hook ((csharp-ts-mode . (lsp lsp-ui-mode))
-	 (lsp-mode . lsp-enable-which-key-integration)))
+  :hook ((lsp-mode . eldoc-mode)
+         (csharp-ts-mode . lsp)
+         (lsp-mode . lsp-enable-which-key-integration)))
 
 (use-package lsp-ui
   :commands (lsp-ui-mode)
   :custom
-  (lsp-ui-sideline-show-hover t)
   (lsp-ui-doc-show-with-cursor nil)
   (lsp-ui-doc-position 'at-point))
 
@@ -675,7 +675,7 @@ FRAME is the frame where the setting gets done."
   :bind
   ("<f5>" . multi-vterm-dedicated-toggle)
   (:map vterm-mode-map
-	("<f8>" . multi-vterm))
+        ("<f8>" . multi-vterm))
   :config
   (setq multi-vterm-dedicated-window-height-percent 25))
 
