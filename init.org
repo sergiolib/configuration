@@ -66,7 +66,7 @@ FRAME is the frame where the setting gets done."
   :config
   (setq doom-modeline-buffer-encoding nil)
   (setq doom-modeline-modal-icon nil)
-  (setq doom-modeline-env-version t)  
+  (setq doom-modeline-env-version t)
   (setq doom-modeline-time-icon nil))
 
 (use-package all-the-icons)
@@ -94,716 +94,704 @@ FRAME is the frame where the setting gets done."
 :VISIBILITY: all
 :END:
 #+begin_src emacs-lisp
-(add-hook 'after-save-hook (lambda () (when (equal (f-filename buffer-file-name) "init.org")
-					(org-babel-tangle-file "init.org"))))
-
-(add-to-list 'exec-path "/home/sliberman/bin/omnisharp")
-(add-to-list 'exec-path "/home/sliberman/bin/netcoredbg")
-
-(setq gc-cons-threshold 100000000)
-(setq read-process-output-max (* 1024 1024)) ;; 1mb
-(setq lsp-idle-delay 0.500)
-
-(use-package calendar
-  :config
-  (setq calendar-week-start-day 1))
-
-(setq native-comp-async-report-warnings-errors nil)
-
-(use-package vertico
-  :straight (vertico :files (:defaults "extensions/*.el"))
-  :init
-  (vertico-mode 1)
-  (setq vertico-cycle t)
-  (unbind-key (kbd "C-m") 'vertico-map))
-
-(use-package vertico-repeat
-  :commands (vertico-repeat-save vertico-repeat)
-  :straight (vertico :files (:defaults "extensions/*.el"))
-  :init
-  (add-hook 'minibuffer-setup-hook #'vertico-repeat-save)
-  :bind
-  ("M-R" . #'vertico-repeat))
-
-(use-package vertico-quick
-  :commands (vertico-quick-insert vertico-quick-exit)
-  :straight (vertico :files (:defaults "extensions/*.el"))
-  :init
-  (keymap-set vertico-map "M-q" #'vertico-quick-insert)
-  (keymap-set vertico-map "C-q" #'vertico-quick-exit))
-
-(use-package orderless
-  :config
-  (setq completion-styles '(orderless basic)
-	completion-category-defaults nil
-	completion-category-overrides '((file (styles partial-completion)))
-	completion-ignore-case t)
-  (defun orderless-fast-dispatch (word index total)
-    (and (= index 0) (= total 1) (length< word 4)
-	 `(orderless-regexp . ,(concat "^" (regexp-quote word)))))
-
-  (orderless-define-completion-style orderless-fast
-    (orderless-style-dispatchers '(orderless-fast-dispatch))
-    (orderless-matching-styles '(orderless-literal orderless-regexp))))
-
-(use-package marginalia
-  :after vertico
-  :custom
-  (marginalia-annotators '(marginalia-annotators-heavy marginalia-annotators-light nil))
-  :init
-  (marginalia-mode 1))
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;; (use-package corfu				   ;;
-;;   :init					   ;;
-;;   (global-corfu-mode 1)			   ;;
-;;   (setq corfu-auto t				   ;;
-;; 	corfu-auto-delay 0.2			   ;;
-;; 	corfu-auto-prefix 3			   ;;
-;; 	corfu-preview-current t			   ;;
-;; 	corfu-quit-no-match 'separator)		   ;;
-;; 						   ;;
-;;   :bind (:map corfu-map			   ;;
-;; 	      ("TAB" . corfu-complete)		   ;;
-;; 	      ([tab] . corfu-complete)		   ;;
-;; 	      ("RET" . corfu-complete)		   ;;
-;; 	      ([ret] . corfu-complete)))	   ;;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-(use-package corfu
-  ;; TAB-and-Go customizations
-  :custom
-  (corfu-cycle t)           ;; Enable cycling for `corfu-next/previous'
-  (corfu-preselect 'prompt) ;; Always preselect the prompt
-  (corfu-auto t)
-  (corfu-auto-prefix 3)
-
-  ;; Use TAB for cycling, default is `corfu-complete'.
-  :bind
-  (:map corfu-map
-        ("TAB" . corfu-next)
-        ([tab] . corfu-next)
-        ("S-TAB" . corfu-previous)
-        ([backtab] . corfu-previous))
-
-  :init
-  (global-corfu-mode))
-
-(use-package kind-icon
-  :after corfu
-  :custom
-  (kind-icon-default-face 'corfu-default) ; to compute blended backgrounds correctly
-  :config
-  (add-to-list 'corfu-margin-formatters #'kind-icon-margin-formatter))
-
-(setq completion-cycle-threshold 3)
-(setq tab-always-indent 'complete)
-
-(use-package embark
-  :commands (embark-act embark-dwim embark-bindings)
-  :init
-  (setq enable-recursive-minibuffers t)
-  (minibuffer-depth-indicate-mode 1)
-  (dolist (map (list corfu-map minibuffer-mode-map))
-    (define-key map (kbd "C-.") 'embark-act)
-    (define-key map (kbd "M-.") 'embark-dwim)
-    (define-key map (kbd "C-h B") 'embark-bindings))
-  (global-set-key (kbd "C-.") 'embark-act)
-  :custom
-  (embark-prompter 'embark-keymap-prompter)
-  (embark-quit-after-action '((t . nil)))
-  :config
-  (add-to-list 'display-buffer-alist
-	       '("\\`\\*Embark Collect \\(Live\\|Completions\\)\\*"
-		 nil
-		 (window-parameters (mode-line-format . none)))))
-
-(use-package embark-consult
-  :after (embark consult)
-  :demand t
-  :hook
-  (embark-collect-mode . consult-preview-at-point-mode))
-
-(use-package cape)
-
-(use-package which-key
-  :init
-  (which-key-mode 1))
-
-(global-set-key (kbd "C-c e e") #'(lambda () (interactive) (find-file "~/Documents/src/configuration/init.org")))
-
-(global-display-line-numbers-mode 1)
-(setq display-line-numbers-type 'relative)
-
-(dolist (mode '(org-mode-hook
-		term-mode-hook
-		shell-mode-hook
-		eshell-mode-hook
-		vterm-mode-hook
-		treemacs-mode-hook
-		inferior-python-mode-hook
-		pdf-view-mode-hook
-                compilation-mode-hook)
-  (add-hook mode #'(lambda () (display-line-numbers-mode 0))))
-
-(add-hook 'Info-mode-hook (lambda ()
-			    (display-line-numbers-mode -1)))
-
-(use-package rainbow-delimiters
-  :hook (prog-mode . rainbow-delimiters-mode))
-
-(show-paren-mode 1)
-(setq show-paren-style 'expression)
-(setq show-paren-when-point-inside-paren nil)
-
-(setq display-time-default-load-average nil)
-(setq display-time-24hr-format t)
-(setq display-time-day-and-date t)
-(setq display-time-format "%H:%M %d-%m-%Y")
-(display-time-mode)
-
-(display-battery-mode -1)
-
-(use-package consult
-  :bind (("C-s" . consult-line)
-         ("C-x f" . consult-find)
-	 ("C-x b" . consult-buffer)
-	 ("C-x C-b" . consult-buffer)
-	 ("C-c e t" . consult-theme)
-	 ("C-x ," . consult-recent-file)
-	 ("C-c o" . consult-outline)
-	 (:map minibuffer-local-map
-               ("C-r" . consult-history)))
-  :config
-  (consult-customize consult-theme :preview-key '(:debounce 0.5 any)))
-
-(winner-mode 1)
-
-(use-package vterm
-  :commands (vterm vterm-other-window)
-  :config
-  (setq vterm-shell "/usr/bin/bash")
-  :bind
-  (("C-c x x" . 'vterm)
-   ("C-c x v" . 'vterm-other-window)))
-
-(setq inhibit-startup-message t)
-(setq system-time-locale "C")
-(tooltip-mode 1)
-(setq visual-bell t)
-
-(setq enable-local-eval t)
-
-(put 'python-shell-extra-pythonpaths 'safe-local-variable (lambda (_) t))
-
-(use-package dockerfile-mode
-  :mode ("\\.dockerfile\\'" . dockerfile-mode))
-
-(unbind-key (kbd "C-x C-z") global-map)
-
-(use-package helpful
-  :bind
-  ("C-h f" . helpful-function)
-  ("C-h v" . helpful-variable)
-  ("C-h k" . helpful-key)
-  ("C-h ." . helpful-at-point))
-
-(use-package yaml-mode
-  :mode ("\\.yml\\'" . yaml-mode))
-
-(use-package docker
-  :commands (docker docker-compose)
-  :init
-  (setq docker-run-async-with-buffer-function 'docker-run-async-with-buffer-vterm))
-
-(use-package pyvenv
-  :config
-  (add-hook 'pyvenv-post-activate-hooks #'(lambda ()
-					    (setq eglot-workspace-configuration
-					     `(:pylsp
-					       (:plugins
-						(:black
-						 (:enabled t
-						  :line_length 120)
-						 :yapf
-						 (:enabled :json-false)
-						 :isort
-						 (:enabled t)
-						 :autopep8
-						 (:enabled t)
-						 :pycodestyle
-						 (:enabled :json-false)
-						 :mccabe
-						 (:enabled :json-false)
-						 :pyflakes
-						 (:enabled :json-false)
-						 :pylint
-						 (:enabled t)
-						 :flake8
-						 (:enabled t)
-						 :pydocstyle
-						 (:enabled t
-						  :convention "google")
-						 :jedi
-						 (:environment ,(f-expand pyvenv-virtual-env)))
-						:configurationSources
-						["flake8"])))) 1)
-  (add-hook 'pyvenv-post-activate-hooks 'eglot-ensure 2)
-  :commands (pyvenv-mode pyvenv-tracking-mode))
-
-(use-package poetry
-  :commands (poetry))
-
-(global-set-key (kbd "C-c r") 'revert-buffer)
-
-(use-package avy
-  :commands (avy-goto-char))
-
-;; Commented out since I need to access the keyboard prefix for kmacros
-;;(global-set-key (kbd "C-x C-k") 'kill-this-buffer)
-
-(use-package org-roam
-  :commands (org-roam-node-find)
-  :init
-  (setq org-roam-directory "/home/sliberman/Documents/Google Drive/RoamNotes/")
-  :config
-  (org-roam-db-autosync-mode 1)
-  :bind
-  ("C-c n" . 'org-roam-node-find))
-
-(setq backup-by-copying t
-      delete-old-versions t
-      kept-new-versions 6
-      kept-old-versions 2
-      version-control t
-      backup-directory-alist '(("." . "~/.emacs.d/backups")))
-
-(use-package eglot
-  :commands (eglot eglot-ensure)
-  :preface
-  (defun mp-eglot-eldoc ()
-    (setq eldoc-documentation-strategy
-	  'eldoc-documentation-compose-eagerly))
-  :config
-  (add-to-list 'eglot-server-programs
-	       `(terraform-mode "terraform-ls" "serve"))
-  (add-to-list 'eglot-server-programs
-	       `(python-base-mode . ,(eglot-alternatives
-				      `("pylsp" "pyls" ("pyright-langserver" "--stdio") "jedi-language-server"))))
-  (set-face-attribute 'eglot-highlight-symbol-face nil :inherit 'bold :underline t)
-  (add-hook 'eglot-managed-mode-hook 'mp-eglot-eldoc)
-  (global-set-key (kbd "C-<down-mouse-1>") #'xref-find-definitions-at-mouse)
-  (global-set-key (kbd "C-S-<down-mouse-1>") #'xref-find-references-at-mouse)
-  (global-set-key (kbd "<mouse-9>") #'xref-go-forward)
-  (global-set-key (kbd "<mouse-8>") #'xref-go-back)
-  
-  ;; Fix wrong version reported misallowing actions in Eglot
-  (cl-defun eglot--apply-text-edits (edits &optional version)
-    "Apply EDITS for current buffer if at VERSION, or if it's nil."
-    (unless edits (cl-return-from eglot--apply-text-edits))
-    ;; (unless (or (not version) (equal version eglot--versioned-identifier))
-    ;;   (jsonrpc-error "Edits on `%s' require version %d, you have %d"
-    ;;                  (current-buffer) version eglot--versioned-identifier))
-    (atomic-change-group
-      (let* ((change-group (prepare-change-group))
-             (howmany (length edits))
-             (reporter (make-progress-reporter
-			(format "[eglot] applying %s edits to `%s'..."
-				howmany (current-buffer))
-			0 howmany))
-             (done 0))
-	(mapc (pcase-lambda (`(,newText ,beg . ,end))
-		(let ((source (current-buffer)))
-                  (with-temp-buffer
-                    (insert newText)
-                    (let ((temp (current-buffer)))
-                      (with-current-buffer source
-			(save-excursion
-                          (save-restriction
-                            (narrow-to-region beg end)
-                            (replace-buffer-contents temp)))
-			(eglot--reporter-update reporter (cl-incf done)))))))
-              (mapcar (eglot--lambda ((TextEdit) range newText)
-				     (cons newText (eglot--range-region range 'markers)))
-                      (reverse edits)))
-	(undo-amalgamate-change-group change-group)
-	(progress-reporter-done reporter))))
-  :bind (
-	 ;; ("C-c l r" . 'eglot-rename)
-	 ;; ("C-c l =" . 'eglot-format-buffer)
-	 ;; ("C-c l a" . 'eglot-code-actions)
-	 ;; ("C-c l e" . 'flymake-show-buffer-diagnostics)
-	 ))
-
-(use-package python
-  :bind (:map python-mode-map
-	      (("M-<left>" . python-indent-shift-left)
-	       ("M-<right>" . python-indent-shift-right)))
-  :config
-  (add-hook 'python-mode-hook #'(lambda () (require 'dap-python)))
-  (add-hook 'python-mode-hook #'(lambda () (add-hook 'before-save-hook (lambda () (interactive) (when (eglot-managed-p) (eglot-format-buffer))) nil t)))
-  (add-hook 'python-mode-hook 'which-function-mode)
-  :mode ("\\.py$" . python-mode))
-
-(load-file "~/.emacs.d/fix_keywords_align.el")
-
-;; Indent the buffer in emacs-lisp mode and lisp-data mode
-(defun sergio/add-indent-to-hook ()
-  "Add indent to before save hook."
-  (add-hook 'before-save-hook (lambda ()
-				(interactive)
-				(save-excursion
-				  (indent-region (point-min) (point-max)))) nil t))
-
-(use-package terraform-mode
-  :init
-  (add-hook 'terraform-mode-hook 'eglot-ensure)
-  :mode
-  ("\\.tf$" . terraform-mode))
-
-(add-hook 'emacs-lisp-mode-hook 'sergio/add-indent-to-hook)
-(add-hook 'lisp-data-mode-hook 'sergio/add-indent-to-hook)
-
-(use-package markdown-mode)
-
-(use-package emacs
-  :after eglot
-  :config
-  (add-to-list 'eglot-server-programs '(js-json-mode "vscode-json-languageserver" "--stdio"))
-  (add-hook 'js-mode-hook (lambda () (setq-local tab-width 2)))
-  :mode ("\\.js\\'" . js-mode))
-
-(use-package dired
-  :straight nil
-  :init
-  (add-hook 'dired-mode-hook 'dired-hide-details-mode))
-
-(use-package ede
-  :config
-  (global-ede-mode t))
-
-(use-package project
-  :config
-  (defun sergio/project-rg ()
-    (interactive)
-    (let ((default-directory (project-root (project-current))))
-      (consult-ripgrep default-directory)))
-  (define-key project-prefix-map "r" 'sergio/project-rg)
-  (add-to-list 'project-switch-commands (list 'sergio/project-rg "Ripgrep"))
-
-  (setq project-switch-commands (remove '(project-vc-dir "VC-Dir") project-switch-commands))
-
-  (defun sergio/project-poetry ()
-    (interactive)
-    (let ((default-directory (project-root (project-current))))
-      (poetry)))
-  (define-key project-prefix-map "v" 'sergio/project-poetry)
-  (add-to-list 'project-switch-commands (list 'sergio/project-poetry "Poetry"))
-
-  (defun sergio/project-magit ()
-    (interactive)
-    (let ((default-directory (project-root (project-current))))
-      (magit-status)))
-  (define-key project-prefix-map "m" 'sergio/project-magit)
-  (add-to-list 'project-switch-commands (list 'sergio/project-magit "Magit"))
-
-  (setq project-find-functions (list #'project-try-ede #'project-try-vc))
-  (add-to-list 'project-switch-commands (list 'project-switch-to-buffer "List buffers")))
-
-(use-package eldoc
-  :init
-  (setq eldoc-documentation-strategy 'eldoc-documentation-compose-eagerly)
-  (add-to-list 'display-buffer-alist
-	       '("^\\*eldoc for" display-buffer-at-bottom
-		 (window-height . 4))))
-
-(defun mp-flycheck-eldoc (callback &rest _ignored)
-  "Print flycheck messages at point by calling CALLBACK."
-  (when-let ((flycheck-errors (and flycheck-mode (flycheck-overlay-errors-at (point)))))
-    (mapc
-     (lambda (err)
-       (funcall callback
-		(format "%s: %s"
-			(let ((level (flycheck-error-level err)))
-			  (pcase level
-			    ('info (propertize "I" 'face 'flycheck-error-list-info))
-			    ('error (propertize "E" 'face 'flycheck-error-list-error))
-			    ('warning (propertize "W" 'face 'flycheck-error-list-warning))
-			    (_ level)))
-			(flycheck-error-message err))
-		:thing (or (flycheck-error-id err)
-			   (flycheck-error-group err))
-		:face 'font-lock-doc-face))
-     flycheck-errors)))
-
-(electric-pair-mode 1)
-
-(defun safe-local-variable-p (sym val) t)
-
-(use-package dap-mode
-  :config
-  (setq dap-python-debugger 'debugpy)
-  (setq dap-auto-configure-features '(sessions locals controls tooltip repl))
-  (dap-auto-configure-mode 1)
-  :bind (:map project-prefix-map
-	      ("C-c C-d C-d" . dap-debug)
-	      ("C-c C-d d" . dap-debug)
-	      ("C-c C-d k" . dap-delete-all-sessions)
-	      ("C-c C-d C-k" . dap-delete-all-sessions)
-	      ("C-c C-d e" . dap-debug-edit-template)
-	      ("C-c C-d C-e" . dap-debug-edit-template))
-  :init
-  (defun sergio/set-pointer-arrow ()
-    (interactive)
-    (setq-local x-pointer-shape x-pointer-top-left-arrow)
-    (set-mouse-color "black"))
-  :hook
-  (treemacs-mode . sergio/set-pointer-arrow))
-
-(use-package restclient
-  :commands (restclient-mode))
-
-(use-package ob-restclient
-  :after org)
-
-(use-package org
-  :init
-  (setq org-todo-keywords (quote ((sequence "TODO(t)" "|" "ABANDONED(b)" "DONE(d)"))))
-  (setq org-log-done t)
-  (defun sergio/check-cell ()
-    (interactive)
-    (let ((cell (org-table-get-field)))
-      (if (string-match "[[:graph:]]" cell)
-          (org-table-blank-field)
-	(insert "X")
-	(org-table-align))
-      (org-table-next-row)))
-  :custom
-  (org-ellipsis " ▼")
-  (org-latex-pdf-process (list "latexmk -f -pdf %f"))
-  (org-latex-logfiles-extensions
-          '("lof" "lot" "tex~" "aux" "idx" "log" "out" "toc" "nav" "snm" "vrb" "dvi" "fdb_latexmk" "blg" "brf" "fls" "entoc" "ps" "spl" "bbl" "xmpi" "run.xml" "bcf" "acn" "acr" "alg" "glg" "gls" "ist"))
-  (org-confirm-babel-evaluate nil)
-  (org-image-actual-width nil)
-  (org-latex-caption-above nil)
-  (org-src-window-setup 'current-window)
-  (org-edit-src-content-indentation 0)
-  (org-M-RET-may-split-line '((default)))
-  (org-odt-preferred-output-format "docx")
-  :hook
-  (org-mode . url-handler-mode)
-  (org-mode . visual-line-mode)
-  (org-mode . org-indent-mode)
-  (org-mode . org-modern-mode)
-  :config
-  (setq org-indent-indentation-per-level 2)
-  (require 'ox-md)
-  (require 'org-tempo)
-  (dolist (template '(("sh" . "src shell")
-		      ("el" . "src emacs-lisp")
-		      ("py" . "src python")
-		      ("ja" . "src java")
-		      ("sql" . "src sql")
-		      ("yaml" . "src yaml")
-		      ("rest" . "src restclient")
-		      ("cc" . "src C")))
-    (add-to-list 'org-structure-template-alist template))
-
-  ;; Babel languages.
-  (org-babel-do-load-languages
-   'org-babel-load-languages
-   '((emacs-lisp . t)
-     (latex . t)
-     (shell . t)
-     (C . t)
-     (sql . t)
-     (java . t)
-     (restclient . t)
-     (python . t)))
-
-  (push '("conf-unix" . conf-unix) org-src-lang-modes)
-  (setq org-latex-with-hyperref nil)
-  (unless (boundp 'org-latex-classes)
-      (setq org-latex-classes nil))
-  :commands (org-store-link org-agenda org-capture)
-  )
-
-(use-package org-contrib
-  :config
-  (require 'ox-extra)
-  (ox-extras-activate '(latex-header-blocks ignore-headlines)))
-
-(global-set-key (kbd "C-c C-l") #'org-store-link)
-(global-set-key (kbd "C-c C-a") #'org-agenda)
-(global-set-key (kbd "C-c C->") #'org-capture)
-
-(use-package org-modern)
-
-(add-hook 'prog-mode 'electric-indent-mode)
-
-(size-indication-mode -1)
-
-(use-package move-text
-  :bind
-  ("M-<up>" . move-text-up)
-  ("M-<down>" . move-text-down))
-
-(use-package lsp-mode
-  :init
-  (setq lsp-keymap-prefix "C-c l")
-  :custom
-  (lsp-completion-provider :none)
-  :hook (
-	 (csharp-ts-mode . lsp)
-	 (lsp-mode . lsp-enable-which-key-integration)))
-
-(use-package lsp-ui
-  :commands (lsp-ui-mode)
-  :custom
-  (lsp-ui-doc-show-with-cursor nil)
-  (lsp-ui-doc-position 'at-point))
-
-(use-package csharp-mode
-  :straight nil
-  :init
-  ;;(add-hook 'csharp-ts-mode-hook 'eglot-ensure)
-  (add-hook 'csharp-ts-mode-hook 'dap-mode)
-  (add-hook 'csharp-ts-mode-hook #'(lambda () (require 'dap-netcore)))
-  ;;(add-hook 'csharp-ts-mode-hook #'(lambda () (c-set-style "awk")))
-  (add-hook 'csharp-ts-mode-hook #'(lambda () (setq-local tab-width 4)))
-  :config
-  :mode ("\\.cs$" . csharp-ts-mode))
-
-(use-package multi-vterm
-  :bind
-  ("<f5>" . multi-vterm-dedicated-toggle)
-  (:map vterm-mode-map
-	("<f8>" . multi-vterm))
-  :config
-  (setq multi-vterm-dedicated-window-height-percent 25))
-
-(tab-bar-mode -1)
-
-(xterm-mouse-mode 1)
-
-(use-package lispy
-  :commands (lispy-mode))
-
-(global-auto-revert-mode 1)
-(setq global-auto-revert-non-file-buffers t)
-
-(setq vc-handled-backends '(Git))
-
-(windmove-default-keybindings '(ctrl meta))
-
-(use-package magit
-  :bind ("C-x g" . magit-status))
-
-(use-package json-mode
-  :custom
-  (js-indent-level 2)
-  :mode ("\\.json$" . json-mode))
-
-(use-package codespaces
-  :config
-  (codespaces-setup)
-  (add-to-list 'tramp-remote-path 'tramp-own-remote-path)
-  (setq tramp-ssh-controlmaster-options "")
-  :bind ("C-c S" . #'codespaces-connect))
-
-(recentf-mode 1)
-
-(use-package forge
-  :after magit)
-
-(use-package savehist
-  :init
-  (savehist-mode 1))
-
-(use-package saveplace
-  :init
-  (save-place-mode 1))
-
-(use-package yasnippet
-  :hook
-  (prog-mode . yas-minor-mode))
-
-(use-package yasnippet-snippets)
-
-(global-unset-key (kbd "C-z"))
-
-(use-package fixmee)
-
-(setq backup-directory-alist
-      `((".*" . "~/.emacs.d/autosave")))
-(setq auto-save-file-name-transforms
-      `((".*" "~/.emacs.d/autosave" t)))
-
-(use-package expand-region
-  :bind
-  ("C-=" . er/expand-region))
-
-(use-package multiple-cursors
-  :bind
-  ("C-<" . mc/mark-next-like-this)
-  ("C->" . mc/mark-previous-like-this)
-  ("C-c M-<" . mc/mark-all-like-this))
-
-(setq compilation-scroll-output t)
-(setq switch-to-buffer-obey-display-actions t)
-(use-package ox-moderncv
-  :straight (org-cv :host gitlab :repo "Titan-C/org-cv"))
-
-(use-package evil
-  :config
-  (evil-mode 1)
-  (global-set-key (kbd "C-M-u") 'universal-argument)
-  (evil-global-set-key 'insert (kbd "C-g") 'evil-normal-state)
-  (evil-global-set-key 'visual (kbd "C-g") 'evil-normal-state)
-  :custom
-  (evil-want-keybinding nil)
-  (evil-want-C-i-jump t)
-  (evil-want-C-u-scroll t)
-  (evil-want-Y-yank-to-eol t)
-  (evil-want-fine-undo t)
-  (evil-shift-width 2)
-  (evil-undo-system 'undo-redo))
-
-(use-package evil-collection
-  :init
-  (evil-collection-init))
-
-(use-package general
-  :config
-  (general-evil-setup t)
-  (general-create-definer leader-def
-    :keymaps '(normal insert visual emacs)
-    :prefix "SPC"
-    :global-prefix "C-SPC"))
-
-(defun sergio/open-init-org ()
-  (interactive)
-  (find-file "~/Documents/src/configuration/init.org"))
-
-(leader-def
-  "" '(:ignore t :wk "Global leader")
-  "e" '(:ignore t :wk "Emacs")
-  "ee" '(sergio/open-init-org :wk "Init file")
-  "et" '(consult-theme :wk "Pick theme"))
-
-(leader-def
-  "g" '(magit-status :wk "Magit"))
-
-(leader-def
-  "p" '(:keymap project-prefix-map :wk "Projects"))
-
-(use-package evil-nerd-commenter
-  :config
-  (evilnc-default-hotkeys))
-
-(use-package evil-surround
-  :config
-  (global-evil-surround-mode 1))
+    (add-hook 'after-save-hook (lambda () (when (equal (f-filename buffer-file-name) "init.org")
+					    (org-babel-tangle-file "init.org"))))
+
+    (add-to-list 'exec-path "/home/sliberman/bin/omnisharp")
+    (add-to-list 'exec-path "/home/sliberman/bin/netcoredbg")
+
+    (setq gc-cons-threshold 100000000)
+    (setq read-process-output-max (* 1024 1024)) ;; 1mb
+    (setq lsp-idle-delay 0.500)
+
+    (use-package calendar
+      :config
+      (setq calendar-week-start-day 1))
+
+    (setq native-comp-async-report-warnings-errors nil)
+
+    (use-package vertico
+      :straight (vertico :files (:defaults "extensions/*.el"))
+      :init
+      (vertico-mode 1)
+      (setq vertico-cycle t)
+      (unbind-key (kbd "C-m") 'vertico-map))
+
+    (use-package vertico-repeat
+      :commands (vertico-repeat-save vertico-repeat)
+      :straight (vertico :files (:defaults "extensions/*.el"))
+      :init
+      (add-hook 'minibuffer-setup-hook #'vertico-repeat-save)
+      :bind
+      ("M-R" . #'vertico-repeat))
+
+    (use-package vertico-quick
+      :commands (vertico-quick-insert vertico-quick-exit)
+      :straight (vertico :files (:defaults "extensions/*.el"))
+      :init
+      (keymap-set vertico-map "M-q" #'vertico-quick-insert)
+      (keymap-set vertico-map "C-q" #'vertico-quick-exit))
+
+    (use-package orderless
+      :config
+      (setq completion-styles '(orderless basic)
+	    completion-category-defaults nil
+	    completion-category-overrides '((file (styles partial-completion)))
+	    completion-ignore-case t)
+      (defun orderless-fast-dispatch (word index total)
+	(and (= index 0) (= total 1) (length< word 4)
+	     `(orderless-regexp . ,(concat "^" (regexp-quote word)))))
+
+      (orderless-define-completion-style orderless-fast
+	(orderless-style-dispatchers '(orderless-fast-dispatch))
+	(orderless-matching-styles '(orderless-literal orderless-regexp))))
+
+    (use-package marginalia
+      :after vertico
+      :custom
+      (marginalia-annotators '(marginalia-annotators-heavy marginalia-annotators-light nil))
+      :init
+      (marginalia-mode 1))
+
+    ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+    ;; (use-package corfu				   ;;
+    ;;   :init					   ;;
+    ;;   (global-corfu-mode 1)			   ;;
+    ;;   (setq corfu-auto t				   ;;
+    ;; 	corfu-auto-delay 0.2			   ;;
+    ;; 	corfu-auto-prefix 3			   ;;
+    ;; 	corfu-preview-current t			   ;;
+    ;; 	corfu-quit-no-match 'separator)		   ;;
+    ;; 						   ;;
+    ;;   :bind (:map corfu-map			   ;;
+    ;; 	      ("TAB" . corfu-complete)		   ;;
+    ;; 	      ([tab] . corfu-complete)		   ;;
+    ;; 	      ("RET" . corfu-complete)		   ;;
+    ;; 	      ([ret] . corfu-complete)))	   ;;
+    ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+    (use-package corfu
+      ;; TAB-and-Go customizations
+      :custom
+      (corfu-cycle t)           ;; Enable cycling for `corfu-next/previous'
+      (corfu-preselect 'prompt) ;; Always preselect the prompt
+      (corfu-auto t)
+      (corfu-auto-prefix 3)
+
+      ;; Use TAB for cycling, default is `corfu-complete'.
+      :bind
+      (:map corfu-map
+	    ("TAB" . corfu-next)
+	    ([tab] . corfu-next)
+	    ("S-TAB" . corfu-previous)
+	    ([backtab] . corfu-previous))
+
+      :init
+      (global-corfu-mode))
+
+    (use-package kind-icon
+      :after corfu
+      :custom
+      (kind-icon-default-face 'corfu-default) ; to compute blended backgrounds correctly
+      :config
+      (add-to-list 'corfu-margin-formatters #'kind-icon-margin-formatter))
+
+    (setq completion-cycle-threshold 3)
+    (setq tab-always-indent 'complete)
+
+    (use-package embark
+      :commands (embark-act embark-dwim embark-bindings)
+      :init
+      (setq enable-recursive-minibuffers t)
+      (minibuffer-depth-indicate-mode 1)
+      (dolist (map (list corfu-map minibuffer-mode-map))
+	(define-key map (kbd "C-.") 'embark-act)
+	(define-key map (kbd "M-.") 'embark-dwim)
+	(define-key map (kbd "C-h B") 'embark-bindings))
+      (global-set-key (kbd "C-.") 'embark-act)
+      :custom
+      (embark-prompter 'embark-keymap-prompter)
+      (embark-quit-after-action '((t . nil)))
+      :config
+      (add-to-list 'display-buffer-alist
+		   '("\\`\\*Embark Collect \\(Live\\|Completions\\)\\*"
+		     nil
+		     (window-parameters (mode-line-format . none)))))
+
+    (use-package embark-consult
+      :after (embark consult)
+      :demand t
+      :hook
+      (embark-collect-mode . consult-preview-at-point-mode))
+
+    (use-package cape)
+
+    (use-package which-key
+      :init
+      (which-key-mode 1))
+
+    (global-display-line-numbers-mode 1)
+    (setq display-line-numbers-type 'relative)
+
+    (dolist (mode '(org-mode-hook
+		    term-mode-hook
+		    shell-mode-hook
+		    eshell-mode-hook
+		    vterm-mode-hook
+		    treemacs-mode-hook
+		    inferior-python-mode-hook
+		    pdf-view-mode-hook
+		    compilation-mode-hook)
+      (add-hook mode #'(lambda () (display-line-numbers-mode 0))))
+
+    (add-hook 'Info-mode-hook (lambda ()
+				(display-line-numbers-mode -1)))
+
+    (use-package rainbow-delimiters
+      :hook (prog-mode . rainbow-delimiters-mode))
+
+    (show-paren-mode 1)
+    (setq show-paren-style 'expression)
+    (setq show-paren-when-point-inside-paren nil)
+
+    (setq display-time-default-load-average nil)
+    (setq display-time-24hr-format t)
+    (setq display-time-day-and-date t)
+    (setq display-time-format "%H:%M %d-%m-%Y")
+    (display-time-mode)
+
+    (display-battery-mode -1)
+
+    (use-package consult
+      :bind (("C-s" . consult-line)
+	     ("C-x f" . consult-find)
+	     ("C-x b" . consult-buffer)
+	     ("C-x C-b" . consult-buffer)
+	     ("C-c e t" . consult-theme)
+	     ("C-x ," . consult-recent-file)
+	     ("C-c o" . consult-outline)
+	     (:map minibuffer-local-map
+		   ("C-r" . consult-history)))
+      :config
+      (consult-customize consult-theme :preview-key '(:debounce 0.5 any)))
+
+    (winner-mode 1)
+
+    (use-package vterm
+      :commands (vterm vterm-other-window)
+      :config
+      (setq vterm-shell "/usr/bin/bash")
+      :bind
+      (("C-c x x" . 'vterm)
+       ("C-c x v" . 'vterm-other-window)))
+
+    (setq inhibit-startup-message t)
+    (setq system-time-locale "C")
+    (tooltip-mode 1)
+    (setq visual-bell t)
+
+    (setq enable-local-eval t)
+
+    (put 'python-shell-extra-pythonpaths 'safe-local-variable (lambda (_) t))
+
+    (use-package dockerfile-mode
+      :mode ("\\.dockerfile\\'" . dockerfile-mode))
+
+    (unbind-key (kbd "C-x C-z") global-map)
+
+    (use-package helpful
+      :bind
+      ("C-h f" . helpful-function)
+      ("C-h v" . helpful-variable)
+      ("C-h k" . helpful-key)
+      ("C-h ." . helpful-at-point))
+
+    (use-package yaml-mode
+      :mode ("\\.yml\\'" . yaml-mode))
+
+    (use-package docker
+      :commands (docker docker-compose)
+      :init
+      (setq docker-run-async-with-buffer-function 'docker-run-async-with-buffer-vterm))
+
+    (use-package pyvenv
+      :config
+      (add-hook 'pyvenv-post-activate-hooks #'(lambda ()
+						(setq eglot-workspace-configuration
+						 `(:pylsp
+						   (:plugins
+						    (:black
+						     (:enabled t
+						      :line_length 120)
+						     :yapf
+						     (:enabled :json-false)
+						     :isort
+						     (:enabled t)
+						     :autopep8
+						     (:enabled t)
+						     :pycodestyle
+						     (:enabled :json-false)
+						     :mccabe
+						     (:enabled :json-false)
+						     :pyflakes
+						     (:enabled :json-false)
+						     :pylint
+						     (:enabled t)
+						     :flake8
+						     (:enabled t)
+						     :pydocstyle
+						     (:enabled t
+						      :convention "google")
+						     :jedi
+						     (:environment ,(f-expand pyvenv-virtual-env)))
+						    :configurationSources
+						    ["flake8"])))) 1)
+      (add-hook 'pyvenv-post-activate-hooks 'eglot-ensure 2)
+      :commands (pyvenv-mode pyvenv-tracking-mode))
+
+    (use-package poetry
+      :commands (poetry))
+
+    (global-set-key (kbd "C-c r") 'revert-buffer)
+
+    (use-package avy
+      :commands (avy-goto-char))
+
+    ;; Commented out since I need to access the keyboard prefix for kmacros
+    ;;(global-set-key (kbd "C-x C-k") 'kill-this-buffer)
+
+    (use-package org-roam
+      :commands (org-roam-node-find)
+      :init
+      (setq org-roam-directory "/home/sliberman/Documents/Google Drive/RoamNotes/")
+      :config
+      (org-roam-db-autosync-mode 1)
+      :bind
+      ("C-c n" . 'org-roam-node-find))
+
+    (setq backup-by-copying t
+	  delete-old-versions t
+	  kept-new-versions 6
+	  kept-old-versions 2
+	  version-control t
+	  backup-directory-alist '(("." . "~/.emacs.d/backups")))
+
+    (use-package eglot
+      :commands (eglot eglot-ensure)
+      :preface
+      (defun mp-eglot-eldoc ()
+	(setq eldoc-documentation-strategy
+	      'eldoc-documentation-compose-eagerly))
+      :config
+      (add-to-list 'eglot-server-programs
+		   `(terraform-mode "terraform-ls" "serve"))
+      (add-to-list 'eglot-server-programs
+		   `(python-base-mode . ,(eglot-alternatives
+					  `("pylsp" "pyls" ("pyright-langserver" "--stdio") "jedi-language-server"))))
+      (set-face-attribute 'eglot-highlight-symbol-face nil :inherit 'bold :underline t)
+      (add-hook 'eglot-managed-mode-hook 'mp-eglot-eldoc)
+      (global-set-key (kbd "C-<down-mouse-1>") #'xref-find-definitions-at-mouse)
+      (global-set-key (kbd "C-S-<down-mouse-1>") #'xref-find-references-at-mouse)
+      (global-set-key (kbd "<mouse-9>") #'xref-go-forward)
+      (global-set-key (kbd "<mouse-8>") #'xref-go-back)
+
+      ;; Fix wrong version reported misallowing actions in Eglot
+      (cl-defun eglot--apply-text-edits (edits &optional version)
+	"Apply EDITS for current buffer if at VERSION, or if it's nil."
+	(unless edits (cl-return-from eglot--apply-text-edits))
+	;; (unless (or (not version) (equal version eglot--versioned-identifier))
+	;;   (jsonrpc-error "Edits on `%s' require version %d, you have %d"
+	;;                  (current-buffer) version eglot--versioned-identifier))
+	(atomic-change-group
+	  (let* ((change-group (prepare-change-group))
+		 (howmany (length edits))
+		 (reporter (make-progress-reporter
+			    (format "[eglot] applying %s edits to `%s'..."
+				    howmany (current-buffer))
+			    0 howmany))
+		 (done 0))
+	    (mapc (pcase-lambda (`(,newText ,beg . ,end))
+		    (let ((source (current-buffer)))
+		      (with-temp-buffer
+			(insert newText)
+			(let ((temp (current-buffer)))
+			  (with-current-buffer source
+			    (save-excursion
+			      (save-restriction
+				(narrow-to-region beg end)
+				(replace-buffer-contents temp)))
+			    (eglot--reporter-update reporter (cl-incf done)))))))
+		  (mapcar (eglot--lambda ((TextEdit) range newText)
+					 (cons newText (eglot--range-region range 'markers)))
+			  (reverse edits)))
+	    (undo-amalgamate-change-group change-group)
+	    (progress-reporter-done reporter))))
+      :bind (
+	     ;; ("C-c l r" . 'eglot-rename)
+	     ;; ("C-c l =" . 'eglot-format-buffer)
+	     ;; ("C-c l a" . 'eglot-code-actions)
+	     ;; ("C-c l e" . 'flymake-show-buffer-diagnostics)
+	     ))
+
+    (use-package python
+      :bind (:map python-mode-map
+		  (("M-<left>" . python-indent-shift-left)
+		   ("M-<right>" . python-indent-shift-right)))
+      :config
+      (add-hook 'python-mode-hook #'(lambda () (require 'dap-python)))
+      (add-hook 'python-mode-hook #'(lambda () (add-hook 'before-save-hook (lambda () (interactive) (when (eglot-managed-p) (eglot-format-buffer))) nil t)))
+      (add-hook 'python-mode-hook 'which-function-mode)
+      :mode ("\\.py$" . python-mode))
+
+    (load-file "~/.emacs.d/fix_keywords_align.el")
+
+    ;; Indent the buffer in emacs-lisp mode and lisp-data mode
+    (defun sergio/add-indent-to-hook ()
+      "Add indent to before save hook."
+      (add-hook 'before-save-hook (lambda ()
+				    (interactive)
+				    (save-excursion
+				      (indent-region (point-min) (point-max)))) nil t))
+
+    (use-package terraform-mode
+      :init
+      (add-hook 'terraform-mode-hook 'eglot-ensure)
+      :mode
+      ("\\.tf$" . terraform-mode))
+
+    (add-hook 'emacs-lisp-mode-hook 'sergio/add-indent-to-hook)
+    (add-hook 'lisp-data-mode-hook 'sergio/add-indent-to-hook)
+
+    (use-package markdown-mode)
+
+    (use-package emacs
+      :after eglot
+      :config
+      (add-to-list 'eglot-server-programs '(js-json-mode "vscode-json-languageserver" "--stdio"))
+      (add-hook 'js-mode-hook (lambda () (setq-local tab-width 2)))
+      :mode ("\\.js\\'" . js-mode))
+
+    (use-package dired
+      :straight nil
+      :init
+      (add-hook 'dired-mode-hook 'dired-hide-details-mode))
+
+    (use-package ede
+      :config
+      (global-ede-mode t))
+
+    (use-package project
+      :config
+      (defun sergio/project-rg ()
+	(interactive)
+	(let ((default-directory (project-root (project-current))))
+	  (consult-ripgrep default-directory)))
+      (define-key project-prefix-map "r" 'sergio/project-rg)
+      (add-to-list 'project-switch-commands (list 'sergio/project-rg "Ripgrep"))
+
+      (setq project-switch-commands (remove '(project-vc-dir "VC-Dir") project-switch-commands))
+
+      (defun sergio/project-poetry ()
+	(interactive)
+	(let ((default-directory (project-root (project-current))))
+	  (poetry)))
+      (define-key project-prefix-map "v" 'sergio/project-poetry)
+      (add-to-list 'project-switch-commands (list 'sergio/project-poetry "Poetry"))
+
+      (defun sergio/project-magit ()
+	(interactive)
+	(let ((default-directory (project-root (project-current))))
+	  (magit-status)))
+      (define-key project-prefix-map "m" 'sergio/project-magit)
+      (add-to-list 'project-switch-commands (list 'sergio/project-magit "Magit"))
+
+      (setq project-find-functions (list #'project-try-ede #'project-try-vc))
+      (add-to-list 'project-switch-commands (list 'project-switch-to-buffer "List buffers")))
+
+    (use-package eldoc
+      :init
+      (setq eldoc-documentation-strategy 'eldoc-documentation-compose-eagerly)
+      (add-to-list 'display-buffer-alist
+		   '("^\\*eldoc for" display-buffer-at-bottom
+		     (window-height . 4))))
+
+    (defun mp-flycheck-eldoc (callback &rest _ignored)
+      "Print flycheck messages at point by calling CALLBACK."
+      (when-let ((flycheck-errors (and flycheck-mode (flycheck-overlay-errors-at (point)))))
+	(mapc
+	 (lambda (err)
+	   (funcall callback
+		    (format "%s: %s"
+			    (let ((level (flycheck-error-level err)))
+			      (pcase level
+				('info (propertize "I" 'face 'flycheck-error-list-info))
+				('error (propertize "E" 'face 'flycheck-error-list-error))
+				('warning (propertize "W" 'face 'flycheck-error-list-warning))
+				(_ level)))
+			    (flycheck-error-message err))
+		    :thing (or (flycheck-error-id err)
+			       (flycheck-error-group err))
+		    :face 'font-lock-doc-face))
+	 flycheck-errors)))
+
+    (electric-pair-mode 1)
+
+    (defun safe-local-variable-p (sym val) t)
+
+    (use-package dap-mode
+      :config
+      (setq dap-python-debugger 'debugpy)
+      (setq dap-auto-configure-features '(sessions locals controls tooltip repl))
+      (dap-auto-configure-mode 1)
+      :bind (:map project-prefix-map
+		  ("C-c C-d C-d" . dap-debug)
+		  ("C-c C-d d" . dap-debug)
+		  ("C-c C-d k" . dap-delete-all-sessions)
+		  ("C-c C-d C-k" . dap-delete-all-sessions)
+		  ("C-c C-d e" . dap-debug-edit-template)
+		  ("C-c C-d C-e" . dap-debug-edit-template))
+      :init
+      (defun sergio/set-pointer-arrow ()
+	(interactive)
+	(setq-local x-pointer-shape x-pointer-top-left-arrow)
+	(set-mouse-color "black"))
+      :hook
+      (treemacs-mode . sergio/set-pointer-arrow))
+
+    (use-package restclient
+      :commands (restclient-mode))
+
+    (use-package ob-restclient
+      :after org)
+
+    (use-package org
+      :init
+      (setq org-todo-keywords (quote ((sequence "TODO(t)" "|" "ABANDONED(b)" "DONE(d)"))))
+      (setq org-log-done t)
+      (defun sergio/check-cell ()
+	(interactive)
+	(let ((cell (org-table-get-field)))
+	  (if (string-match "[[:graph:]]" cell)
+	      (org-table-blank-field)
+	    (insert "X")
+	    (org-table-align))
+	  (org-table-next-row)))
+      :custom
+      (org-ellipsis " ▼")
+      (org-latex-pdf-process (list "latexmk -f -pdf %f"))
+      (org-latex-logfiles-extensions
+	      '("lof" "lot" "tex~" "aux" "idx" "log" "out" "toc" "nav" "snm" "vrb" "dvi" "fdb_latexmk" "blg" "brf" "fls" "entoc" "ps" "spl" "bbl" "xmpi" "run.xml" "bcf" "acn" "acr" "alg" "glg" "gls" "ist"))
+      (org-confirm-babel-evaluate nil)
+      (org-image-actual-width nil)
+      (org-latex-caption-above nil)
+      (org-src-window-setup 'current-window)
+      (org-edit-src-content-indentation 0)
+      (org-M-RET-may-split-line '((default)))
+      (org-odt-preferred-output-format "docx")
+      :hook
+      (org-mode . url-handler-mode)
+      (org-mode . visual-line-mode)
+      (org-mode . org-indent-mode)
+      (org-mode . org-modern-mode)
+      :config
+      (setq org-indent-indentation-per-level 2)
+      (require 'ox-md)
+      (require 'org-tempo)
+      (dolist (template '(("sh" . "src shell")
+			  ("el" . "src emacs-lisp")
+			  ("py" . "src python")
+			  ("ja" . "src java")
+			  ("sql" . "src sql")
+			  ("yaml" . "src yaml")
+			  ("rest" . "src restclient")
+			  ("cc" . "src C")))
+	(add-to-list 'org-structure-template-alist template))
+
+      ;; Babel languages.
+      (org-babel-do-load-languages
+       'org-babel-load-languages
+       '((emacs-lisp . t)
+	 (latex . t)
+	 (shell . t)
+	 (C . t)
+	 (sql . t)
+	 (java . t)
+	 (restclient . t)
+	 (python . t)))
+
+      (push '("conf-unix" . conf-unix) org-src-lang-modes)
+      (setq org-latex-with-hyperref nil)
+      (unless (boundp 'org-latex-classes)
+	  (setq org-latex-classes nil))
+      :commands (org-store-link org-agenda org-capture)
+      )
+
+    (use-package org-contrib
+      :config
+      (require 'ox-extra)
+      (ox-extras-activate '(latex-header-blocks ignore-headlines)))
+
+    (global-set-key (kbd "C-c C-l") #'org-store-link)
+    (global-set-key (kbd "C-c C-a") #'org-agenda)
+    (global-set-key (kbd "C-c C->") #'org-capture)
+
+    (use-package org-modern)
+
+    (add-hook 'prog-mode 'electric-indent-mode)
+
+    (size-indication-mode -1)
+
+    (use-package move-text
+      :bind
+      ("M-<up>" . move-text-up)
+      ("M-<down>" . move-text-down))
+
+    (use-package lsp-mode
+      :init
+      (setq lsp-keymap-prefix "C-c l")
+      :custom
+      (lsp-completion-provider :none)
+      :hook (
+	     (csharp-ts-mode . lsp)
+	     (lsp-mode . lsp-enable-which-key-integration)))
+
+    (use-package lsp-ui
+      :commands (lsp-ui-mode)
+      :custom
+      (lsp-ui-doc-show-with-cursor nil)
+      (lsp-ui-doc-position 'at-point))
+
+    (use-package csharp-mode
+      :straight nil
+      :init
+      ;;(add-hook 'csharp-ts-mode-hook 'eglot-ensure)
+      (add-hook 'csharp-ts-mode-hook 'dap-mode)
+      (add-hook 'csharp-ts-mode-hook #'(lambda () (require 'dap-netcore)))
+      ;;(add-hook 'csharp-ts-mode-hook #'(lambda () (c-set-style "awk")))
+      (add-hook 'csharp-ts-mode-hook #'(lambda () (setq-local tab-width 4)))
+      :config
+      :mode ("\\.cs$" . csharp-ts-mode))
+
+    (use-package multi-vterm
+      :bind
+      ("<f5>" . multi-vterm-dedicated-toggle)
+      (:map vterm-mode-map
+	    ("<f8>" . multi-vterm))
+      :config
+      (setq multi-vterm-dedicated-window-height-percent 25))
+
+    (tab-bar-mode -1)
+
+    (xterm-mouse-mode 1)
+
+    (use-package lispy
+      :commands (lispy-mode))
+
+    (global-auto-revert-mode 1)
+    (setq global-auto-revert-non-file-buffers t)
+
+    (setq vc-handled-backends '(Git))
+
+    (windmove-default-keybindings '(ctrl meta))
+
+    (use-package magit
+      :bind ("C-x g" . magit-status))
+
+    (use-package json-mode
+      :custom
+      (js-indent-level 2)
+      :mode ("\\.json$" . json-mode))
+
+    (use-package codespaces
+      :config
+      (codespaces-setup)
+      (add-to-list 'tramp-remote-path 'tramp-own-remote-path)
+      (setq tramp-ssh-controlmaster-options "")
+      :bind ("C-c S" . #'codespaces-connect))
+
+    (recentf-mode 1)
+
+    (use-package forge
+      :after magit)
+
+    (use-package savehist
+      :init
+      (savehist-mode 1))
+
+    (use-package saveplace
+      :init
+      (save-place-mode 1))
+
+    (use-package yasnippet
+      :hook
+      (prog-mode . yas-minor-mode))
+
+    (use-package yasnippet-snippets)
+
+    (use-package fixmee)
+
+    (setq backup-directory-alist
+	  `((".*" . "~/.emacs.d/autosave")))
+    (setq auto-save-file-name-transforms
+	  `((".*" "~/.emacs.d/autosave" t)))
+
+    (setq compilation-scroll-output t)
+    (setq switch-to-buffer-obey-display-actions t)
+    (use-package ox-moderncv
+      :straight (org-cv :host gitlab :repo "Titan-C/org-cv"))
+
+    (use-package evil
+      :config
+      (evil-mode 1)
+      (global-set-key (kbd "C-M-u") 'universal-argument)
+      (evil-global-set-key 'insert (kbd "C-g") 'evil-normal-state)
+      (evil-global-set-key 'visual (kbd "C-g") 'evil-normal-state)
+      :custom
+      (evil-want-keybinding nil)
+      (evil-want-C-i-jump t)
+      (evil-want-C-u-scroll t)
+      (evil-want-Y-yank-to-eol t)
+      (evil-want-fine-undo t)
+      (evil-shift-width 2)
+      (evil-undo-system 'undo-redo))
+
+    (use-package evil-collection
+      :init
+      (evil-collection-init))
+
+    (use-package general
+      :config
+      (general-evil-setup t)
+      (general-create-definer leader-def
+	:keymaps '(normal insert visual emacs)
+	:prefix "SPC"
+	:global-prefix "C-SPC"))
+
+    (defun sergio/open-init-org ()
+      (interactive)
+      (find-file "~/Documents/src/configuration/init.org"))
+
+    (leader-def
+      "" '(:ignore t :wk "Global leader")
+      "e" '(:ignore t :wk "Emacs")
+      "ee" '(sergio/open-init-org :wk "Init file")
+      "et" '(consult-theme :wk "Pick theme"))
+
+    (leader-def
+      "g" '(magit-status :wk "Magit"))
+
+    (leader-def
+      "p" '(:keymap project-prefix-map :wk "Projects"))
+
+    (use-package evil-nerd-commenter
+      :config
+      (evilnc-default-hotkeys))
+
+    (use-package evil-surround
+      :config
+      (global-evil-surround-mode 1))
+
+    (global-set-key (kbd "C-c e e") 'sergio/open-init-org)
 #+end_src
 
 ** Dashboard
@@ -846,8 +834,8 @@ FRAME is the frame where the setting gets done."
 
   (defun void~calculate-lisp-indent (&optional parse-start)
     "Add better indentation for quoted and backquoted lists."
-    ;; This line because `calculate-lisp-indent-last-sexp` was defined with `defvar` 
-    ;; with it's value ommited, marking it special and only defining it locally. So  
+    ;; This line because `calculate-lisp-indent-last-sexp` was defined with `defvar`
+    ;; with it's value ommited, marking it special and only defining it locally. So 
     ;; if you don't have this, you'll get a void variable error.
     (defvar calculate-lisp-indent-last-sexp)
     (save-excursion
