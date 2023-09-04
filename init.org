@@ -76,7 +76,6 @@ FRAME is the frame where the setting gets done."
   (defun nerd-icons--web-mode-icon (&rest arg-overrides)
     "Get icon for a `web-mode' buffer with ARG-OVERRIDES."
     (all-the-icons--web-mode nil arg-overrides)))
-
 #+end_src
 
 * Init file
@@ -234,7 +233,7 @@ FRAME is the frame where the setting gets done."
 (global-set-key (kbd "C-c e e") #'(lambda () (interactive) (find-file "~/Documents/src/configuration/init.org")))
 
 (global-display-line-numbers-mode 1)
-;; (setq display-line-numbers-type 'relative)
+(setq display-line-numbers-type 'relative)
 
 (dolist (mode '(org-mode-hook
 		term-mode-hook
@@ -243,7 +242,8 @@ FRAME is the frame where the setting gets done."
 		vterm-mode-hook
 		treemacs-mode-hook
 		inferior-python-mode-hook
-		pdf-view-mode-hook))
+		pdf-view-mode-hook
+                compilation-mode-hook)
   (add-hook mode #'(lambda () (display-line-numbers-mode 0))))
 
 (add-hook 'Info-mode-hook (lambda ()
@@ -265,14 +265,15 @@ FRAME is the frame where the setting gets done."
 (display-battery-mode -1)
 
 (use-package consult
-  :bind (("C-x f" . consult-find)
+  :bind (("C-s" . consult-line)
+         ("C-x f" . consult-find)
 	 ("C-x b" . consult-buffer)
 	 ("C-x C-b" . consult-buffer)
 	 ("C-c e t" . consult-theme)
 	 ("C-x ," . consult-recent-file)
 	 ("C-c o" . consult-outline)
 	 (:map minibuffer-local-map
-	       ("C-r" . consult-history)))
+               ("C-r" . consult-history)))
   :config
   (consult-customize consult-theme :preview-key '(:debounce 0.5 any)))
 
@@ -358,7 +359,8 @@ FRAME is the frame where the setting gets done."
 (use-package avy
   :commands (avy-goto-char))
 
-(global-set-key (kbd "C-x C-k") 'kill-this-buffer)
+;; Commented out since I need to access the keyboard prefix for kmacros
+;;(global-set-key (kbd "C-x C-k") 'kill-this-buffer)
 
 (use-package org-roam
   :commands (org-roam-node-find)
@@ -422,7 +424,7 @@ FRAME is the frame where the setting gets done."
                             (replace-buffer-contents temp)))
 			(eglot--reporter-update reporter (cl-incf done)))))))
               (mapcar (eglot--lambda ((TextEdit) range newText)
-			(cons newText (eglot--range-region range 'markers)))
+				     (cons newText (eglot--range-region range 'markers)))
                       (reverse edits)))
 	(undo-amalgamate-change-group change-group)
 	(progress-reporter-done reporter))))
@@ -550,7 +552,7 @@ FRAME is the frame where the setting gets done."
 		:face 'font-lock-doc-face))
      flycheck-errors)))
 
-(electric-pair-mode -1)
+(electric-pair-mode 1)
 
 (defun safe-local-variable-p (sym val) t)
 
@@ -687,7 +689,7 @@ FRAME is the frame where the setting gets done."
 (use-package lsp-ui
   :commands (lsp-ui-mode)
   :custom
-  (lsp-ui-doc-show-with-cursor t)
+  (lsp-ui-doc-show-with-cursor nil)
   (lsp-ui-doc-position 'at-point))
 
 (use-package csharp-mode
@@ -704,8 +706,10 @@ FRAME is the frame where the setting gets done."
 (use-package multi-vterm
   :bind
   ("<f5>" . multi-vterm-dedicated-toggle)
+  (:map vterm-mode-map
+	("<f8>" . multi-vterm))
   :config
-  (setq multi-vterm-dedicated-window-height-percent 20))
+  (setq multi-vterm-dedicated-window-height-percent 25))
 
 (tab-bar-mode -1)
 
@@ -797,6 +801,56 @@ FRAME is the frame where the setting gets done."
 (use-package ox-moderncv
   :straight (org-cv :host gitlab :repo "Titan-C/org-cv"))
 
+(use-package evil
+  :config
+  (evil-mode 1)
+  (global-set-key (kbd "C-M-u") 'universal-argument)
+  (evil-global-set-key 'insert (kbd "C-g") 'evil-normal-state)
+  (evil-global-set-key 'visual (kbd "C-g") 'evil-normal-state)
+  :custom
+  (evil-want-keybinding nil)
+  (evil-want-C-i-jump t)
+  (evil-want-C-u-scroll t)
+  (evil-want-Y-yank-to-eol t)
+  (evil-want-fine-undo t)
+  (evil-shift-width 2)
+  (evil-undo-system 'undo-redo))
+
+(use-package evil-collection
+  :init
+  (evil-collection-init))
+
+(use-package general
+  :config
+  (general-evil-setup t)
+  (general-create-definer leader-def
+    :keymaps '(normal insert visual emacs)
+    :prefix "SPC"
+    :global-prefix "C-SPC"))
+
+(defun sergio/open-init-org ()
+  (interactive)
+  (find-file "~/Documents/src/configuration/init.org"))
+
+(leader-def
+  "" '(:ignore t :wk "Global leader")
+  "e" '(:ignore t :wk "Emacs")
+  "ee" '(sergio/open-init-org :wk "Init file")
+  "et" '(consult-theme :wk "Pick theme"))
+
+(leader-def
+  "g" '(magit-status :wk "Magit"))
+
+(leader-def
+  "p" '(:keymap project-prefix-map :wk "Projects"))
+
+(use-package evil-nerd-commenter
+  :config
+  (evilnc-default-hotkeys))
+
+(use-package evil-surround
+  :config
+  (global-evil-surround-mode 1))
 #+end_src
 
 ** Dashboard
@@ -804,7 +858,25 @@ FRAME is the frame where the setting gets done."
 (use-package dashboard
   :config
   (dashboard-setup-startup-hook)
-  (setq initial-buffer-choice (lambda () (get-buffer-create "*dashboard*"))))
+  (setq initial-buffer-choice (lambda () (get-buffer-create "*dashboard*")))
+  (setq dashboard-startup-banner 'logo)
+  (setq dashboard-banner-logo-title "GNU/Emacs")
+  (setq dashboard-projects-backend 'project-el)
+  (setq dashboard-display-icons-p t)
+  (setq dashboard-icon-type 'all-the-icons)
+  (setq dashboard-set-heading-icons t)
+  (setq dashboard-set-file-icons t)
+  (setq dashboard-center-content t)
+  (setq dashboard-heading-icons '((recents   . "history")
+                                  (bookmarks . "bookmark")
+                                  (agenda    . "calendar")
+                                  (projects  . "rocket")
+                                  (registers . "database")))
+  (setq dashboard-items '((recents  . 5)
+                          (bookmarks . 5)
+                          (projects . 5)
+                          (agenda . 5)
+                          (registers . 5))))
 #+end_src
 
 ** Fonts
