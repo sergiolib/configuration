@@ -565,7 +565,8 @@ FRAME is the frame where the setting gets done."
   :bind
   ("<f5>" . multi-vterm-dedicated-toggle)
   (:map vterm-mode-map
-        ("<f8>" . multi-vterm))
+        ("<f8>" . multi-vterm)
+        ("<f5>" . multi-vterm-dedicated-toggle))
   :config
   (setq multi-vterm-dedicated-window-height-percent 25))
 
