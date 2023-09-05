@@ -658,14 +658,13 @@ FRAME is the frame where the setting gets done."
 	 (-mapcat (-lambda ((key description))
 		    (list (concat "SPC l" " " key)
 			  description)))))
+  (add-hook 'csharp-ts-mode-hook 'lsp)
+  (add-hook 'lsp-mode-hook 'lsp-enable-which-key-integration)
+  (add-hook 'lsp-mode-hook 'mp-eglot-eldoc)
   :custom
-  (lsp-completion-provider :none)
-  :hook ((csharp-ts-mode . lsp)
-         (lsp-mode . lsp-enable-which-key-integration)
-	 (lsp-mode . mp-eglot-eldoc)))
+  (lsp-completion-provider :none))
 
 (use-package lsp-ui
-  :commands (lsp-ui-mode)
   :custom
   (lsp-ui-doc-show-with-cursor t)
   (lsp-ui-doc-position 'at-point))
@@ -804,6 +803,14 @@ FRAME is the frame where the setting gets done."
   (global-evil-surround-mode 1))
 
 (global-set-key (kbd "C-c e e") 'sergio/open-init-org)
+
+(use-package evil-multiedit
+  :config
+  (evil-define-key '(insert normal visual) evil-multiedit-mode-map (kbd "RET") nil)
+  :bind
+  ("M-d" . 'evil-multiedit-match-and-next)
+  ("M-D" . 'evil-multiedit-match-and-prev)
+  ("C-M-d" . 'evil-multiedit-match-all))
 #+end_src
 
 ** Dashboard
