@@ -315,38 +315,6 @@ FRAME is the frame where the setting gets done."
   (setq docker-run-async-with-buffer-function 'docker-run-async-with-buffer-vterm))
 
 (use-package pyvenv
-  :config
-  (add-hook 'pyvenv-post-activate-hooks #'(lambda ()
-                                            (setq eglot-workspace-configuration
-                                             `(:pylsp
-                                               (:plugins
-                                                (:black
-                                                 (:enabled t
-                                                  :line_length 120)
-                                                 :yapf
-                                                 (:enabled :json-false)
-                                                 :isort
-                                                 (:enabled t)
-                                                 :autopep8
-                                                 (:enabled t)
-                                                 :pycodestyle
-                                                 (:enabled :json-false)
-                                                 :mccabe
-                                                 (:enabled :json-false)
-                                                 :pyflakes
-                                                 (:enabled :json-false)
-                                                 :pylint
-                                                 (:enabled t)
-                                                 :flake8
-                                                 (:enabled t)
-                                                 :pydocstyle
-                                                 (:enabled t
-                                                  :convention "google")
-                                                 :jedi
-                                                 (:environment ,(f-expand pyvenv-virtual-env)))
-                                                :configurationSources
-                                                ["flake8"])))) 1)
-  (add-hook 'pyvenv-post-activate-hooks 'eglot-ensure 2)
   :commands (pyvenv-mode pyvenv-tracking-mode))
 
 (use-package poetry
@@ -376,63 +344,9 @@ FRAME is the frame where the setting gets done."
       version-control t
       backup-directory-alist '(("." . "~/.emacs.d/backups")))
 
-(defun mp-eglot-eldoc ()
+(defun mp-eldoc ()
   (setq eldoc-documentation-strategy
 	'eldoc-documentation-compose-eagerly))
-
-(use-package eglot
-  :commands (eglot eglot-ensure)
-  :preface
-  :config
-  (add-to-list 'eglot-server-programs
-               `(terraform-mode "terraform-ls" "serve"))
-  (add-to-list 'eglot-server-programs
-               `(python-base-mode . ,(eglot-alternatives
-                                      `("pylsp" "pyls" ("pyright-langserver" "--stdio") "jedi-language-server"))))
-  (set-face-attribute 'eglot-highlight-symbol-face nil :inherit 'bold :underline t)
-  (add-hook 'eglot-managed-mode-hook 'mp-eglot-eldoc)
-  (global-set-key (kbd "C-<down-mouse-1>") #'xref-find-definitions-at-mouse)
-  (global-set-key (kbd "C-S-<down-mouse-1>") #'xref-find-references-at-mouse)
-  (global-set-key (kbd "<mouse-9>") #'xref-go-forward)
-  (global-set-key (kbd "<mouse-8>") #'xref-go-back)
-
-  ;; Fix wrong version reported misallowing actions in Eglot
-  (cl-defun eglot--apply-text-edits (edits &optional version)
-    "Apply EDITS for current buffer if at VERSION, or if it's nil."
-    (unless edits (cl-return-from eglot--apply-text-edits))
-    ;; (unless (or (not version) (equal version eglot--versioned-identifier))
-    ;;   (jsonrpc-error "Edits on `%s' require version %d, you have %d"
-    ;;                  (current-buffer) version eglot--versioned-identifier))
-    (atomic-change-group
-      (let* ((change-group (prepare-change-group))
-             (howmany (length edits))
-             (reporter (make-progress-reporter
-                        (format "[eglot] applying %s edits to `%s'..."
-                                howmany (current-buffer))
-                        0 howmany))
-             (done 0))
-        (mapc (pcase-lambda (`(,newText ,beg . ,end))
-                (let ((source (current-buffer)))
-                  (with-temp-buffer
-                    (insert newText)
-                    (let ((temp (current-buffer)))
-                      (with-current-buffer source
-                        (save-excursion
-                          (save-restriction
-                            (narrow-to-region beg end)
-                            (replace-buffer-contents temp)))
-                        (eglot--reporter-update reporter (cl-incf done)))))))
-              (mapcar (eglot--lambda ((TextEdit) range newText)
-                                     (cons newText (eglot--range-region range 'markers)))
-                      (reverse edits)))
-        (undo-amalgamate-change-group change-group)
-        (progress-reporter-done reporter))))
-  :bind (
-         ;; ("C-c l r" . 'eglot-rename)
-         ;; ("C-c l =" . 'eglot-format-buffer)
-         ;; ("C-c l a" . 'eglot-code-actions)
-         ;; ("C-c l e" . 'flymake-show-buffer-diagnostics)
-         ))
 
 (use-package python
   :bind (:map python-mode-map
@@ -440,7 +354,6 @@ FRAME is the frame where the setting gets done."
                ("M-<right>" . python-indent-shift-right)))
   :config
   (add-hook 'python-mode-hook #'(lambda () (require 'dap-python)))
-  (add-hook 'python-mode-hook #'(lambda () (add-hook 'before-save-hook (lambda () (interactive) (when (eglot-managed-p) (eglot-format-buffer))) nil t)))
   (add-hook 'python-mode-hook 'which-function-mode)
   :mode ("\\.py$" . python-mode))
 
@@ -456,7 +369,7 @@ FRAME is the frame where the setting gets done."
 
 (use-package terraform-mode
   :init
-  (add-hook 'terraform-mode-hook 'eglot-ensure)
+  (add-hook 'terraform-mode-hook 'lsp)
   :mode
   ("\\.tf$" . terraform-mode))
 
@@ -464,13 +377,6 @@ FRAME is the frame where the setting gets done."
 (add-hook 'lisp-data-mode-hook 'sergio/add-indent-to-hook)
 
 (use-package markdown-mode)
-
-(use-package emacs
-  :after eglot
-  :config
-  (add-to-list 'eglot-server-programs '(js-json-mode "vscode-json-languageserver" "--stdio"))
-  (add-hook 'js-mode-hook (lambda () (setq-local tab-width 2)))
-  :mode ("\\.js\\'" . js-mode))
 
 (use-package dired
   :straight nil
@@ -660,7 +566,7 @@ FRAME is the frame where the setting gets done."
 			  description)))))
   (add-hook 'csharp-ts-mode-hook 'lsp)
   (add-hook 'lsp-mode-hook 'lsp-enable-which-key-integration)
-  (add-hook 'lsp-mode-hook 'mp-eglot-eldoc)
+  (add-hook 'lsp-mode-hook 'mp-eldoc)
   :custom
   (lsp-completion-provider :none))
 
@@ -672,10 +578,8 @@ FRAME is the frame where the setting gets done."
 (use-package csharp-mode
   :straight nil
   :init
-  ;;(add-hook 'csharp-ts-mode-hook 'eglot-ensure)
   (add-hook 'csharp-ts-mode-hook 'dap-mode)
   (add-hook 'csharp-ts-mode-hook #'(lambda () (require 'dap-netcore)))
-  ;;(add-hook 'csharp-ts-mode-hook #'(lambda () (c-set-style "awk")))
   (add-hook 'csharp-ts-mode-hook #'(lambda () (setq-local tab-width 4)))
   :config
   :mode ("\\.cs$" . csharp-ts-mode))
