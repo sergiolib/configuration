@@ -98,7 +98,7 @@ FRAME is the frame where the setting gets done."
 	  (lambda () (when (equal (f-filename buffer-file-name) "init.org")
 		       (org-babel-tangle-file "init.org"))))
 
-(add-to-list 'exec-path "/home/sliberman/bin/netcoredbg")
+(add-to-list 'exec-path "~/.local/bin")
 
 (setq gc-cons-threshold 100000000)
 (setq read-process-output-max (* 1024 1024)) ;; 1mb
@@ -344,10 +344,6 @@ FRAME is the frame where the setting gets done."
       version-control t
       backup-directory-alist '(("." . "~/.emacs.d/backups")))
 
-(defun mp-eldoc ()
-  (setq eldoc-documentation-strategy
-	'eldoc-documentation-compose-eagerly))
-
 (use-package python
   :bind (:map python-mode-map
               (("M-<left>" . python-indent-shift-left)
@@ -422,25 +418,6 @@ FRAME is the frame where the setting gets done."
                '("^\\*eldoc for" display-buffer-at-bottom
                  (window-height . 4)))
   (global-eldoc-mode 1))
-
-(defun mp-flycheck-eldoc (callback &rest _ignored)
-  "Print flycheck messages at point by calling CALLBACK."
-  (when-let ((flycheck-errors (and flycheck-mode (flycheck-overlay-errors-at (point)))))
-    (mapc
-     (lambda (err)
-       (funcall callback
-                (format "%s: %s"
-                        (let ((level (flycheck-error-level err)))
-                          (pcase level
-                            ('info (propertize "I" 'face 'flycheck-error-list-info))
-                            ('error (propertize "E" 'face 'flycheck-error-list-error))
-                            ('warning (propertize "W" 'face 'flycheck-error-list-warning))
-                            (_ level)))
-                        (flycheck-error-message err))
-                :thing (or (flycheck-error-id err)
-                           (flycheck-error-group err))
-                :face 'font-lock-doc-face))
-     flycheck-errors)))
 
 (electric-pair-mode 1)
 
@@ -566,7 +543,6 @@ FRAME is the frame where the setting gets done."
 			  description)))))
   (add-hook 'csharp-ts-mode-hook 'lsp)
   (add-hook 'lsp-mode-hook 'lsp-enable-which-key-integration)
-  (add-hook 'lsp-mode-hook 'mp-eldoc)
   :custom
   (lsp-completion-provider :none))
 
@@ -582,6 +558,7 @@ FRAME is the frame where the setting gets done."
   (add-hook 'csharp-ts-mode-hook #'(lambda () (require 'dap-netcore)))
   (add-hook 'csharp-ts-mode-hook #'(lambda () (setq-local tab-width 4)))
   :config
+  (setq dap-netcore-download-url "https://github.com/Samsung/netcoredbg/releases/download/2.2.3-992/netcoredbg-linux-amd64.tar.gz")
   :mode ("\\.cs$" . csharp-ts-mode))
 
 (use-package multi-vterm
@@ -601,6 +578,7 @@ FRAME is the frame where the setting gets done."
 
 (global-auto-revert-mode 1)
 (setq global-auto-revert-non-file-buffers t)
+(setq auto-revert-interval 1)
 
 (setq vc-handled-backends '(Git))
 
@@ -659,6 +637,7 @@ FRAME is the frame where the setting gets done."
   (evil-global-set-key 'insert (kbd "C-g") 'evil-normal-state)
   (evil-global-set-key 'visual (kbd "C-g") 'evil-normal-state)
   :custom
+  (evil-goto-definition-functions '(evil-goto-definition-xref evil-goto-definition-imenu evil-goto-definition-semantic evil-goto-definition-search))
   (evil-want-keybinding nil)
   (evil-want-C-i-jump t)
   (evil-want-C-u-scroll t)
@@ -715,6 +694,8 @@ FRAME is the frame where the setting gets done."
   ("M-d" . 'evil-multiedit-match-and-next)
   ("M-D" . 'evil-multiedit-match-and-prev)
   ("C-M-d" . 'evil-multiedit-match-all))
+
+(define-key minibuffer-mode-map (kbd "M-d") 'kill-word)
 #+end_src
 
 ** Dashboard
