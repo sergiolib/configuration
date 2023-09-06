@@ -153,44 +153,28 @@ FRAME is the frame where the setting gets done."
   :init
   (marginalia-mode 1))
 
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;; (use-package corfu                              ;;
-;;   :init                                         ;;
-;;   (global-corfu-mode 1)                         ;;
-;;   (setq corfu-auto t                            ;;
-;;      corfu-auto-delay 0.2                       ;;
-;;      corfu-auto-prefix 3                        ;;
-;;      corfu-preview-current t                    ;;
-;;      corfu-quit-no-match 'separator)            ;;
-;;                                                 ;;
-;;   :bind (:map corfu-map                         ;;
-;;            ("TAB" . corfu-complete)             ;;
-;;            ([tab] . corfu-complete)             ;;
-;;            ("RET" . corfu-complete)             ;;
-;;            ([ret] . corfu-complete)))           ;;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
 (use-package corfu
-  ;; TAB-and-Go customizations
+  :straight (corfu :files (:defaults "extensions/*"))
+  :config
+  (corfu-popupinfo-mode 1)
   :custom
-  (corfu-cycle t)           ;; Enable cycling for `corfu-next/previous'
-  (corfu-preselect 'prompt) ;; Always preselect the prompt
+  (corfu-cycle t)
+  (corfu-preselect 'prompt)
   (corfu-auto t)
   (corfu-auto-prefix 3)
 
-  ;; Use TAB for cycling, default is `corfu-complete'.
   :bind
   (:map corfu-map
         ("TAB" . corfu-next)
         ([tab] . corfu-next)
         ("S-TAB" . corfu-previous)
-        ([backtab] . corfu-previous))
+        ([backtab] . corfu-previous)
+        ("M-d" . corfu-popupinfo-toggle))
 
   :init
-  (global-corfu-mode))
+  (global-corfu-mode 1))
 
 (use-package kind-icon
-  :after corfu
   :custom
   (kind-icon-default-face 'corfu-default) ; to compute blended backgrounds correctly
   :config
@@ -351,7 +335,10 @@ FRAME is the frame where the setting gets done."
   :config
   (add-hook 'python-mode-hook #'(lambda () (require 'dap-python)))
   (add-hook 'python-mode-hook 'which-function-mode)
-  :mode ("\\.py$" . python-mode))
+  :mode ("\\.py$" . python-mode)
+  :custom
+  (lsp-pylsp-plugins-black-enabled t)
+  (lsp-pylsp-plugins-flake8-max-line-length 120))
 
 (load-file "~/.emacs.d/fix_keywords_align.el")
 
@@ -589,6 +576,8 @@ FRAME is the frame where the setting gets done."
   :bind ("C-x g" . magit-status))
 
 (use-package json-mode
+  :hook
+  (json-mode . lsp)
   :custom
   (js-indent-level 2)
   :mode ("\\.json$" . json-mode))
@@ -645,7 +634,9 @@ FRAME is the frame where the setting gets done."
   (evil-want-Y-yank-to-eol t)
   (evil-want-fine-undo t)
   (evil-shift-width 2)
-  (evil-undo-system 'undo-redo))
+  (evil-undo-system 'undo-redo)
+  (evil-symbol-word-search t)
+  (evil-jumps-cross-buffers nil))
 
 (use-package evil-collection
   :init
@@ -691,6 +682,15 @@ FRAME is the frame where the setting gets done."
 (use-package evil-multiedit
   :config
   (evil-define-key '(insert normal visual) evil-multiedit-mode-map (kbd "RET") nil)
+  ;; Make multiedit take casing into consideration
+  (defun make-evil-multiedit-case-sensitive (fn &rest args)
+    (let ((case-fold-search (not iedit-case-sensitive)))
+      (apply fn args)))
+
+  (advice-add #'evil-multiedit-match-and-next :around #'make-evil-multiedit-case-sensitive)
+  :custom
+  (evil-multiedit-use-symbols t)
+  (evil-multiedit-follow-matches t)
   :bind
   ("M-d" . 'evil-multiedit-match-and-next)
   ("M-D" . 'evil-multiedit-match-and-prev)
