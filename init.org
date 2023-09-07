@@ -37,23 +37,91 @@ FRAME is the frame where the setting gets done."
          (server-running-p))
     (add-hook 'after-make-frame-functions #'set-window-faces)
   (set-window-faces nil))
+#+end_src
 
-(defvar bootstrap-version)
-(let ((bootstrap-file
-       (expand-file-name "straight/repos/straight.el/bootstrap.el" user-emacs-directory))
-      (bootstrap-version 6))
-  (unless (file-exists-p bootstrap-file)
-    (with-current-buffer
-        (url-retrieve-synchronously
-         "https://raw.githubusercontent.com/radian-software/straight.el/develop/install.el"
-         'silent 'inhibit-cookies)
-      (goto-char (point-max))
-      (eval-print-last-sexp)))
-  (load bootstrap-file nil 'nomessage))
+* Init file
+** Header
+:PROPERTIES:
+:VISIBILITY: folded
+:END:
+#+begin_src emacs-lisp
+;;; package --- Init.el
+;;; Commentary: This is my Emacs configuration. It works with the current bleeding edge Emacs version.
+;;; Code:
+#+end_src
 
-(straight-use-package 'use-package)
+** Elpaca
+#+begin_src emacs-lisp
+(defvar elpaca-installer-version 0.5)
+(defvar elpaca-directory (expand-file-name "elpaca/" user-emacs-directory))
+(defvar elpaca-builds-directory (expand-file-name "builds/" elpaca-directory))
+(defvar elpaca-repos-directory (expand-file-name "repos/" elpaca-directory))
+(defvar elpaca-order '(elpaca :repo "https://github.com/progfolio/elpaca.git"
+                              :ref nil
+                              :files (:defaults (:exclude "extensions"))
+                              :build (:not elpaca--activate-package)))
+(let* ((repo  (expand-file-name "elpaca/" elpaca-repos-directory))
+       (build (expand-file-name "elpaca/" elpaca-builds-directory))
+       (order (cdr elpaca-order))
+       (default-directory repo))
+  (add-to-list 'load-path (if (file-exists-p build) build repo))
+  (unless (file-exists-p repo)
+    (make-directory repo t)
+    (when (< emacs-major-version 28) (require 'subr-x))
+    (condition-case-unless-debug err
+        (if-let ((buffer (pop-to-buffer-same-window "*elpaca-bootstrap*"))
+                 ((zerop (call-process "git" nil buffer t "clone"
+                                       (plist-get order :repo) repo)))
+                 ((zerop (call-process "git" nil buffer t "checkout"
+                                       (or (plist-get order :ref) "--"))))
+                 (emacs (concat invocation-directory invocation-name))
+                 ((zerop (call-process emacs nil buffer nil "-Q" "-L" "." "--batch"
+                                       "--eval" "(byte-recompile-directory \".\" 0 'force)")))
+                 ((require 'elpaca))
+                 ((elpaca-generate-autoloads "elpaca" repo)))
+            (progn (message "%s" (buffer-string)) (kill-buffer buffer))
+          (error "%s" (with-current-buffer buffer (buffer-string))))
+      ((error) (warn "%s" err) (delete-directory repo 'recursive))))
+  (unless (require 'elpaca-autoloads nil t)
+    (require 'elpaca)
+    (elpaca-generate-autoloads "elpaca" repo)
+    (load "./elpaca-autoloads")))
+(add-hook 'after-init-hook #'elpaca-process-queues)
+(elpaca `(,@elpaca-order))
+;; Install use-package support
+(elpaca elpaca-use-package
+  ;; Enable :elpaca use-package keyword.
+  (elpaca-use-package-mode)
+  ;; Assume :elpaca t unless otherwise specified.
+  (setq elpaca-use-package-by-default t))
 
-(setq straight-use-package-by-default t)
+;; Block until current queue processed.
+(elpaca-wait)
+;; (defvar bootstrap-version)
+;; (let ((bootstrap-file
+;;        (expand-file-name "straight/repos/straight.el/bootstrap.el" user-emacs-directory))
+;;       (bootstrap-version 6))
+;;   (unless (file-exists-p bootstrap-file)
+;;     (with-current-buffer
+;;         (url-retrieve-synchronously
+;;          "https://raw.githubusercontent.com/radian-software/straight.el/develop/install.el"
+;;          'silent 'inhibit-cookies)
+;;       (goto-char (point-max))
+;;       (eval-print-last-sexp)))
+;;   (load bootstrap-file nil 'nomessage))
+
+;; (straight-use-package 'use-package)
+
+;; (setq straight-use-package-by-default t)
+#+end_src
+
+** Configuration
+:PROPERTIES:
+:VISIBILITY: all
+:END:
+#+begin_src emacs-lisp
+(use-package tabulated-list
+  :elpaca nil)
 
 (use-package doom-themes
   :config
@@ -76,27 +144,10 @@ FRAME is the frame where the setting gets done."
   (defun nerd-icons--web-mode-icon (&rest arg-overrides)
     "Get icon for a `web-mode' buffer with ARG-OVERRIDES."
     (all-the-icons--web-mode nil arg-overrides)))
-#+end_src
 
-* Init file
-** Header
-:PROPERTIES:
-:VISIBILITY: folded
-:END:
-#+begin_src emacs-lisp
-;;; package --- Init.el
-;;; Commentary: This is my Emacs configuration. It works with the current bleeding edge Emacs version.
-;;; Code:
-#+end_src
-
-** Configuration
-:PROPERTIES:
-:VISIBILITY: all
-:END:
-#+begin_src emacs-lisp
 (add-hook 'after-save-hook
-	  (lambda () (when (equal (f-filename buffer-file-name) "init.org")
-		       (org-babel-tangle-file "init.org"))))
+  	  (lambda () (when (equal (f-filename buffer-file-name) "init.org")
+  		       (org-babel-tangle-file "init.org"))))
 
 (add-to-list 'exec-path "~/.local/bin")
 
@@ -105,42 +156,33 @@ FRAME is the frame where the setting gets done."
 (setq lsp-idle-delay 0.500)
 
 (use-package calendar
+  :elpaca nil
   :config
   (setq calendar-week-start-day 1))
 
 (setq native-comp-async-report-warnings-errors nil)
 
 (use-package vertico
-  :straight (vertico :files (:defaults "extensions/*.el"))
+  :elpaca (vertico :files (:defaults "extensions/*.el"))
   :init
   (vertico-mode 1)
   (setq vertico-cycle t)
-  (unbind-key (kbd "C-m") 'vertico-map))
-
-(use-package vertico-repeat
-  :commands (vertico-repeat-save vertico-repeat)
-  :straight (vertico :files (:defaults "extensions/*.el"))
-  :init
+  (unbind-key (kbd "C-m") 'vertico-map)
   (add-hook 'minibuffer-setup-hook #'vertico-repeat-save)
+  (keymap-set vertico-map "M-q" #'vertico-quick-insert)
+  (keymap-set vertico-map "C-q" #'vertico-quick-exit)
   :bind
   ("M-R" . #'vertico-repeat))
-
-(use-package vertico-quick
-  :commands (vertico-quick-insert vertico-quick-exit)
-  :straight (vertico :files (:defaults "extensions/*.el"))
-  :init
-  (keymap-set vertico-map "M-q" #'vertico-quick-insert)
-  (keymap-set vertico-map "C-q" #'vertico-quick-exit))
 
 (use-package orderless
   :config
   (setq completion-styles '(orderless basic)
-        completion-category-defaults nil
-        completion-category-overrides '((file (styles partial-completion)))
-        completion-ignore-case t)
+  	completion-category-defaults nil
+  	completion-category-overrides '((file (styles partial-completion)))
+  	completion-ignore-case t)
   (defun orderless-fast-dispatch (word index total)
     (and (= index 0) (= total 1) (length< word 4)
-         `(orderless-regexp . ,(concat "^" (regexp-quote word)))))
+  	 `(orderless-regexp . ,(concat "^" (regexp-quote word)))))
 
   (orderless-define-completion-style orderless-fast
     (orderless-style-dispatchers '(orderless-fast-dispatch))
@@ -154,7 +196,7 @@ FRAME is the frame where the setting gets done."
   (marginalia-mode 1))
 
 (use-package corfu
-  :straight (corfu :files (:defaults "extensions/*"))
+  :elpaca (corfu :files (:defaults "extensions/*"))
   :config
   (corfu-popupinfo-mode 1)
   :custom
@@ -165,11 +207,11 @@ FRAME is the frame where the setting gets done."
 
   :bind
   (:map corfu-map
-        ("TAB" . corfu-next)
-        ([tab] . corfu-next)
-        ("S-TAB" . corfu-previous)
-        ([backtab] . corfu-previous)
-        ("M-d" . corfu-popupinfo-toggle))
+  	("TAB" . corfu-next)
+  	([tab] . corfu-next)
+  	("S-TAB" . corfu-previous)
+  	([backtab] . corfu-previous)
+  	("M-d" . corfu-popupinfo-toggle))
 
   :init
   (global-corfu-mode 1))
@@ -198,9 +240,9 @@ FRAME is the frame where the setting gets done."
   (embark-quit-after-action '((t . nil)))
   :config
   (add-to-list 'display-buffer-alist
-               '("\\`\\*Embark Collect \\(Live\\|Completions\\)\\*"
-                 nil
-                 (window-parameters (mode-line-format . none)))))
+  	       '("\\`\\*Embark Collect \\(Live\\|Completions\\)\\*"
+  		 nil
+  		 (window-parameters (mode-line-format . none)))))
 
 (use-package embark-consult
   :after (embark consult)
@@ -218,18 +260,18 @@ FRAME is the frame where the setting gets done."
 (setq display-line-numbers-type 'relative)
 
 (dolist (mode '(org-mode-hook
-                term-mode-hook
-                shell-mode-hook
-                eshell-mode-hook
-                vterm-mode-hook
-                treemacs-mode-hook
-                inferior-python-mode-hook
-                pdf-view-mode-hook
-                compilation-mode-hook))
+  		term-mode-hook
+  		shell-mode-hook
+  		eshell-mode-hook
+  		vterm-mode-hook
+  		treemacs-mode-hook
+  		inferior-python-mode-hook
+  		pdf-view-mode-hook
+  		compilation-mode-hook))
   (add-hook mode #'(lambda () (display-line-numbers-mode 0))))
 
 (add-hook 'Info-mode-hook (lambda ()
-                            (display-line-numbers-mode -1)))
+  			    (display-line-numbers-mode -1)))
 
 (use-package rainbow-delimiters
   :hook (prog-mode . rainbow-delimiters-mode))
@@ -248,14 +290,14 @@ FRAME is the frame where the setting gets done."
 
 (use-package consult
   :bind (("C-s" . consult-line)
-         ("C-x f" . consult-find)
-         ("C-x b" . consult-buffer)
-         ("C-x C-b" . consult-buffer)
-         ("C-c e t" . consult-theme)
-         ("C-x ," . consult-recent-file)
-         ("C-c o" . consult-outline)
-         (:map minibuffer-local-map
-               ("C-r" . consult-history)))
+  	 ("C-x f" . consult-find)
+  	 ("C-x b" . consult-buffer)
+  	 ("C-x C-b" . consult-buffer)
+  	 ("C-c e t" . consult-theme)
+  	 ("C-x ," . consult-recent-file)
+  	 ("C-c o" . consult-outline)
+  	 (:map minibuffer-local-map
+  	       ("C-r" . consult-history)))
   :config
   (consult-customize consult-theme :preview-key '(:debounce 0.5 any)))
 
@@ -330,8 +372,8 @@ FRAME is the frame where the setting gets done."
 
 (use-package python
   :bind (:map python-mode-map
-              (("M-<left>" . python-indent-shift-left)
-               ("M-<right>" . python-indent-shift-right)))
+  	      (("M-<left>" . python-indent-shift-left)
+  	       ("M-<right>" . python-indent-shift-right)))
   :config
   (add-hook 'python-mode-hook #'(lambda () (require 'dap-python)))
   (add-hook 'python-mode-hook 'which-function-mode)
@@ -346,9 +388,9 @@ FRAME is the frame where the setting gets done."
 (defun sergio/add-indent-to-hook ()
   "Add indent to before save hook."
   (add-hook 'before-save-hook (lambda ()
-                                (interactive)
-                                (save-excursion
-                                  (indent-region (point-min) (point-max)))) nil t))
+  				(interactive)
+  				(save-excursion
+  				  (indent-region (point-min) (point-max)))) nil t))
 
 (use-package terraform-mode
   :init
@@ -362,11 +404,12 @@ FRAME is the frame where the setting gets done."
 (use-package markdown-mode)
 
 (use-package dired
-  :straight nil
+  :elpaca nil
   :init
   (add-hook 'dired-mode-hook 'dired-hide-details-mode))
 
 (use-package ede
+  :elpaca nil
   :config
   (global-ede-mode t))
 
@@ -399,11 +442,12 @@ FRAME is the frame where the setting gets done."
   (add-to-list 'project-switch-commands (list 'project-switch-to-buffer "List buffers")))
 
 (use-package eldoc
+  :elpaca nil
   :init
   (setq eldoc-documentation-strategy 'eldoc-documentation-compose-eagerly)
   (add-to-list 'display-buffer-alist
-               '("^\\*eldoc for" display-buffer-at-bottom
-                 (window-height . 4)))
+  	       '("^\\*eldoc for" display-buffer-at-bottom
+  		 (window-height . 4)))
   (global-eldoc-mode 1))
 
 (electric-pair-mode 1)
@@ -416,12 +460,12 @@ FRAME is the frame where the setting gets done."
   (setq dap-auto-configure-features '(sessions locals controls tooltip repl))
   (dap-auto-configure-mode 1)
   :bind (:map project-prefix-map
-              ("C-c C-d C-d" . dap-debug)
-              ("C-c C-d d" . dap-debug)
-              ("C-c C-d k" . dap-delete-all-sessions)
-              ("C-c C-d C-k" . dap-delete-all-sessions)
-              ("C-c C-d e" . dap-debug-edit-template)
-              ("C-c C-d C-e" . dap-debug-edit-template))
+  	      ("C-c C-d C-d" . dap-debug)
+  	      ("C-c C-d d" . dap-debug)
+  	      ("C-c C-d k" . dap-delete-all-sessions)
+  	      ("C-c C-d C-k" . dap-delete-all-sessions)
+  	      ("C-c C-d e" . dap-debug-edit-template)
+  	      ("C-c C-d C-e" . dap-debug-edit-template))
   :init
   (defun sergio/set-pointer-arrow ()
     (interactive)
@@ -444,9 +488,9 @@ FRAME is the frame where the setting gets done."
     (interactive)
     (let ((cell (org-table-get-field)))
       (if (string-match "[[:graph:]]" cell)
-          (org-table-blank-field)
-        (insert "X")
-        (org-table-align))
+  	  (org-table-blank-field)
+  	(insert "X")
+  	(org-table-align))
       (org-table-next-row)))
   :custom
   (org-ellipsis " ▼")
@@ -470,13 +514,13 @@ FRAME is the frame where the setting gets done."
   (require 'ox-md)
   (require 'org-tempo)
   (dolist (template '(("sh" . "src shell")
-                      ("el" . "src emacs-lisp")
-                      ("py" . "src python")
-                      ("ja" . "src java")
-                      ("sql" . "src sql")
-                      ("yaml" . "src yaml")
-                      ("rest" . "src restclient")
-                      ("cc" . "src C")))
+  		      ("el" . "src emacs-lisp")
+  		      ("py" . "src python")
+  		      ("ja" . "src java")
+  		      ("sql" . "src sql")
+  		      ("yaml" . "src yaml")
+  		      ("rest" . "src restclient")
+  		      ("cc" . "src C")))
     (add-to-list 'org-structure-template-alist template))
 
   ;; Babel languages.
@@ -524,10 +568,10 @@ FRAME is the frame where the setting gets done."
   :config
   (defun lsp--prepend-prefix (mappings)
     (->> mappings
-	 (-partition 2)
-	 (-mapcat (-lambda ((key description))
-		    (list (concat "SPC l" " " key)
-			  description)))))
+  	 (-partition 2)
+  	 (-mapcat (-lambda ((key description))
+  		    (list (concat "SPC l" " " key)
+  			  description)))))
   (add-hook 'csharp-ts-mode-hook 'lsp)
   (add-hook 'lsp-mode-hook 'lsp-enable-which-key-integration)
   :custom
@@ -539,7 +583,7 @@ FRAME is the frame where the setting gets done."
   (lsp-ui-doc-position 'at-point))
 
 (use-package csharp-mode
-  :straight nil
+  :elpaca nil
   :init
   (add-hook 'csharp-ts-mode-hook 'dap-mode)
   (add-hook 'csharp-ts-mode-hook #'(lambda () (require 'dap-netcore)))
@@ -552,8 +596,8 @@ FRAME is the frame where the setting gets done."
   :bind
   ("<f5>" . multi-vterm-dedicated-toggle)
   (:map vterm-mode-map
-        ("<f8>" . multi-vterm)
-        ("<f5>" . multi-vterm-dedicated-toggle))
+  	("<f8>" . multi-vterm)
+  	("<f5>" . multi-vterm-dedicated-toggle))
   :config
   (setq multi-vterm-dedicated-window-height-percent 25))
 
@@ -595,10 +639,12 @@ FRAME is the frame where the setting gets done."
   :after magit)
 
 (use-package savehist
+  :elpaca nil
   :init
   (savehist-mode 1))
 
 (use-package saveplace
+  :elpaca nil
   :init
   (save-place-mode 1))
 
@@ -618,7 +664,7 @@ FRAME is the frame where the setting gets done."
 (setq compilation-scroll-output t)
 (setq switch-to-buffer-obey-display-actions t)
 (use-package ox-moderncv
-  :straight (org-cv :host gitlab :repo "Titan-C/org-cv"))
+  :elpaca (org-cv :host gitlab :repo "Titan-C/org-cv"))
 
 (use-package evil
   :config
@@ -648,26 +694,25 @@ FRAME is the frame where the setting gets done."
   (general-create-definer leader-def
     :keymaps '(normal insert visual emacs)
     :prefix "SPC"
-    :global-prefix "C-SPC"))
+    :global-prefix "C-SPC")
+  (leader-def
+    "" '(:ignore t :wk "Global leader")
+    "e" '(:ignore t :wk "Emacs")
+    "ee" '(sergio/open-init-org :wk "Init file")
+    "et" '(consult-theme :wk "Pick theme"))
+
+  (leader-def
+    "g" '(magit-status :wk "Magit"))
+
+  (leader-def
+    "p" '(:keymap project-prefix-map :wk "Projects"))
+
+  (leader-def
+    "l" '(:keymap lsp-command-map :wk "LSP" :package lsp-mode)))
 
 (defun sergio/open-init-org ()
   (interactive)
   (find-file "~/Documents/src/configuration/init.org"))
-
-(leader-def
-  "" '(:ignore t :wk "Global leader")
-  "e" '(:ignore t :wk "Emacs")
-  "ee" '(sergio/open-init-org :wk "Init file")
-  "et" '(consult-theme :wk "Pick theme"))
-
-(leader-def
-  "g" '(magit-status :wk "Magit"))
-
-(leader-def
-  "p" '(:keymap project-prefix-map :wk "Projects"))
-
-(leader-def
-  "l" '(:keymap lsp-command-map :wk "LSP" :package lsp-mode))
 
 (use-package evil-nerd-commenter
   :config
