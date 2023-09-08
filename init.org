@@ -120,9 +120,6 @@ FRAME is the frame where the setting gets done."
 :VISIBILITY: all
 :END:
 #+begin_src emacs-lisp
-(use-package tabulated-list
-  :elpaca nil)
-
 (use-package doom-themes
   :config
   (load-theme 'doom-oceanic-next t)
@@ -215,6 +212,11 @@ FRAME is the frame where the setting gets done."
 
   :init
   (global-corfu-mode 1))
+
+(use-package corfu-mouse
+  :elpaca (corfu-mouse :repo "akib/emacs-corfu-mouse" :host codeberg)
+  :config
+  (corfu-mouse-mode 1))
 
 (use-package kind-icon
   :custom
@@ -443,12 +445,12 @@ FRAME is the frame where the setting gets done."
 
 (use-package eldoc
   :elpaca nil
-  :init
+  :config
   (setq eldoc-documentation-strategy 'eldoc-documentation-compose-eagerly)
   (add-to-list 'display-buffer-alist
   	       '("^\\*eldoc for" display-buffer-at-bottom
   		 (window-height . 4)))
-  (global-eldoc-mode 1))
+  (global-eldoc-mode))
 
 (electric-pair-mode 1)
 
@@ -565,6 +567,18 @@ FRAME is the frame where the setting gets done."
 (use-package lsp-mode
   :init
   (setq lsp-keymap-prefix "C-c l")
+  (defun my/orderless-dispatch-flex-first (_pattern index _total)
+    (and (eq index 0) 'orderless-flex))
+
+  (defun my/lsp-mode-setup-completion ()
+    (setf (alist-get 'styles (alist-get 'lsp-capf completion-category-defaults))
+          '(orderless)))
+
+  ;; Optionally configure the first word as flex filtered.
+  (add-hook 'orderless-style-dispatchers #'my/orderless-dispatch-flex-first nil 'local)
+
+  ;; Optionally configure the cape-capf-buster.
+  (setq-local completion-at-point-functions (list (cape-capf-buster #'lsp-completion-at-point)))
   :config
   (defun lsp--prepend-prefix (mappings)
     (->> mappings
@@ -575,11 +589,13 @@ FRAME is the frame where the setting gets done."
   (add-hook 'csharp-ts-mode-hook 'lsp)
   (add-hook 'lsp-mode-hook 'lsp-enable-which-key-integration)
   :custom
-  (lsp-completion-provider :none))
+  (lsp-completion-provider :none)
+  :hook
+  (lsp-completion-mode . my/lsp-mode-setup-completion))
 
 (use-package lsp-ui
   :custom
-  (lsp-ui-doc-show-with-cursor t)
+  (lsp-ui-doc-show-with-cursor nil)
   (lsp-ui-doc-position 'at-point))
 
 (use-package csharp-mode
