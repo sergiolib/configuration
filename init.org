@@ -196,6 +196,22 @@ FRAME is the frame where the setting gets done."
   :elpaca (corfu :files (:defaults "extensions/*"))
   :config
   (corfu-popupinfo-mode 1)
+  (defun corfu-enable-in-minibuffer ()
+  "Enable Corfu in the minibuffer if `completion-at-point' is bound."
+  (when (where-is-internal #'completion-at-point (list (current-local-map)))
+    ;; (setq-local corfu-auto nil) ;; Enable/disable auto completion
+    (setq-local corfu-echo-delay nil ;; Disable automatic echo and popup
+                corfu-popupinfo-delay nil)
+    (corfu-mode 1)))
+  (add-hook 'minibuffer-setup-hook #'corfu-enable-in-minibuffer)
+  (defun corfu-move-to-minibuffer ()
+  (interactive)
+  (when completion-in-region--data
+    (let ((completion-extra-properties corfu--extra)
+          completion-cycle-threshold completion-cycling)
+      (apply #'consult-completion-in-region completion-in-region--data))))
+  (keymap-set corfu-map "M-m" #'corfu-move-to-minibuffer)
+  (add-to-list 'corfu-continue-commands #'corfu-move-to-minibuffer)
   :custom
   (corfu-cycle t)
   (corfu-preselect 'prompt)
@@ -373,6 +389,7 @@ FRAME is the frame where the setting gets done."
       backup-directory-alist '(("." . "~/.emacs.d/backups")))
 
 (use-package python
+  :elpaca nil
   :bind (:map python-mode-map
   	      (("M-<left>" . python-indent-shift-left)
   	       ("M-<right>" . python-indent-shift-right)))
@@ -416,6 +433,7 @@ FRAME is the frame where the setting gets done."
   (global-ede-mode t))
 
 (use-package project
+  :elpaca nil
   :config
   (defun sergio/project-rg ()
     (interactive)
@@ -578,7 +596,9 @@ FRAME is the frame where the setting gets done."
   (add-hook 'orderless-style-dispatchers #'my/orderless-dispatch-flex-first nil 'local)
 
   ;; Optionally configure the cape-capf-buster.
-  (setq-local completion-at-point-functions (list (cape-capf-buster #'lsp-completion-at-point)))
+  (defun sergio/setup-capf()
+    (setq-local completion-at-point-functions (list 'cape-file (cape-capf-buster #'lsp-completion-at-point) (cape-capf-prefix-length #'cape-dabbrev 2))))
+  (add-hook 'lsp-mode-hook 'sergio/setup-capf)
   :config
   (defun lsp--prepend-prefix (mappings)
     (->> mappings
@@ -609,12 +629,12 @@ FRAME is the frame where the setting gets done."
   :mode ("\\.cs$" . csharp-ts-mode))
 
 (use-package multi-vterm
-  :bind
-  ("<f5>" . multi-vterm-dedicated-toggle)
-  (:map vterm-mode-map
-  	("<f8>" . multi-vterm)
-  	("<f5>" . multi-vterm-dedicated-toggle))
-  :config
+  ;; :bind
+  ;; ("<f5>" . multi-vterm-dedicated-toggle)
+  ;; (:map vterm-mode-map
+  ;; 	("<f8>" . multi-vterm)
+  ;; 	("<f5>" . multi-vterm-dedicated-toggle))
+  ;; :config
   (setq multi-vterm-dedicated-window-height-percent 25))
 
 (tab-bar-mode -1)
@@ -670,8 +690,6 @@ FRAME is the frame where the setting gets done."
 
 (use-package yasnippet-snippets)
 
-(use-package fixmee)
-
 (setq backup-directory-alist
       `((".*" . "~/.emacs.d/autosave")))
 (setq auto-save-file-name-transforms
@@ -724,7 +742,10 @@ FRAME is the frame where the setting gets done."
     "p" '(:keymap project-prefix-map :wk "Projects"))
 
   (leader-def
-    "l" '(:keymap lsp-command-map :wk "LSP" :package lsp-mode)))
+    "l" '(:keymap lsp-command-map :wk "LSP" :package lsp-mode))
+
+  (leader-def
+    "x" '(vterm :wk "Terminal")))
 
 (defun sergio/open-init-org ()
   (interactive)
@@ -758,6 +779,12 @@ FRAME is the frame where the setting gets done."
   ("C-M-d" . 'evil-multiedit-match-all))
 
 (define-key minibuffer-mode-map (kbd "M-d") 'kill-word)
+
+(use-package rainbow-mode
+  :hook (
+  (prog-mode . rainbow-mode)
+  (org-mode . rainbow-mode))
+  )
 #+end_src
 
 ** Dashboard
