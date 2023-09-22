@@ -248,7 +248,7 @@ FRAME is the frame where the setting gets done."
   :init
   (setq enable-recursive-minibuffers t)
   (minibuffer-depth-indicate-mode 1)
-  (dolist (map (list corfu-map minibuffer-mode-map))
+  (dolist (map (list corfu-map minibuffer-mode-map evil-normal-state-map evil-insert-state-map evil-visual-state-map))
     (define-key map (kbd "C-.") 'embark-act)
     (define-key map (kbd "M-.") 'embark-dwim)
     (define-key map (kbd "C-h B") 'embark-bindings))
@@ -453,7 +453,7 @@ FRAME is the frame where the setting gets done."
   (define-key project-prefix-map "m" 'sergio/project-magit)
   (add-to-list 'project-switch-commands (list 'sergio/project-magit "Magit"))
 
-  (setq project-find-functions (list #'project-try-ede #'project-try-vc))
+  (setq project-find-functions (list #'project-try-vc))
   (add-to-list 'project-switch-commands (list 'project-switch-to-buffer "List buffers")))
 
 (use-package eldoc
