@@ -248,6 +248,7 @@ FRAME is the frame where the setting gets done."
 (setq tab-always-indent 'complete)
 
 (use-package embark
+  :after evil
   :commands (embark-act embark-dwim embark-bindings)
   :init
   (setq enable-recursive-minibuffers t)
