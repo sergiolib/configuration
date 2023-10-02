@@ -212,6 +212,10 @@ FRAME is the frame where the setting gets done."
 	(apply #'consult-completion-in-region completion-in-region--data))))
   (keymap-set corfu-map "M-m" #'corfu-move-to-minibuffer)
   (add-to-list 'corfu-continue-commands #'corfu-move-to-minibuffer)
+  (dolist (map (list corfu-map minibuffer-mode-map))
+    (define-key map (kbd "C-.") 'embark-act)
+    (define-key map (kbd "M-.") 'embark-dwim)
+    (define-key map (kbd "C-h B") 'embark-bindings))
   :custom
   (corfu-cycle t)
   (corfu-preselect 'prompt)
@@ -248,11 +252,6 @@ FRAME is the frame where the setting gets done."
   :init
   (setq enable-recursive-minibuffers t)
   (minibuffer-depth-indicate-mode 1)
-  (dolist (map (list corfu-map minibuffer-mode-map evil-normal-state-map evil-insert-state-map evil-visual-state-map))
-    (define-key map (kbd "C-.") 'embark-act)
-    (define-key map (kbd "M-.") 'embark-dwim)
-    (define-key map (kbd "C-h B") 'embark-bindings))
-  (global-set-key (kbd "C-.") 'embark-act)
   :custom
   (embark-prompter 'embark-keymap-prompter)
   (embark-quit-after-action '((t . nil)))
@@ -260,7 +259,8 @@ FRAME is the frame where the setting gets done."
   (add-to-list 'display-buffer-alist
   	       '("\\`\\*Embark Collect \\(Live\\|Completions\\)\\*"
   		 nil
-  		 (window-parameters (mode-line-format . none)))))
+  		 (window-parameters (mode-line-format . none))))
+)
 
 (use-package embark-consult
   :after (embark consult)
@@ -462,9 +462,7 @@ FRAME is the frame where the setting gets done."
   (setq eldoc-documentation-strategy 'eldoc-documentation-compose-eagerly)
   (add-to-list 'display-buffer-alist
   	       '("^\\*eldoc for" display-buffer-at-bottom
-                 (window-height . 4)))
-  :hook
-  (lsp-mode . eldoc-mode))
+                 (window-height . 4))))
 
 (electric-pair-mode 1)
 
@@ -594,7 +592,8 @@ FRAME is the frame where the setting gets done."
 
   ;; Optionally configure the cape-capf-buster.
   (defun sergio/setup-capf()
-    (setq-local completion-at-point-functions (list 'cape-file (cape-capf-buster #'lsp-completion-at-point) (cape-capf-prefix-length #'cape-dabbrev 2))))
+    (setq-local completion-at-point-functions (list 'cape-file (cape-capf-buster #'lsp-completion-at-point) ;;(cape-capf-prefix-length #'cape-dabbrev 2)
+)))
   (add-hook 'lsp-mode-hook 'sergio/setup-capf)
   :config
   (defun lsp--prepend-prefix (mappings)
@@ -621,11 +620,10 @@ FRAME is the frame where the setting gets done."
   (add-hook 'csharp-ts-mode-hook 'dap-mode)
   (add-hook 'csharp-ts-mode-hook #'(lambda () (require 'dap-netcore)))
   (add-hook 'csharp-ts-mode-hook #'(lambda () (setq-local tab-width 4)))
+  (add-hook 'csharp-ts-mode-hook 'eldoc-mode)
   :config
   (setq dap-netcore-download-url "https://github.com/Samsung/netcoredbg/releases/download/2.2.3-992/netcoredbg-linux-amd64.tar.gz")
-  :mode ("\\.cs$" . csharp-ts-mode)
-  :bind (:map csharp-ts-mode-map
-	      ("C-s" . isearch-forward)))
+  :mode ("\\.cs$" . csharp-ts-mode))
 
 (tab-bar-mode -1)
 
@@ -698,6 +696,10 @@ FRAME is the frame where the setting gets done."
   (global-set-key (kbd "C-M-u") 'universal-argument)
   (evil-global-set-key 'insert (kbd "C-g") 'evil-normal-state)
   (evil-global-set-key 'visual (kbd "C-g") 'evil-normal-state)
+  (dolist (map (list evil-normal-state-map evil-insert-state-map evil-visual-state-map))
+    (define-key map (kbd "C-.") 'embark-act)
+    (define-key map (kbd "M-.") 'embark-dwim)
+    (define-key map (kbd "C-h B") 'embark-bindings))
   :custom
   (evil-goto-definition-functions '(evil-goto-definition-xref evil-goto-definition-imenu evil-goto-definition-semantic evil-goto-definition-search))
   (evil-want-keybinding nil)
