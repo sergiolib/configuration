@@ -457,14 +457,6 @@ FRAME is the frame where the setting gets done."
   (setq project-find-functions (list #'project-try-vc))
   (add-to-list 'project-switch-commands (list 'project-switch-to-buffer "List buffers")))
 
-(use-package eldoc
-  :elpaca nil
-  :config
-  (setq eldoc-documentation-strategy 'eldoc-documentation-compose-eagerly)
-  (add-to-list 'display-buffer-alist
-  	       '("^\\*eldoc for" display-buffer-at-bottom
-                 (window-height . 4))))
-
 (electric-pair-mode 1)
 
 (defun safe-local-variable-p (sym val) t)
@@ -621,7 +613,6 @@ FRAME is the frame where the setting gets done."
   (add-hook 'csharp-ts-mode-hook 'dap-mode)
   (add-hook 'csharp-ts-mode-hook #'(lambda () (require 'dap-netcore)))
   (add-hook 'csharp-ts-mode-hook #'(lambda () (setq-local tab-width 4)))
-  (add-hook 'csharp-ts-mode-hook 'eldoc-mode)
   :config
   (setq dap-netcore-download-url "https://github.com/Samsung/netcoredbg/releases/download/2.2.3-992/netcoredbg-linux-amd64.tar.gz")
   :mode ("\\.cs$" . csharp-ts-mode))
