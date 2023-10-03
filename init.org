@@ -332,7 +332,7 @@ FRAME is the frame where the setting gets done."
 
 (setq inhibit-startup-message t)
 (setq system-time-locale "C")
-(tooltip-mode 1)
+(tooltip-mode -1)
 (setq visual-bell t)
 
 (setq enable-local-eval t)
