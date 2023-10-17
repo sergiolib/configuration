@@ -595,7 +595,7 @@ FRAME is the frame where the setting gets done."
   	 (-mapcat (-lambda ((key description))
   		    (list (concat "SPC l" " " key)
   			  description)))))
-  (add-hook 'csharp-ts-mode-hook 'lsp)
+  (add-hook 'csharp-mode-hook 'lsp)
   (add-hook 'lsp-mode-hook 'lsp-enable-which-key-integration)
   :custom
   (lsp-completion-provider :none)
@@ -610,12 +610,12 @@ FRAME is the frame where the setting gets done."
 (use-package csharp-mode
   :elpaca nil
   :init
-  (add-hook 'csharp-ts-mode-hook 'dap-mode)
-  (add-hook 'csharp-ts-mode-hook #'(lambda () (require 'dap-netcore)))
-  (add-hook 'csharp-ts-mode-hook #'(lambda () (setq-local tab-width 4)))
+  (add-hook 'csharp-mode-hook 'dap-mode)
+  (add-hook 'csharp-mode-hook #'(lambda () (require 'dap-netcore)))
+  (add-hook 'csharp-mode-hook #'(lambda () (setq-local tab-width 4)))
   :config
   (setq dap-netcore-download-url "https://github.com/Samsung/netcoredbg/releases/download/2.2.3-992/netcoredbg-linux-amd64.tar.gz")
-  :mode ("\\.cs$" . csharp-ts-mode))
+  :mode ("\\.cs$" . csharp-mode))
 
 (tab-bar-mode -1)
 
@@ -637,11 +637,11 @@ FRAME is the frame where the setting gets done."
 
 (use-package json-mode
   :config
-  (add-hook 'json-mode-hook #'(lambda () (setq-local tab-width 2)))
+  (add-hook 'json-mode-hook #'(lambda () (indent-tabs-mode -1)))
   :hook
   (json-mode . lsp)
   :custom
-  (js-indent-level 2)
+  (js-indent-level 4)
   :mode ("\\.json$" . json-mode))
 
 (use-package codespaces
@@ -773,6 +773,11 @@ FRAME is the frame where the setting gets done."
   )
 
 (pixel-scroll-mode 1)
+
+(use-package eldoc
+  :elpaca nil
+  :config
+  (set-face-attribute 'eldoc-highlight-function-argument nil :box t))
 #+end_src
 
 ** Dashboard
