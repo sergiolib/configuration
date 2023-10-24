@@ -88,6 +88,7 @@ FRAME is the frame where the setting gets done."
     (load "./elpaca-autoloads")))
 (add-hook 'after-init-hook #'elpaca-process-queues)
 (elpaca `(,@elpaca-order))
+
 ;; Install use-package support
 (elpaca elpaca-use-package
   ;; Enable :elpaca use-package keyword.
@@ -97,22 +98,6 @@ FRAME is the frame where the setting gets done."
 
 ;; Block until current queue processed.
 (elpaca-wait)
-;; (defvar bootstrap-version)
-;; (let ((bootstrap-file
-;;        (expand-file-name "straight/repos/straight.el/bootstrap.el" user-emacs-directory))
-;;       (bootstrap-version 6))
-;;   (unless (file-exists-p bootstrap-file)
-;;     (with-current-buffer
-;;         (url-retrieve-synchronously
-;;          "https://raw.githubusercontent.com/radian-software/straight.el/develop/install.el"
-;;          'silent 'inhibit-cookies)
-;;       (goto-char (point-max))
-;;       (eval-print-last-sexp)))
-;;   (load bootstrap-file nil 'nomessage))
-
-;; (straight-use-package 'use-package)
-
-;; (setq straight-use-package-by-default t)
 #+end_src
 
 ** Configuration
@@ -261,7 +246,7 @@ FRAME is the frame where the setting gets done."
   	       '("\\`\\*Embark Collect \\(Live\\|Completions\\)\\*"
   		 nil
   		 (window-parameters (mode-line-format . none))))
-)
+  )
 
 (use-package embark-consult
   :after (embark consult)
@@ -501,7 +486,11 @@ FRAME is the frame where the setting gets done."
       (org-table-next-row)))
   :custom
   (org-ellipsis " ▼")
-  (org-latex-pdf-process (list "latexmk -f -pdf %f"))
+  (org-latex-pdf-process
+   '("pdflatex -interaction nonstopmode -output-directory %o %f"
+     "bibtex %b"
+     "pdflatex -interaction nonstopmode -output-directory %o %f"
+     "pdflatex -interaction nonstopmode -output-directory %o %f"))
   (org-latex-logfiles-extensions
    '("lof" "lot" "tex~" "aux" "idx" "log" "out" "toc" "nav" "snm" "vrb" "dvi" "fdb_latexmk" "blg" "brf" "fls" "entoc" "ps" "spl" "bbl" "xmpi" "run.xml" "bcf" "acn" "acr" "alg" "glg" "gls" "ist"))
   (org-confirm-babel-evaluate nil)
@@ -550,6 +539,10 @@ FRAME is the frame where the setting gets done."
   :commands (org-store-link org-agenda org-capture)
   )
 
+(use-package denote
+  :custom
+  (denote-directory "~/Documents/Google Drive/Notes/"))
+
 (use-package org-contrib
   :config
   (require 'ox-extra)
@@ -586,7 +579,7 @@ FRAME is the frame where the setting gets done."
   ;; Optionally configure the cape-capf-buster.
   (defun sergio/setup-capf()
     (setq-local completion-at-point-functions (list 'cape-file (cape-capf-buster #'lsp-completion-at-point) ;;(cape-capf-prefix-length #'cape-dabbrev 2)
-)))
+						    )))
   (add-hook 'lsp-mode-hook 'sergio/setup-capf)
   :config
   (defun lsp--prepend-prefix (mappings)
@@ -731,7 +724,11 @@ FRAME is the frame where the setting gets done."
     "l" '(:keymap lsp-command-map :wk "LSP" :package lsp-mode))
 
   (leader-def
-    "x" '(vterm :wk "Terminal")))
+    "x" '(vterm :wk "Terminal"))
+
+  (leader-def
+    "nn" 'denote
+    "nf" 'denote-open-or-create))
 
 (defun sergio/open-init-org ()
   (interactive)
@@ -778,6 +775,8 @@ FRAME is the frame where the setting gets done."
   :elpaca nil
   :config
   (set-face-attribute 'eldoc-highlight-function-argument nil :box t))
+
+(use-package noccur)
 #+end_src
 
 ** Dashboard
