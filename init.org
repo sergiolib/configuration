@@ -543,6 +543,12 @@ FRAME is the frame where the setting gets done."
   :custom
   (denote-directory "~/Documents/Google Drive/Notes/"))
 
+(use-package ox-latex
+  :elpaca nil
+  :after org
+  :config
+  (setq org-latex-pdf-process "latexmk"))
+
 (use-package org-contrib
   :config
   (require 'ox-extra)
