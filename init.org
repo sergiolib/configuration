@@ -105,6 +105,8 @@ FRAME is the frame where the setting gets done."
 :VISIBILITY: all
 :END:
 #+begin_src emacs-lisp
+(setq agenda-file "~/Documents/agenda.org")
+
 (use-package doom-themes
   :config
   (load-theme 'doom-oceanic-next t)
@@ -535,13 +537,9 @@ FRAME is the frame where the setting gets done."
   (setq org-latex-with-hyperref nil)
   (unless (boundp 'org-latex-classes)
     (setq org-latex-classes nil))
-  (add-to-list 'org-agenda-files "~/Documents/personal.org")
+  (add-to-list 'org-agenda-files agenda-file)
   :commands (org-store-link org-agenda org-capture)
   )
-
-(use-package denote
-  :custom
-  (denote-directory "~/Documents/Google Drive/Notes/"))
 
 (use-package ox-latex
   :elpaca nil
@@ -733,8 +731,14 @@ FRAME is the frame where the setting gets done."
     "x" '(vterm :wk "Terminal"))
 
   (leader-def
-    "nn" 'denote
-    "nf" 'denote-open-or-create))
+    "n" '(:ignore t :wk "Denote")
+    "nn" '(denote :wk "Create new note")
+    "nf" '(denote-open-or-create :wk "Open notes"))
+
+  (leader-def
+    "a"  '(:ignore :wk "Agenda")
+    "af" '((lambda () (interactive) (find-file agenda-file)) :wk "Open agenda file")
+    "aa" '(org-agenda-list :wk "Show agenda")))
 
 (defun sergio/open-init-org ()
   (interactive)
@@ -782,7 +786,15 @@ FRAME is the frame where the setting gets done."
   :config
   (set-face-attribute 'eldoc-highlight-function-argument nil :box t))
 
+
 (use-package noccur)
+
+(use-package denote
+  :config
+  (setq denote-directory "~/Documents/Notes/"))
+
+(use-package guix)
+
 #+end_src
 
 ** Dashboard
