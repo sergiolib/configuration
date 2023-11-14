@@ -7,6 +7,7 @@
 :END:
 #+begin_src emacs-lisp :tangle /home/sliberman/.emacs.d/early-init.el
 ;;; backup/autosave
+(auto-save-visited-mode 1)
 (make-directory "~/.emacs.d/backup/" t)
 (make-directory "~/.emacs.d/autosave/" t)
 (defvar backup-dir (expand-file-name "~/.emacs.d/backup/"))
@@ -135,7 +136,6 @@ FRAME is the frame where the setting gets done."
 
 (setq gc-cons-threshold 100000000)
 (setq read-process-output-max (* 1024 1024)) ;; 1mb
-(setq lsp-idle-delay 0.500)
 
 (use-package calendar
   :elpaca nil
@@ -352,9 +352,6 @@ FRAME is the frame where the setting gets done."
 
 (global-set-key (kbd "C-c r") 'revert-buffer)
 
-(use-package avy
-  :commands (avy-goto-char))
-
 ;; Commented out since I need to access the keyboard prefix for kmacros
 ;;(global-set-key (kbd "C-x C-k") 'kill-this-buffer)
 
@@ -382,10 +379,7 @@ FRAME is the frame where the setting gets done."
   :config
   (add-hook 'python-mode-hook #'(lambda () (require 'dap-python)))
   (add-hook 'python-mode-hook 'which-function-mode)
-  :mode ("\\.py$" . python-mode)
-  :custom
-  (lsp-pylsp-plugins-black-enabled t)
-  (lsp-pylsp-plugins-flake8-max-line-length 120))
+  :mode ("\\.py$" . python-mode))
 
 (load-file "~/.emacs.d/fix_keywords_align.el")
 
@@ -398,8 +392,6 @@ FRAME is the frame where the setting gets done."
 				  (indent-region (point-min) (point-max)))) nil t))
 
 (use-package terraform-mode
-  :init
-  (add-hook 'terraform-mode-hook 'lsp)
   :mode
   ("\\.tf$" . terraform-mode))
 
@@ -569,52 +561,104 @@ FRAME is the frame where the setting gets done."
   ("M-<up>" . move-text-up)
   ("M-<down>" . move-text-down))
 
-(use-package lsp-mode
+(use-package eglot
   :init
-  (setq lsp-keymap-prefix "C-c l")
-  (defun my/orderless-dispatch-flex-first (_pattern index _total)
-    (and (eq index 0) 'orderless-flex))
-
-  (defun my/lsp-mode-setup-completion ()
-    (setf (alist-get 'styles (alist-get 'lsp-capf completion-category-defaults))
-          '(orderless)))
-
-  ;; Optionally configure the first word as flex filtered.
-  (add-hook 'orderless-style-dispatchers #'my/orderless-dispatch-flex-first nil 'local)
-
-  ;; Optionally configure the cape-capf-buster.
-  (defun sergio/setup-capf()
-    (setq-local completion-at-point-functions (list 'cape-file (cape-capf-buster #'lsp-completion-at-point) ;;(cape-capf-prefix-length #'cape-dabbrev 2)
-						    )))
-  (add-hook 'lsp-mode-hook 'sergio/setup-capf)
+  (add-to-list 'exec-path "~/bin/omnisharp")
   :config
-  (defun lsp--prepend-prefix (mappings)
-    (->> mappings
-  	 (-partition 2)
-  	 (-mapcat (-lambda ((key description))
-  		    (list (concat "SPC l" " " key)
-  			  description)))))
-  (add-hook 'csharp-mode-hook 'lsp)
-  (add-hook 'lsp-mode-hook 'lsp-enable-which-key-integration)
-  :custom
-  (lsp-completion-provider :none)
-  :hook
-  (lsp-completion-mode . my/lsp-mode-setup-completion))
-
-(use-package lsp-ui
-  :custom
-  (lsp-ui-doc-show-with-cursor nil)
-  (lsp-ui-doc-position 'at-point))
+  (setq eglot-events-buffer-size 0)
+  (setq eglot-server-programs `(((rust-ts-mode rust-mode) . ("rust-analyzer"))
+                                ((cmake-mode cmake-ts-mode) . ("cmake-language-server"))
+                                (vimrc-mode . ("vim-language-server" "--stdio"))
+                                ((python-mode python-ts-mode)
+                                 . ,(eglot-alternatives
+                                     '("pylsp" "pyls" ("pyright-langserver" "--stdio") "jedi-language-server")))
+                                ((js-json-mode json-mode json-ts-mode)
+                                 . ,(eglot-alternatives '(("vscode-json-language-server" "--stdio")
+                                                          ("vscode-json-languageserver" "--stdio")
+                                                          ("json-languageserver" "--stdio"))))
+                                ((js-mode js-ts-mode tsx-ts-mode typescript-ts-mode typescript-mode)
+                                 . ("typescript-language-server" "--stdio"))
+                                ((bash-ts-mode sh-mode) . ("bash-language-server" "start"))
+                                ((php-mode phps-mode)
+                                 . ,(eglot-alternatives
+                                     '(("phpactor" "language-server")
+                                       ("php" "vendor/felixfbecker/language-server/bin/php-language-server.php"))))
+                                ((c-mode c-ts-mode c++-mode c++-ts-mode objc-mode)
+                                 . ,(eglot-alternatives
+                                     '("clangd" "ccls")))
+                                (((caml-mode :language-id "ocaml")
+                                  (tuareg-mode :language-id "ocaml") reason-mode)
+                                 . ("ocamllsp"))
+                                ((ruby-mode ruby-ts-mode)
+                                 . ("solargraph" "socket" "--port" :autoport))
+                                (haskell-mode
+                                 . ("haskell-language-server-wrapper" "--lsp"))
+                                (elm-mode . ("elm-language-server"))
+                                (mint-mode . ("mint" "ls"))
+                                (kotlin-mode . ("kotlin-language-server"))
+                                ((go-mode go-dot-mod-mode go-dot-work-mode go-ts-mode go-mod-ts-mode)
+                                 . ("gopls"))
+                                ((R-mode ess-r-mode) . ("R" "--slave" "-e"
+                                                        "languageserver::run()"))
+                                ((java-mode java-ts-mode) . ("jdtls"))
+                                ((dart-mode dart-ts-mode)
+                                 . ("dart" "language-server"
+                                    "--client-id" "emacs.eglot-dart"))
+                                ((elixir-mode elixir-ts-mode heex-ts-mode)
+                                 . ,(if (and (fboundp 'w32-shell-dos-semantics)
+                                         (w32-shell-dos-semantics))
+                                        '("language_server.bat")
+                                      (eglot-alternatives
+                                       '("language_server.sh" "start_lexical.sh"))))
+                                (ada-mode . ("ada_language_server"))
+                                (scala-mode . ,(eglot-alternatives
+                                                '("metals" "metals-emacs")))
+                                (racket-mode . ("racket" "-l" "racket-langserver"))
+                                ((tex-mode context-mode texinfo-mode bibtex-mode)
+                                 . ,(eglot-alternatives '("digestif" "texlab")))
+                                (erlang-mode . ("erlang_ls" "--transport" "stdio"))
+                                ((yaml-ts-mode yaml-mode) . ("yaml-language-server" "--stdio"))
+                                (nix-mode . ,(eglot-alternatives '("nil" "rnix-lsp" "nixd")))
+                                (nickel-mode . ("nls"))
+                                (gdscript-mode . ("localhost" 6008))
+                                ((fortran-mode f90-mode) . ("fortls"))
+                                (futhark-mode . ("futhark" "lsp"))
+                                ((lua-mode lua-ts-mode) . ,(eglot-alternatives
+                                                            '("lua-language-server" "lua-lsp")))
+                                (zig-mode . ("zls"))
+                                ((css-mode css-ts-mode)
+                                 . ,(eglot-alternatives '(("vscode-css-language-server" "--stdio")
+                                                          ("css-languageserver" "--stdio"))))
+                                (html-mode . ,(eglot-alternatives '(("vscode-html-language-server" "--stdio") ("html-languageserver" "--stdio"))))
+                                ((dockerfile-mode dockerfile-ts-mode) . ("docker-langserver" "--stdio"))
+                                ((clojure-mode clojurescript-mode clojurec-mode clojure-ts-mode)
+                                 . ("clojure-lsp"))
+                                ((csharp-mode csharp-ts-mode)
+                                 . ,(eglot-alternatives
+                                     '(("OmniSharp" "-lsp")
+                                       ("csharp-ls"))))
+                                (purescript-mode . ("purescript-language-server" "--stdio"))
+                                ((perl-mode cperl-mode) . ("perl" "-MPerl::LanguageServer" "-e" "Perl::LanguageServer::run"))
+                                (markdown-mode
+                                 . ,(eglot-alternatives
+                                     '(("marksman" "server")
+                                       ("vscode-markdown-language-server" "--stdio"))))
+                                (graphviz-dot-mode . ("dot-language-server" "--stdio"))
+                                (terraform-mode . ("terraform-ls" "serve")))))
 
 (use-package csharp-mode
   :elpaca nil
   :init
-  (add-hook 'csharp-mode-hook 'dap-mode)
-  (add-hook 'csharp-mode-hook #'(lambda () (require 'dap-netcore)))
-  (add-hook 'csharp-mode-hook #'(lambda () (setq-local tab-width 4)))
+  (add-hook 'csharp-ts-mode-hook 'dap-mode)
+  (add-hook 'csharp-ts-mode-hook 'eldoc-mode)
+  (add-hook 'csharp-ts-mode-hook #'(lambda () (require 'dap-netcore)))
+  (add-hook 'csharp-ts-mode-hook 'which-function-mode)
+  (add-hook 'csharp-ts-mode-hook #'(lambda () (setq-local tab-width 4)))
   :config
   (setq dap-netcore-download-url "https://github.com/Samsung/netcoredbg/releases/download/2.2.3-992/netcoredbg-linux-amd64.tar.gz")
-  :mode ("\\.cs$" . csharp-mode))
+  :mode ("\\.cs$" . csharp-ts-mode)
+  :hook
+  ((csharp-ts-mode csharp-mode) . eglot-ensure))
 
 (tab-bar-mode -1)
 
@@ -637,8 +681,6 @@ FRAME is the frame where the setting gets done."
 (use-package json-mode
   :config
   (add-hook 'json-mode-hook #'(lambda () (indent-tabs-mode -1)))
-  :hook
-  (json-mode . lsp)
   :custom
   (js-indent-level 4)
   :mode ("\\.json$" . json-mode))
@@ -691,6 +733,8 @@ FRAME is the frame where the setting gets done."
     (define-key map (kbd "C-.") 'embark-act)
     (define-key map (kbd "M-.") 'embark-dwim)
     (define-key map (kbd "C-h B") 'embark-bindings))
+  (dolist (map (list evil-normal-state-map))
+    (define-key map (kbd "go") 'evil-avy-goto-char))
   :custom
   (evil-goto-definition-functions '(evil-goto-definition-xref evil-goto-definition-imenu evil-goto-definition-semantic evil-goto-definition-search))
   (evil-want-keybinding nil)
@@ -727,7 +771,15 @@ FRAME is the frame where the setting gets done."
     "p" '(:keymap project-prefix-map :wk "Projects"))
 
   (leader-def
-    "l" '(:keymap lsp-command-map :wk "LSP" :package lsp-mode))
+    "l" '(:ignore t :wk "Eglot")
+    "la" 'eglot-code-actions
+    "l=" '(:ignore t :wk "Format")
+    "l==" 'eglot-format-buffer
+    "lr" 'eglot-rename
+    "lh" 'eldoc-doc-buffer
+    "le" 'flymake-show-project-diagnostics
+    "ln" 'flymake-goto-next-error
+    "lp" 'flymake-goto-prev-error)
 
   (leader-def
     "x" '(vterm :wk "Terminal"))
@@ -783,6 +835,8 @@ FRAME is the frame where the setting gets done."
   (set-face-attribute 'eldoc-highlight-function-argument nil :box t))
 
 (use-package noccur)
+
+(setq warning-minimum-level :error)
 #+end_src
 
 ** Dashboard
