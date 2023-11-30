@@ -671,7 +671,7 @@ FRAME is the frame where the setting gets done."
 
 (setq vc-handled-backends '(Git))
 
-(windmove-default-keybindings '(ctrl meta))
+(windmove-default-keybindings '(ctrl shift))
 
 (use-package magit
   :bind ("C-x g" . magit-status))
@@ -849,32 +849,50 @@ FRAME is the frame where the setting gets done."
   (setq denote-directory "~/Documents/Notes/"))
 
 (use-package guix)
+
+(use-package code-cells
+  :init
+  (with-eval-after-load 'code-cells
+    (let ((map code-cells-mode-map))
+      (define-key map (kbd "M-p") 'code-cells-backward-cell)
+      (define-key map (kbd "M-n") 'code-cells-forward-cell)
+      (define-key map (kbd "C-c C-c") 'code-cells-eval)
+      ;; Overriding other minor mode bindings requires some insistence...
+      (define-key map [remap jupyter-eval-line-or-region] 'code-cells-eval)))
+ (with-eval-after-load 'code-cells
+  (let ((map code-cells-mode-map))
+    (define-key map [remap evil-search-next] (code-cells-speed-key 'code-cells-forward-cell)) ;; n
+    (define-key map [remap evil-paste-after] (code-cells-speed-key 'code-cells-backward-cell)) ;; p
+    (define-key map [remap evil-backward-word-begin] (code-cells-speed-key 'code-cells-eval-above)) ;; b
+    (define-key map [remap evil-forward-word-end] (code-cells-speed-key 'code-cells-eval)) ;; e
+    (define-key map [remap evil-jump-forward] (code-cells-speed-key 'outline-cycle)))) ;; TAB
+ )
 #+end_src
 
 ** Dashboard
 #+begin_src emacs-lisp
-(use-package dashboard
-  :config
-  (dashboard-setup-startup-hook)
-  (setq initial-buffer-choice (lambda () (get-buffer-create "*dashboard*")))
-  (setq dashboard-startup-banner 'logo)
-  (setq dashboard-banner-logo-title "GNU/Emacs")
-  (setq dashboard-projects-backend 'project-el)
-  (setq dashboard-display-icons-p t)
-  (setq dashboard-icon-type 'all-the-icons)
-  (setq dashboard-set-heading-icons t)
-  (setq dashboard-set-file-icons t)
-  (setq dashboard-center-content t)
-  (setq dashboard-heading-icons '((recents   . "history")
-                                  (bookmarks . "bookmark")
-                                  (agenda    . "calendar")
-                                  (projects  . "rocket")
-                                  (registers . "database")))
-  (setq dashboard-items '((recents  . 5)
-                          (bookmarks . 5)
-                          (projects . 5)
-                          (agenda . 5)
-                          (registers . 5))))
+;; (use-package dashboard
+;;   :config
+;;   (dashboard-setup-startup-hook)
+;;   (setq initial-buffer-choice (lambda () (get-buffer-create "*dashboard*")))
+;;   (setq dashboard-startup-banner 'logo)
+;;   (setq dashboard-banner-logo-title "GNU/Emacs")
+;;   (setq dashboard-projects-backend 'project-el)
+;;   (setq dashboard-display-icons-p t)
+;;   (setq dashboard-icon-type 'all-the-icons)
+;;   (setq dashboard-set-heading-icons t)
+;;   (setq dashboard-set-file-icons t)
+;;   (setq dashboard-center-content t)
+;;   (setq dashboard-heading-icons '((recents   . "history")
+;;                                   (bookmarks . "bookmark")
+;;                                   (agenda    . "calendar")
+;;                                   (projects  . "rocket")
+;;                                   (registers . "database")))
+;;   (setq dashboard-items '((recents  . 5)
+;;                           (bookmarks . 5)
+;;                           (projects . 5)
+;;                           (agenda . 5)
+;;                           (registers . 5))))
 #+end_src
 
 ** Fonts
