@@ -381,7 +381,9 @@ FRAME is the frame where the setting gets done."
   :config
   (add-hook 'python-mode-hook #'(lambda () (require 'dap-python)))
   (add-hook 'python-mode-hook 'which-function-mode)
-  :mode ("\\.py$" . python-mode))
+  :mode ("\\.py$" . python-mode)
+  :hook
+  ((python-ts-mode python-mode) . eglot-ensure))
 
 (load-file "~/.emacs.d/fix_keywords_align.el")
 
@@ -395,7 +397,9 @@ FRAME is the frame where the setting gets done."
 
 (use-package terraform-mode
   :mode
-  ("\\.tf$" . terraform-mode))
+  ("\\.tf$" . terraform-mode)
+  :hook
+  ((terraform-mode) . eglot-ensure))
 
 (add-hook 'emacs-lisp-mode-hook 'sergio/add-indent-to-hook)
 (add-hook 'lisp-data-mode-hook 'sergio/add-indent-to-hook)
@@ -780,7 +784,7 @@ FRAME is the frame where the setting gets done."
     "lp" 'flymake-goto-prev-error)
 
   (leader-def
-    "x" '(vterm :wk "Terminal"))
+    "x" '(vterm-other-window :wk "Terminal"))
 
   (leader-def
     "n" '(:ignore t :wk "Denote")
@@ -867,6 +871,8 @@ FRAME is the frame where the setting gets done."
     (define-key map [remap evil-forward-word-end] (code-cells-speed-key 'code-cells-eval)) ;; e
     (define-key map [remap evil-jump-forward] (code-cells-speed-key 'outline-cycle)))) ;; TAB
  )
+
+(use-package svelte-mode)
 #+end_src
 
 ** Dashboard
