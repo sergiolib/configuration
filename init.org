@@ -381,9 +381,15 @@ FRAME is the frame where the setting gets done."
   :config
   (add-hook 'python-mode-hook #'(lambda () (require 'dap-python)))
   (add-hook 'python-mode-hook 'which-function-mode)
+  :init
+  (defun try-activate-poetry-venv ()
+    "Try activate poetry virtual env or fail silently"
+    (ignore-errors
+      (poetry-venv-workon)))
   :mode ("\\.py$" . python-mode)
   :hook
-  ((python-ts-mode python-mode) . eglot-ensure))
+  ((python-ts-mode python-mode) . eglot-ensure)
+  ((python-ts-mode python-mode) . try-activate-poetry-venv))
 
 (load-file "~/.emacs.d/fix_keywords_align.el")
 
@@ -567,6 +573,13 @@ FRAME is the frame where the setting gets done."
   :init
   (add-to-list 'exec-path "~/bin/omnisharp")
   :config
+  (setq-default eglot-workspace-configuration
+		'(:pylsp (:plugins (
+				    :flake8 (:enabled t)
+				    :pycodestyle (:enabled :json-false)
+				    :pyflakes (:enabled :json-false)
+				    :mccabe (:enabled :json-false))
+			  :configurationSources ["flake8"])))
   (setq eglot-events-buffer-size 0)
   (setq eglot-server-programs `(((rust-ts-mode rust-mode) . ("rust-analyzer"))
                                 ((cmake-mode cmake-ts-mode) . ("cmake-language-server"))
@@ -909,6 +922,17 @@ FRAME is the frame where the setting gets done."
 (set-face-attribute 'font-lock-comment-face nil :slant 'italic)
 #+end_src
 
+** Pulumi
+#+begin_src emacs-lisp
+(add-to-list 'exec-path "~/.pulumi/bin")
+#+end_src
+
+** Dired Gitignore
+#+begin_src emacs-lisp
+(use-package dired-gitignore
+  :bind (:map dired-mode-map
+	      ("C-c h" . #'dired-gitignore-global-mode)))
+#+end_src
 * Fix keywords alignment
 #+BEGIN_SRC emacs-lisp :tangle /home/sliberman/.emacs.d/fix_keywords_align.el
 (advice-add #'calculate-lisp-indent :override #'void~calculate-lisp-indent)
