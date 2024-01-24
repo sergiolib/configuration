@@ -571,7 +571,7 @@ FRAME is the frame where the setting gets done."
 
 (use-package eglot
   :init
-  (add-to-list 'exec-path "~/bin/omnisharp")
+  (add-to-list 'exec-path "~/.local/omnisharp")
   :config
   (setq-default eglot-workspace-configuration
 		'(:pylsp (:plugins (
@@ -932,6 +932,10 @@ FRAME is the frame where the setting gets done."
 (use-package dired-gitignore
   :bind (:map dired-mode-map
 	      ("C-c h" . #'dired-gitignore-global-mode)))
+#+end_src
+** Fancy scrolling
+#+begin_src emacs-lisp
+(pixel-scroll-precision-mode 1)
 #+end_src
 * Fix keywords alignment
 #+BEGIN_SRC emacs-lisp :tangle /home/sliberman/.emacs.d/fix_keywords_align.el
