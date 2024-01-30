@@ -108,6 +108,8 @@ FRAME is the frame where the setting gets done."
 #+begin_src emacs-lisp
 (setq agenda-file "~/Documents/agenda.org")
 
+(setq-default tab-width 4)
+
 (use-package doom-themes
   :config
   (load-theme 'doom-oceanic-next t)
@@ -350,6 +352,8 @@ FRAME is the frame where the setting gets done."
   :commands (pyvenv-mode pyvenv-tracking-mode))
 
 (use-package poetry
+  :init
+  (setenv "PATH" (concat "/home/sliberman/.local/bin:" (getenv "PATH")))
   :commands (poetry))
 
 (global-set-key (kbd "C-c r") 'revert-buffer)
