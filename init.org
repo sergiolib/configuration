@@ -7,37 +7,9 @@
 :END:
 #+begin_src emacs-lisp :tangle /home/sliberman/.emacs.d/early-init.el
 ;;; backup/autosave
-(auto-save-visited-mode 1)
-(make-directory "~/.emacs.d/backup/" t)
-(make-directory "~/.emacs.d/autosave/" t)
-(defvar backup-dir (expand-file-name "~/.emacs.d/backup/"))
-(defvar autosave-dir (expand-file-name "~/.emacs.d/autosave/"))
-(setq backup-directory-alist (list (cons ".*" backup-dir)))
-(setq auto-save-list-file-prefix autosave-dir)
-(setq auto-save-file-name-transforms `((".*" ,autosave-dir t)))
 (setq package-enable-at-startup nil)
-(tool-bar-mode -1)
-(scroll-bar-mode -1)
-(menu-bar-mode -1)
 
 (defvar native-comp-deferred-compilation-deny-list nil)
-
-(setq initial-scratch-message "")
-
-(column-number-mode 1)
-
-(defun set-window-faces (frame)
-  "Set font families and sizes for all frames.
-FRAME is the frame where the setting gets done."
-  (set-face-attribute 'default nil :family "JetBrains Mono" :height 120)
-  (set-face-attribute 'fixed-pitch nil :family "JetBrains Mono" :height 120)
-  (remove-hook 'after-make-frame-functions 'set-window-faces))
-
-(if (and (boundp 'server-process)
-         (processp server-process)
-         (server-running-p))
-    (add-hook 'after-make-frame-functions #'set-window-faces)
-  (set-window-faces nil))
 #+end_src
 
 * Init file
@@ -53,7 +25,7 @@ FRAME is the frame where the setting gets done."
 
 ** Elpaca
 #+begin_src emacs-lisp
-(defvar elpaca-installer-version 0.5)
+(defvar elpaca-installer-version 0.6)
 (defvar elpaca-directory (expand-file-name "elpaca/" user-emacs-directory))
 (defvar elpaca-builds-directory (expand-file-name "builds/" elpaca-directory))
 (defvar elpaca-repos-directory (expand-file-name "repos/" elpaca-directory))
@@ -106,7 +78,37 @@ FRAME is the frame where the setting gets done."
 :VISIBILITY: all
 :END:
 #+begin_src emacs-lisp
+(auto-save-visited-mode 1)
+(make-directory "~/.emacs.d/backup/" t)
+(make-directory "~/.emacs.d/autosave/" t)
+(defvar backup-dir (expand-file-name "~/.emacs.d/backup/"))
+(defvar autosave-dir (expand-file-name "~/.emacs.d/autosave/"))
+(setq backup-directory-alist (list (cons ".*" backup-dir)))
+(setq auto-save-list-file-prefix autosave-dir)
+(setq auto-save-file-name-transforms `((".*" ,autosave-dir t)))
 (setq agenda-file "~/Documents/agenda.org")
+(setq notes-directory "~/Documents/Notes/")
+
+(tool-bar-mode -1)
+(scroll-bar-mode -1)
+(menu-bar-mode 1)
+
+(setq initial-scratch-message "")
+
+(column-number-mode 1)
+
+(defun set-window-faces (frame)
+  "Set font families and sizes for all frames.
+FRAME is the frame where the setting gets done."
+  (set-face-attribute 'default nil :family "JetBrains Mono" :height 120)
+  (set-face-attribute 'fixed-pitch nil :family "JetBrains Mono" :height 120)
+  (remove-hook 'after-make-frame-functions 'set-window-faces))
+
+(if (and (boundp 'server-process)
+         (processp server-process)
+         (server-running-p))
+    (add-hook 'after-make-frame-functions #'set-window-faces)
+  (set-window-faces nil))
 
 (setq-default tab-width 4)
 
@@ -258,7 +260,22 @@ FRAME is the frame where the setting gets done."
   :hook
   (embark-collect-mode . consult-preview-at-point-mode))
 
-(use-package cape)
+(use-package cape
+  :init
+  (add-to-list 'completion-at-point-functions #'cape-dabbrev)
+  (add-to-list 'completion-at-point-functions #'cape-file)
+  (add-to-list 'completion-at-point-functions #'cape-elisp-block)
+  ;; :config
+  ;; (add-hook 'prog-mode-hook #'(lambda ()
+  ;; 							   (setq-local completion-at-point-functions
+  ;; 								(list (cape-capf-buster #'(lambda ()
+  ;; 															(cape-capf-super
+  ;; 															 #'eglot-completion-at-point
+  ;; 															 #'cape-file
+  ;; 															 #'cape-dabbrev
+  ;; 															 t)
+  ;; 															))))))
+)
 
 (use-package which-key
   :init
@@ -416,11 +433,6 @@ FRAME is the frame where the setting gets done."
 
 (use-package markdown-mode)
 
-(use-package dired
-  :elpaca nil
-  :init
-  (add-hook 'dired-mode-hook 'dired-hide-details-mode))
-
 (use-package project
   :elpaca nil
   :config
@@ -449,8 +461,6 @@ FRAME is the frame where the setting gets done."
 
   (setq project-find-functions (list #'project-try-vc))
   (add-to-list 'project-switch-commands (list 'project-switch-to-buffer "List buffers")))
-
-(electric-pair-mode 1)
 
 (defun safe-local-variable-p (sym val) t)
 
@@ -544,8 +554,11 @@ FRAME is the frame where the setting gets done."
   (unless (boundp 'org-latex-classes)
     (setq org-latex-classes nil))
   (add-to-list 'org-agenda-files agenda-file)
+  (mapcar #'(lambda (f) (add-to-list 'org-agenda-files (concat notes-directory f)))
+		  (-filter #'(lambda (f) (s-ends-with? ".org" f))
+				   (directory-files notes-directory)))
   :commands (org-store-link org-agenda org-capture)
-  )
+)
 
 (use-package ox-latex
   :elpaca nil
@@ -565,6 +578,7 @@ FRAME is the frame where the setting gets done."
 (use-package org-modern)
 
 (add-hook 'prog-mode 'electric-indent-mode)
+(add-hook 'prog-mode 'electric-pair-mode)
 
 (size-indication-mode -1)
 
@@ -573,9 +587,9 @@ FRAME is the frame where the setting gets done."
   ("M-<up>" . move-text-up)
   ("M-<down>" . move-text-down))
 
+(use-package jsonrpc)
+
 (use-package eglot
-  :init
-  (add-to-list 'exec-path "~/.local/omnisharp")
   :config
   (setq-default eglot-workspace-configuration
 		'(:pylsp (:plugins (
@@ -674,6 +688,8 @@ FRAME is the frame where the setting gets done."
   (add-hook 'csharp-ts-mode-hook 'which-function-mode)
   (add-hook 'csharp-ts-mode-hook #'(lambda () (setq-local tab-width 4)))
   :config
+  :init
+  (add-to-list 'exec-path "~/.local/omnisharp")
   (setq dap-netcore-download-url "https://github.com/Samsung/netcoredbg/releases/download/2.2.3-992/netcoredbg-linux-amd64.tar.gz")
   :mode ("\\.cs$" . csharp-ts-mode)
   :hook
@@ -694,14 +710,28 @@ FRAME is the frame where the setting gets done."
 
 (windmove-default-keybindings '(ctrl shift))
 
+(use-package seq)
+
 (use-package magit
+  :elpaca ( :package "magit"
+		   :fetcher github
+		   :repo "magit/magit"
+		   :files ("lisp/magit*.el"
+				   "lisp/git-rebase.el" "docs/magit.texi"
+				   "docs/AUTHORS.md" "LICENSE"
+				   "Documentation/magit.texi"
+				   "Documentation/AUTHORS.md" (:exclude
+											   "lisp/magit-libgit.el"
+											   "lisp/magit-libgit-pkg.el"
+											   "lisp/magit-section.el"
+											   "lisp/magit-section-pkg.el"))
+		   :source "MELPA")
   :bind ("C-x g" . magit-status))
 
 (use-package json-mode
   :config
   (add-hook 'json-mode-hook #'(lambda () (indent-tabs-mode -1)))
-  :custom
-  (js-indent-level 4)
+  (add-hook 'json-mode-hook #'(lambda () (make-local-variable 'js-indent-level) (setq js-indent-level 4)))
   :mode ("\\.json$" . json-mode))
 
 (use-package codespaces
@@ -739,8 +769,6 @@ FRAME is the frame where the setting gets done."
 
 (setq compilation-scroll-output t)
 (setq switch-to-buffer-obey-display-actions t)
-(use-package ox-moderncv
-  :elpaca (org-cv :host gitlab :repo "Titan-C/org-cv"))
 
 (use-package evil
   :config
@@ -805,8 +833,7 @@ FRAME is the frame where the setting gets done."
 
   (leader-def
     "n" '(:ignore t :wk "Denote")
-    "nn" '(denote :wk "Create new note")
-    "nf" '(denote-open-or-create :wk "Open notes"))
+    "nn" '(denote-open-or-create :wk "Open note or create"))
 
   (leader-def
     "a"  '(:ignore :wk "Agenda")
@@ -855,7 +882,6 @@ FRAME is the frame where the setting gets done."
 (pixel-scroll-mode 1)
 
 (use-package eldoc
-  :elpaca nil
   :config
   (set-face-attribute 'eldoc-highlight-function-argument nil :box t))
 
@@ -867,7 +893,7 @@ FRAME is the frame where the setting gets done."
 
 (use-package denote
   :config
-  (setq denote-directory "~/Documents/Notes/"))
+  (setq denote-directory notes-directory))
 
 (use-package guix)
 
@@ -931,15 +957,26 @@ FRAME is the frame where the setting gets done."
 (add-to-list 'exec-path "~/.pulumi/bin")
 #+end_src
 
-** Dired Gitignore
-#+begin_src emacs-lisp
-(use-package dired-gitignore
-  :bind (:map dired-mode-map
-	      ("C-c h" . #'dired-gitignore-global-mode)))
-#+end_src
 ** Fancy scrolling
 #+begin_src emacs-lisp
 (pixel-scroll-precision-mode 1)
+#+end_src
+** Wgrep
+#+begin_src emacs-lisp
+(use-package wgrep)
+#+end_src
+** Dired
+#+begin_src emacs-lisp
+(use-package dired
+  :elpaca nil
+  :init
+  (add-hook 'dired-mode-hook 'dired-hide-details-mode))
+
+(use-package dired-gitignore
+  :bind (:map dired-mode-map
+	      ("C-c h" . #'dired-gitignore-global-mode)))
+
+(use-package dired-narrow)
 #+end_src
 * Fix keywords alignment
 #+BEGIN_SRC emacs-lisp :tangle /home/sliberman/.emacs.d/fix_keywords_align.el
