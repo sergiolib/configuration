@@ -30,9 +30,9 @@
 (defvar elpaca-builds-directory (expand-file-name "builds/" elpaca-directory))
 (defvar elpaca-repos-directory (expand-file-name "repos/" elpaca-directory))
 (defvar elpaca-order '(elpaca :repo "https://github.com/progfolio/elpaca.git"
-                              :ref nil
-                              :files (:defaults (:exclude "extensions"))
-                              :build (:not elpaca--activate-package)))
+                       :ref nil
+                       :files (:defaults (:exclude "extensions"))
+                       :build (:not elpaca--activate-package)))
 (let* ((repo  (expand-file-name "elpaca/" elpaca-repos-directory))
        (build (expand-file-name "elpaca/" elpaca-builds-directory))
        (order (cdr elpaca-order))
@@ -144,7 +144,7 @@ FRAME is the frame where the setting gets done."
 (setq read-process-output-max (* 1024 1024)) ;; 1mb
 
 (use-package calendar
-  :elpaca nil
+  :ensure nil
   :config
   (setq calendar-week-start-day 1))
 
@@ -275,7 +275,7 @@ FRAME is the frame where the setting gets done."
   ;; 															 #'cape-dabbrev
   ;; 															 t)
   ;; 															))))))
-)
+  )
 
 (use-package which-key
   :init
@@ -375,9 +375,6 @@ FRAME is the frame where the setting gets done."
 
 (global-set-key (kbd "C-c r") 'revert-buffer)
 
-;; Commented out since I need to access the keyboard prefix for kmacros
-;;(global-set-key (kbd "C-x C-k") 'kill-this-buffer)
-
 (use-package org-roam
   :commands (org-roam-node-find)
   :init
@@ -395,7 +392,7 @@ FRAME is the frame where the setting gets done."
       backup-directory-alist '(("." . "~/.emacs.d/backups")))
 
 (use-package python
-  :elpaca nil
+  :ensure nil
   :bind (:map python-mode-map
   	      (("M-<left>" . python-indent-shift-left)
   	       ("M-<right>" . python-indent-shift-right)))
@@ -434,7 +431,7 @@ FRAME is the frame where the setting gets done."
 (use-package markdown-mode)
 
 (use-package project
-  :elpaca nil
+  :ensure nil
   :config
   (defun sergio/project-rg ()
     (interactive)
@@ -555,13 +552,13 @@ FRAME is the frame where the setting gets done."
     (setq org-latex-classes nil))
   (add-to-list 'org-agenda-files agenda-file)
   (mapcar #'(lambda (f) (add-to-list 'org-agenda-files (concat notes-directory f)))
-		  (-filter #'(lambda (f) (s-ends-with? ".org" f))
-				   (directory-files notes-directory)))
+	  (-filter #'(lambda (f) (s-ends-with? ".org" f))
+		   (directory-files notes-directory)))
   :commands (org-store-link org-agenda org-capture)
-)
+  )
 
 (use-package ox-latex
-  :elpaca nil
+  :ensure nil
   :after org
   :config
   (setq org-latex-pdf-process "latexmk"))
@@ -677,10 +674,16 @@ FRAME is the frame where the setting gets done."
                                      '(("marksman" "server")
                                        ("vscode-markdown-language-server" "--stdio"))))
                                 (graphviz-dot-mode . ("dot-language-server" "--stdio"))
-                                (terraform-mode . ("terraform-ls" "serve")))))
+                                (terraform-mode . ("terraform-ls" "serve"))))
+  (add-hook 'pyvenv-post-activate-hooks 'eglot-ensure)
+  (defun sergio/format-buffer ()
+	"If in python-mode, format the buffer on save."
+	(when (and (equal major-mode 'python-mode) (eglot-managed-p))
+	  (eglot-format-buffer)))
+  (add-hook 'before-save-hook 'sergio/format-buffer))
 
 (use-package csharp-mode
-  :elpaca nil
+  :ensure nil
   :init
   (add-hook 'csharp-ts-mode-hook 'dap-mode)
   (add-hook 'csharp-ts-mode-hook 'eldoc-mode)
@@ -710,22 +713,19 @@ FRAME is the frame where the setting gets done."
 
 (windmove-default-keybindings '(ctrl shift))
 
+(defun +elpaca-unload-seq (e)
+  (and (featurep 'seq) (unload-feature 'seq t))
+  (elpaca--continue-build e))
+
+;; You could embed this code directly in the reicpe, I just abstracted it into a function.
+(defun +elpaca-seq-build-steps ()
+  (append (butlast (if (file-exists-p (expand-file-name "seq" elpaca-builds-directory))
+                       elpaca--pre-built-steps elpaca-build-steps))
+          (list '+elpaca-unload-seq 'elpaca--activate-package)))
+
 (use-package seq)
 
 (use-package magit
-  :elpaca ( :package "magit"
-		   :fetcher github
-		   :repo "magit/magit"
-		   :files ("lisp/magit*.el"
-				   "lisp/git-rebase.el" "docs/magit.texi"
-				   "docs/AUTHORS.md" "LICENSE"
-				   "Documentation/magit.texi"
-				   "Documentation/AUTHORS.md" (:exclude
-											   "lisp/magit-libgit.el"
-											   "lisp/magit-libgit-pkg.el"
-											   "lisp/magit-section.el"
-											   "lisp/magit-section-pkg.el"))
-		   :source "MELPA")
   :bind ("C-x g" . magit-status))
 
 (use-package json-mode
@@ -747,12 +747,12 @@ FRAME is the frame where the setting gets done."
   :after magit)
 
 (use-package savehist
-  :elpaca nil
+  :ensure nil
   :init
   (savehist-mode 1))
 
 (use-package saveplace
-  :elpaca nil
+  :ensure nil
   :init
   (save-place-mode 1))
 
@@ -906,14 +906,14 @@ FRAME is the frame where the setting gets done."
       (define-key map (kbd "C-c C-c") 'code-cells-eval)
       ;; Overriding other minor mode bindings requires some insistence...
       (define-key map [remap jupyter-eval-line-or-region] 'code-cells-eval)))
- (with-eval-after-load 'code-cells
-  (let ((map code-cells-mode-map))
-    (define-key map [remap evil-search-next] (code-cells-speed-key 'code-cells-forward-cell)) ;; n
-    (define-key map [remap evil-paste-after] (code-cells-speed-key 'code-cells-backward-cell)) ;; p
-    (define-key map [remap evil-backward-word-begin] (code-cells-speed-key 'code-cells-eval-above)) ;; b
-    (define-key map [remap evil-forward-word-end] (code-cells-speed-key 'code-cells-eval)) ;; e
-    (define-key map [remap evil-jump-forward] (code-cells-speed-key 'outline-cycle)))) ;; TAB
- )
+  (with-eval-after-load 'code-cells
+    (let ((map code-cells-mode-map))
+      (define-key map [remap evil-search-next] (code-cells-speed-key 'code-cells-forward-cell)) ;; n
+      (define-key map [remap evil-paste-after] (code-cells-speed-key 'code-cells-backward-cell)) ;; p
+      (define-key map [remap evil-backward-word-begin] (code-cells-speed-key 'code-cells-eval-above)) ;; b
+      (define-key map [remap evil-forward-word-end] (code-cells-speed-key 'code-cells-eval)) ;; e
+      (define-key map [remap evil-jump-forward] (code-cells-speed-key 'outline-cycle)))) ;; TAB
+  )
 
 (use-package svelte-mode)
 #+end_src
@@ -968,7 +968,7 @@ FRAME is the frame where the setting gets done."
 ** Dired
 #+begin_src emacs-lisp
 (use-package dired
-  :elpaca nil
+  :ensure nil
   :init
   (add-hook 'dired-mode-hook 'dired-hide-details-mode))
 
