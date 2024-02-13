@@ -144,7 +144,7 @@ FRAME is the frame where the setting gets done."
 (setq read-process-output-max (* 1024 1024)) ;; 1mb
 
 (use-package calendar
-  :ensure nil
+  :elpaca nil
   :config
   (setq calendar-week-start-day 1))
 
@@ -392,7 +392,7 @@ FRAME is the frame where the setting gets done."
       backup-directory-alist '(("." . "~/.emacs.d/backups")))
 
 (use-package python
-  :ensure nil
+  :elpaca nil
   :bind (:map python-mode-map
   	      (("M-<left>" . python-indent-shift-left)
   	       ("M-<right>" . python-indent-shift-right)))
@@ -431,7 +431,7 @@ FRAME is the frame where the setting gets done."
 (use-package markdown-mode)
 
 (use-package project
-  :ensure nil
+  :elpaca nil
   :config
   (defun sergio/project-rg ()
     (interactive)
@@ -558,7 +558,7 @@ FRAME is the frame where the setting gets done."
   )
 
 (use-package ox-latex
-  :ensure nil
+  :elpaca nil
   :after org
   :config
   (setq org-latex-pdf-process "latexmk"))
@@ -683,7 +683,7 @@ FRAME is the frame where the setting gets done."
   (add-hook 'before-save-hook 'sergio/format-buffer))
 
 (use-package csharp-mode
-  :ensure nil
+  :elpaca nil
   :init
   (add-hook 'csharp-ts-mode-hook 'dap-mode)
   (add-hook 'csharp-ts-mode-hook 'eldoc-mode)
@@ -747,12 +747,12 @@ FRAME is the frame where the setting gets done."
   :after magit)
 
 (use-package savehist
-  :ensure nil
+  :elpaca nil
   :init
   (savehist-mode 1))
 
 (use-package saveplace
-  :ensure nil
+  :elpaca nil
   :init
   (save-place-mode 1))
 
@@ -968,7 +968,7 @@ FRAME is the frame where the setting gets done."
 ** Dired
 #+begin_src emacs-lisp
 (use-package dired
-  :ensure nil
+  :elpaca nil
   :init
   (add-hook 'dired-mode-hook 'dired-hide-details-mode))
 
@@ -978,6 +978,9 @@ FRAME is the frame where the setting gets done."
 
 (use-package dired-narrow)
 #+end_src
+
+#+RESULTS:
+
 * Fix keywords alignment
 #+BEGIN_SRC emacs-lisp :tangle /home/sliberman/.emacs.d/fix_keywords_align.el
 (advice-add #'calculate-lisp-indent :override #'void~calculate-lisp-indent)
