@@ -869,6 +869,8 @@ FRAME is the frame where the setting gets done."
     "x" '(vterm-other-window :wk "Terminal"))
 
   (leader-def
+	"," 'consult-recent-file)
+  (leader-def
     "n" '(:ignore t :wk "Denote")
     "nn" '(denote-open-or-create :wk "Open note or create"))
 
@@ -920,8 +922,8 @@ FRAME is the frame where the setting gets done."
 
 (use-package rainbow-mode
   :hook (
-	 (prog-mode . rainbow-mode)
-	 (org-mode . rainbow-mode))
+		 (prog-mode . rainbow-mode)
+		 (org-mode . rainbow-mode))
   )
 
 (pixel-scroll-mode 1)
@@ -929,6 +931,17 @@ FRAME is the frame where the setting gets done."
 (use-package eldoc
   :config
   (set-face-attribute 'eldoc-highlight-function-argument nil :box t))
+
+(use-package eldoc-box
+  :hook
+  ;; (eldoc-mode . eldoc-box-hover-mode)
+  (eldoc-mode . eldoc-box-hover-at-point-mode)
+  :config
+  ;; (add-hook 'eldoc-box-frame-hook 'toggle-scroll-bar)
+  (setq eldoc-box-only-multi-line nil)
+  (set-face-attribute 'eldoc-box-body nil :family "Noto Sans")
+  (set-face-attribute 'eldoc-box-border nil :background "dim gray")
+  (setq eldoc-box-offset '(32 32 32)))
 
 (use-package noccur)
 
