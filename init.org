@@ -111,7 +111,43 @@ FRAME is the frame where the setting gets done."
   (set-window-faces nil))
 
 (setq-default tab-width 4)
+#+end_src
+** Evil Mode
+#+begin_src emacs-lisp
+(use-package evil
+  :config
+  (evil-mode 1)
+  (evil-global-set-key 'normal (kbd "C-M-u") 'universal-argument)
+  (evil-global-set-key 'insert (kbd "C-M-u") 'universal-argument)
+  (evil-global-set-key 'visual (kbd "C-M-u") 'universal-argument)
+  (evil-global-set-key 'insert (kbd "C-g") 'evil-normal-state)
+  (evil-global-set-key 'visual (kbd "C-g") 'evil-normal-state)
+  (dolist (map (list evil-normal-state-map evil-insert-state-map evil-visual-state-map))
+    (define-key map (kbd "C-.") 'embark-act)
+    (define-key map (kbd "M-.") 'embark-dwim)
+    (define-key map (kbd "C-h B") 'embark-bindings))
+  (dolist (map (list evil-normal-state-map))
+    (define-key map (kbd "go") 'evil-avy-goto-char))
+  ;; Buffers that have a different initial mode than normal
+  (evil-set-initial-state 'ibuffer-mode 'emacs)
+  :custom
+  (evil-goto-definition-functions '(evil-goto-definition-xref evil-goto-definition-imenu evil-goto-definition-semantic evil-goto-definition-search))
+  (evil-want-keybinding nil)
+  (evil-want-C-i-jump t)
+  (evil-want-C-u-scroll t)
+  (evil-want-Y-yank-to-eol t)
+  (evil-want-fine-undo t)
+  (evil-shift-width 2)
+  (evil-undo-system 'undo-redo)
+  (evil-symbol-word-search t)
+  (evil-jumps-cross-buffers nil))
 
+(use-package evil-collection
+  :init
+  (evil-collection-init))
+#+end_src
+** Rest of packages
+#+begin_src emacs-lisp
 (use-package doom-themes
   :config
   (load-theme 'doom-oceanic-next t)
@@ -317,7 +353,7 @@ FRAME is the frame where the setting gets done."
   :bind (("C-s" . consult-line)
   	 ("C-x f" . consult-find)
   	 ("C-x b" . consult-buffer)
-  	 ("C-x C-b" . consult-buffer)
+  	 ("C-x C-b" . ibuffer)
   	 ("C-c e t" . consult-theme)
   	 ("C-x ," . consult-recent-file)
   	 ("C-c o" . consult-outline)
@@ -366,7 +402,9 @@ FRAME is the frame where the setting gets done."
   (setq docker-run-async-with-buffer-function 'docker-run-async-with-buffer-vterm))
 
 (use-package pyvenv
-  :commands (pyvenv-mode pyvenv-tracking-mode))
+  :commands (pyvenv-mode pyvenv-tracking-mode)
+  :config
+  (pyvenv-tracking-mode 1))
 
 (use-package poetry
   :init
@@ -457,7 +495,13 @@ FRAME is the frame where the setting gets done."
   (add-to-list 'project-switch-commands (list 'sergio/project-magit "Magit"))
 
   (setq project-find-functions (list #'project-try-vc))
-  (add-to-list 'project-switch-commands (list 'project-switch-to-buffer "List buffers")))
+  (add-to-list 'project-switch-commands (list 'project-switch-to-buffer "List buffers"))
+  (defun sergio/project-add-variable ()
+	(interactive)
+	"Add dir variable to the main project directory."
+	(let ((default-directory (project-root (project-current))))
+	  (call-interactively 'add-dir-local-variable)))
+  (define-key project-prefix-map "V" 'sergio/project-add-variable))
 
 (defun safe-local-variable-p (sym val) t)
 
@@ -486,6 +530,8 @@ FRAME is the frame where the setting gets done."
 
 (use-package ob-restclient
   :after org)
+
+(use-package mixed-pitch)
 
 (use-package org
   :init
@@ -519,8 +565,14 @@ FRAME is the frame where the setting gets done."
   :hook
   (org-mode . url-handler-mode)
   (org-mode . visual-line-mode)
+  (org-mode . mixed-pitch-mode)
   (org-mode . org-modern-mode)
   :config
+  (set-face-attribute 'org-level-1 nil :height 2.5)
+  (set-face-attribute 'org-level-2 nil :height 1.8)
+  (set-face-attribute 'org-level-3 nil :height 1.5)
+  (set-face-attribute 'org-level-4 nil :height 1.2)
+  (set-face-attribute 'org-level-5 nil :height 1.1)
   (setq org-indent-indentation-per-level 2)
   (require 'ox-md)
   (require 'org-tempo)
@@ -539,6 +591,7 @@ FRAME is the frame where the setting gets done."
    'org-babel-load-languages
    '((emacs-lisp . t)
      (latex . t)
+     (terraform . t)
      (shell . t)
      (C . t)
      (sql . t)
@@ -556,6 +609,14 @@ FRAME is the frame where the setting gets done."
 		   (directory-files notes-directory)))
   :commands (org-store-link org-agenda org-capture)
   )
+
+(defun efs/org-mode-visual-fill ()
+  (setq visual-fill-column-width 100
+        visual-fill-column-center-text t)
+  (visual-fill-column-mode 1))
+
+(use-package visual-fill-column
+  :hook (org-mode . efs/org-mode-visual-fill))
 
 (use-package ox-latex
   :elpaca nil
@@ -769,40 +830,14 @@ FRAME is the frame where the setting gets done."
 
 (setq compilation-scroll-output t)
 (setq switch-to-buffer-obey-display-actions t)
+#+end_src
 
-(use-package evil
-  :config
-  (evil-mode 1)
-  (global-set-key (kbd "C-M-u") 'universal-argument)
-  (evil-global-set-key 'insert (kbd "C-g") 'evil-normal-state)
-  (evil-global-set-key 'visual (kbd "C-g") 'evil-normal-state)
-  (dolist (map (list evil-normal-state-map evil-insert-state-map evil-visual-state-map))
-    (define-key map (kbd "C-.") 'embark-act)
-    (define-key map (kbd "M-.") 'embark-dwim)
-    (define-key map (kbd "C-h B") 'embark-bindings))
-  (dolist (map (list evil-normal-state-map))
-    (define-key map (kbd "go") 'evil-avy-goto-char))
-  :custom
-  (evil-goto-definition-functions '(evil-goto-definition-xref evil-goto-definition-imenu evil-goto-definition-semantic evil-goto-definition-search))
-  (evil-want-keybinding nil)
-  (evil-want-C-i-jump t)
-  (evil-want-C-u-scroll t)
-  (evil-want-Y-yank-to-eol t)
-  (evil-want-fine-undo t)
-  (evil-shift-width 2)
-  (evil-undo-system 'undo-redo)
-  (evil-symbol-word-search t)
-  (evil-jumps-cross-buffers nil))
-
-(use-package evil-collection
-  :init
-  (evil-collection-init))
-
+#+begin_src emacs-lisp
 (use-package general
   :config
   (general-evil-setup t)
   (general-create-definer leader-def
-    :keymaps '(normal insert visual emacs)
+    :keymaps '(normal insert visual)
     :prefix "SPC"
     :global-prefix "C-SPC")
   (leader-def
@@ -811,6 +846,8 @@ FRAME is the frame where the setting gets done."
     "ee" '(sergio/open-init-org :wk "Init file")
     "et" '(consult-theme :wk "Pick theme"))
 
+  (leader-def
+    "b" 'ibuffer)
   (leader-def
     "g" '(magit-status :wk "Magit"))
 
@@ -863,13 +900,14 @@ FRAME is the frame where the setting gets done."
       (apply fn args)))
 
   (advice-add #'evil-multiedit-match-and-next :around #'make-evil-multiedit-case-sensitive)
+  (evil-define-key '(insert normal visual) (kbd "M-d") 'evil-multiedit-match-and-next)
+  (evil-define-key '(insert normal visual) (kbd "M-D") 'evil-multiedit-match-and-prev)
+  (evil-define-key '(insert normal visual) (kbd "C-M-d") 'evil-multiedit-match-all)
   :custom
   (evil-multiedit-use-symbols t)
   (evil-multiedit-follow-matches t)
   :bind
-  ("M-d" . 'evil-multiedit-match-and-next)
-  ("M-D" . 'evil-multiedit-match-and-prev)
-  ("C-M-d" . 'evil-multiedit-match-all))
+  )
 
 (define-key minibuffer-mode-map (kbd "M-d") 'kill-word)
 
@@ -980,6 +1018,32 @@ FRAME is the frame where the setting gets done."
 #+end_src
 
 #+RESULTS:
+** Ox-Pandoc
+#+begin_src emacs-lisp
+(use-package ox-pandoc)
+#+end_src
+** Ibuffer
+#+begin_src emacs-lisp
+(setq ibuffer-saved-filter-groups
+	  (quote (("default"
+			   ("dired" (mode . dired-mode))
+			   ("help" (or
+						(mode . helpful-mode)
+						(mode . help-mode)
+						(mode . Info-mode)))
+			   ("org" (or
+					   (mode . org-mode)
+					   (name . "^\\*Org.*\\*$"))
+			   ("emacs" (or
+						 (name . "^\\*scratch\\*$")
+						 (name . "^\\*Backtrace\\*$")
+						 (name . "^\\*Compile-Log\\*$")
+						 (name . "^\\*Async-native-compile-log\\*$")
+						 (name . "^\\*Messages\\*$")))))))
+(add-hook 'ibuffer-mode-hook
+		  (lambda ()
+			(ibuffer-switch-to-saved-filter-groups "default")))
+#+end_src
 
 * Fix keywords alignment
 #+BEGIN_SRC emacs-lisp :tangle /home/sliberman/.emacs.d/fix_keywords_align.el
