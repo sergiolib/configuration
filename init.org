@@ -91,7 +91,7 @@
 
 (tool-bar-mode -1)
 (scroll-bar-mode -1)
-(menu-bar-mode 1)
+(menu-bar-mode -1)
 
 (setq initial-scratch-message "")
 
@@ -591,7 +591,6 @@ FRAME is the frame where the setting gets done."
    'org-babel-load-languages
    '((emacs-lisp . t)
      (latex . t)
-     (terraform . t)
      (shell . t)
      (C . t)
      (sql . t)
@@ -656,7 +655,7 @@ FRAME is the frame where the setting gets done."
 				    :pyflakes (:enabled :json-false)
 				    :mccabe (:enabled :json-false))
 			  :configurationSources ["flake8"])))
-  (setq eglot-events-buffer-size 0)
+  (setq eglot-events-buffer-config '(:size 0 :format full))
   (setq eglot-server-programs `(((rust-ts-mode rust-mode) . ("rust-analyzer"))
                                 ((cmake-mode cmake-ts-mode) . ("cmake-language-server"))
                                 (vimrc-mode . ("vim-language-server" "--stdio"))
@@ -843,7 +842,8 @@ FRAME is the frame where the setting gets done."
   (leader-def
     "" '(:ignore t :wk "Global leader")
     "e" '(:ignore t :wk "Emacs")
-    "ee" '(sergio/open-init-org :wk "Init file")
+    "ee" '(sergio/open-init-org :wk "Org init file")
+    "eE" #'(lambda () (interactive) (find-file user-init-file)) :wk "Init file"
     "et" '(consult-theme :wk "Pick theme"))
 
   (leader-def
@@ -890,6 +890,7 @@ FRAME is the frame where the setting gets done."
   (global-evil-surround-mode 1))
 
 (global-set-key (kbd "C-c e e") 'sergio/open-init-org)
+(global-set-key (kbd "C-c e E") #'(lambda () (interactive) (find-file user-init-file)))
 
 (use-package evil-multiedit
   :config
@@ -900,9 +901,15 @@ FRAME is the frame where the setting gets done."
       (apply fn args)))
 
   (advice-add #'evil-multiedit-match-and-next :around #'make-evil-multiedit-case-sensitive)
-  (evil-define-key '(insert normal visual) (kbd "M-d") 'evil-multiedit-match-and-next)
-  (evil-define-key '(insert normal visual) (kbd "M-D") 'evil-multiedit-match-and-prev)
-  (evil-define-key '(insert normal visual) (kbd "C-M-d") 'evil-multiedit-match-all)
+  (evil-global-set-key 'insert (kbd "M-d") 'evil-multiedit-match-and-next)
+  (evil-global-set-key 'normal (kbd "M-d") 'evil-multiedit-match-and-next)
+  (evil-global-set-key 'visual (kbd "M-d") 'evil-multiedit-match-and-next)
+  (evil-global-set-key 'insert (kbd "M-D") 'evil-multiedit-match-and-prev)
+  (evil-global-set-key 'normal (kbd "M-D") 'evil-multiedit-match-and-prev)
+  (evil-global-set-key 'visual (kbd "M-D") 'evil-multiedit-match-and-prev)
+  (evil-global-set-key 'insert (kbd "C-M-d") 'evil-multiedit-match-all)
+  (evil-global-set-key 'normal (kbd "C-M-d") 'evil-multiedit-match-all)
+  (evil-global-set-key 'visual (kbd "C-M-d") 'evil-multiedit-match-all)
   :custom
   (evil-multiedit-use-symbols t)
   (evil-multiedit-follow-matches t)
@@ -923,9 +930,7 @@ FRAME is the frame where the setting gets done."
   :config
   (set-face-attribute 'eldoc-highlight-function-argument nil :box t))
 
-
 (use-package noccur)
-
 
 (setq warning-minimum-level :error)
 
