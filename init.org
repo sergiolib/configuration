@@ -129,7 +129,7 @@ FRAME is the frame where the setting gets done."
   (dolist (map (list evil-normal-state-map))
     (define-key map (kbd "go") 'evil-avy-goto-char))
   ;; Buffers that have a different initial mode than normal
-  (evil-set-initial-state 'ibuffer-mode 'emacs)
+  (evil-set-initial-state 'inferior-python-mode 'normal)
   :custom
   (evil-goto-definition-functions '(evil-goto-definition-xref evil-goto-definition-imenu evil-goto-definition-semantic evil-goto-definition-search))
   (evil-want-keybinding nil)
@@ -171,8 +171,8 @@ FRAME is the frame where the setting gets done."
     (all-the-icons--web-mode nil arg-overrides)))
 
 (add-hook 'after-save-hook
-  	  (lambda () (when (equal (f-filename buffer-file-name) "init.org")
-  		       (org-babel-tangle-file "init.org"))))
+  		  (lambda () (when (equal (f-filename buffer-file-name) "init.org")
+  					   (org-babel-tangle-file "init.org"))))
 
 (add-to-list 'exec-path "~/.local/bin")
 
@@ -201,12 +201,12 @@ FRAME is the frame where the setting gets done."
 (use-package orderless
   :config
   (setq completion-styles '(orderless basic)
-  	completion-category-defaults nil
-  	completion-category-overrides '((file (styles partial-completion)))
-  	completion-ignore-case t)
+  		completion-category-defaults nil
+  		completion-category-overrides '((file (styles partial-completion)))
+  		completion-ignore-case t)
   (defun orderless-fast-dispatch (word index total)
     (and (= index 0) (= total 1) (length< word 4)
-  	 `(orderless-regexp . ,(concat "^" (regexp-quote word)))))
+  		 `(orderless-regexp . ,(concat "^" (regexp-quote word)))))
 
   (orderless-define-completion-style orderless-fast
     (orderless-style-dispatchers '(orderless-fast-dispatch))
@@ -228,15 +228,15 @@ FRAME is the frame where the setting gets done."
     (when (where-is-internal #'completion-at-point (list (current-local-map)))
       ;; (setq-local corfu-auto nil) ;; Enable/disable auto completion
       (setq-local corfu-echo-delay nil ;; Disable automatic echo and popup
-		  corfu-popupinfo-delay nil)
+				  corfu-popupinfo-delay nil)
       (corfu-mode 1)))
   (add-hook 'minibuffer-setup-hook #'corfu-enable-in-minibuffer)
   (defun corfu-move-to-minibuffer ()
     (interactive)
     (when completion-in-region--data
       (let ((completion-extra-properties corfu--extra)
-	    completion-cycle-threshold completion-cycling)
-	(apply #'consult-completion-in-region completion-in-region--data))))
+			completion-cycle-threshold completion-cycling)
+		(apply #'consult-completion-in-region completion-in-region--data))))
   (keymap-set corfu-map "M-m" #'corfu-move-to-minibuffer)
   (add-to-list 'corfu-continue-commands #'corfu-move-to-minibuffer)
   (dolist (map (list corfu-map minibuffer-mode-map))
@@ -251,11 +251,11 @@ FRAME is the frame where the setting gets done."
 
   :bind
   (:map corfu-map
-  	("TAB" . corfu-next)
-  	([tab] . corfu-next)
-  	("S-TAB" . corfu-previous)
-  	([backtab] . corfu-previous)
-  	("M-d" . corfu-popupinfo-toggle))
+  		("TAB" . corfu-next)
+  		([tab] . corfu-next)
+  		("S-TAB" . corfu-previous)
+  		([backtab] . corfu-previous)
+  		("M-d" . corfu-popupinfo-toggle))
 
   :init
   (global-corfu-mode 1))
@@ -285,9 +285,9 @@ FRAME is the frame where the setting gets done."
   (embark-quit-after-action '((t . nil)))
   :config
   (add-to-list 'display-buffer-alist
-  	       '("\\`\\*Embark Collect \\(Live\\|Completions\\)\\*"
-  		 nil
-  		 (window-parameters (mode-line-format . none))))
+  			   '("\\`\\*Embark Collect \\(Live\\|Completions\\)\\*"
+  				 nil
+  				 (window-parameters (mode-line-format . none))))
   )
 
 (use-package embark-consult
@@ -321,18 +321,18 @@ FRAME is the frame where the setting gets done."
 (setq display-line-numbers-type 'relative)
 
 (dolist (mode '(org-mode-hook
-  		term-mode-hook
-  		shell-mode-hook
-  		eshell-mode-hook
-  		vterm-mode-hook
-  		treemacs-mode-hook
-  		inferior-python-mode-hook
-  		pdf-view-mode-hook
-  		compilation-mode-hook))
+  				term-mode-hook
+  				shell-mode-hook
+  				eshell-mode-hook
+  				vterm-mode-hook
+  				treemacs-mode-hook
+  				inferior-python-mode-hook
+  				pdf-view-mode-hook
+  				compilation-mode-hook))
   (add-hook mode #'(lambda () (display-line-numbers-mode 0))))
 
 (add-hook 'Info-mode-hook (lambda ()
-  			    (display-line-numbers-mode -1)))
+  							(display-line-numbers-mode -1)))
 
 (use-package rainbow-delimiters
   :hook (prog-mode . rainbow-delimiters-mode))
@@ -351,14 +351,14 @@ FRAME is the frame where the setting gets done."
 
 (use-package consult
   :bind (("C-s" . consult-line)
-  	 ("C-x f" . consult-find)
-  	 ("C-x b" . consult-buffer)
-  	 ("C-x C-b" . ibuffer)
-  	 ("C-c e t" . consult-theme)
-  	 ("C-x ," . consult-recent-file)
-  	 ("C-c o" . consult-outline)
-  	 (:map minibuffer-local-map
-  	       ("C-r" . consult-history)))
+  		 ("C-x f" . consult-find)
+  		 ("C-x b" . consult-buffer)
+  		 ("C-x C-b" . ibuffer)
+  		 ("C-c e t" . consult-theme)
+  		 ("C-x ," . consult-recent-file)
+  		 ("C-c o" . consult-outline)
+  		 (:map minibuffer-local-map
+  			   ("C-r" . consult-history)))
   :config
   (consult-customize consult-theme :preview-key '(:debounce 0.5 any)))
 
@@ -432,17 +432,20 @@ FRAME is the frame where the setting gets done."
 (use-package python
   :elpaca nil
   :bind (:map python-mode-map
-  	      (("M-<left>" . python-indent-shift-left)
-  	       ("M-<right>" . python-indent-shift-right)))
+  			  (("M-<left>" . python-indent-shift-left)
+  			   ("M-<right>" . python-indent-shift-right)))
   :config
   (add-hook 'python-mode-hook #'(lambda () (require 'dap-python)))
   (add-hook 'python-mode-hook 'which-function-mode)
+  (define-key inferior-python-mode-map (kbd "C-c C-k") #'(lambda () (interactive) (kill-buffer)))
   :init
   (defun try-activate-poetry-venv ()
     "Try activate poetry virtual env or fail silently"
     (ignore-errors
       (poetry-venv-workon)))
   :mode ("\\.py$" . python-mode)
+  :bind
+  ("C-c C-k" . 'python-shell-restart)
   :hook
   ((python-ts-mode python-mode) . eglot-ensure)
   ((python-ts-mode python-mode) . try-activate-poetry-venv))
@@ -453,9 +456,9 @@ FRAME is the frame where the setting gets done."
 (defun sergio/add-indent-to-hook ()
   "Add indent to before save hook."
   (add-hook 'before-save-hook (lambda ()
-				(interactive)
-				(save-excursion
-				  (indent-region (point-min) (point-max)))) nil t))
+								(interactive)
+								(save-excursion
+								  (indent-region (point-min) (point-max)))) nil t))
 
 (use-package terraform-mode
   :mode
@@ -511,12 +514,12 @@ FRAME is the frame where the setting gets done."
   (setq dap-auto-configure-features '(sessions locals controls tooltip repl))
   (dap-auto-configure-mode 1)
   :bind (:map project-prefix-map
-  	      ("C-c C-d C-d" . dap-debug)
-  	      ("C-c C-d d" . dap-debug)
-  	      ("C-c C-d k" . dap-delete-all-sessions)
-  	      ("C-c C-d C-k" . dap-delete-all-sessions)
-  	      ("C-c C-d e" . dap-debug-edit-template)
-  	      ("C-c C-d C-e" . dap-debug-edit-template))
+  			  ("C-c C-d C-d" . dap-debug)
+  			  ("C-c C-d d" . dap-debug)
+  			  ("C-c C-d k" . dap-delete-all-sessions)
+  			  ("C-c C-d C-k" . dap-delete-all-sessions)
+  			  ("C-c C-d e" . dap-debug-edit-template)
+  			  ("C-c C-d C-e" . dap-debug-edit-template))
   :init
   (defun sergio/set-pointer-arrow ()
     (interactive)
@@ -541,9 +544,9 @@ FRAME is the frame where the setting gets done."
     (interactive)
     (let ((cell (org-table-get-field)))
       (if (string-match "[[:graph:]]" cell)
-  	  (org-table-blank-field)
-  	(insert "X")
-  	(org-table-align))
+  		  (org-table-blank-field)
+  		(insert "X")
+  		(org-table-align))
       (org-table-next-row)))
   :custom
   (org-ellipsis " ▼")
@@ -577,13 +580,13 @@ FRAME is the frame where the setting gets done."
   (require 'ox-md)
   (require 'org-tempo)
   (dolist (template '(("sh" . "src shell")
-  		      ("el" . "src emacs-lisp")
-  		      ("py" . "src python")
-  		      ("ja" . "src java")
-  		      ("sql" . "src sql")
-  		      ("yaml" . "src yaml")
-  		      ("rest" . "src restclient")
-  		      ("cc" . "src C")))
+  					  ("el" . "src emacs-lisp")
+  					  ("py" . "src python")
+  					  ("ja" . "src java")
+  					  ("sql" . "src sql")
+  					  ("yaml" . "src yaml")
+  					  ("rest" . "src restclient")
+  					  ("cc" . "src C")))
     (add-to-list 'org-structure-template-alist template))
 
   ;; Babel languages.
@@ -604,8 +607,8 @@ FRAME is the frame where the setting gets done."
     (setq org-latex-classes nil))
   (add-to-list 'org-agenda-files agenda-file)
   (mapcar #'(lambda (f) (add-to-list 'org-agenda-files (concat notes-directory f)))
-	  (-filter #'(lambda (f) (s-ends-with? ".org" f))
-		   (directory-files notes-directory)))
+		  (-filter #'(lambda (f) (s-ends-with? ".org" f))
+				   (directory-files notes-directory)))
   :commands (org-store-link org-agenda org-capture)
   )
 
@@ -649,12 +652,12 @@ FRAME is the frame where the setting gets done."
 (use-package eglot
   :config
   (setq-default eglot-workspace-configuration
-		'(:pylsp (:plugins (
-				    :flake8 (:enabled t)
-				    :pycodestyle (:enabled :json-false)
-				    :pyflakes (:enabled :json-false)
-				    :mccabe (:enabled :json-false))
-			  :configurationSources ["flake8"])))
+				'(:pylsp (:plugins (
+									:flake8 (:enabled t)
+									:pycodestyle (:enabled :json-false)
+									:pyflakes (:enabled :json-false)
+									:mccabe (:enabled :json-false))
+						  :configurationSources ["flake8"])))
   (setq eglot-events-buffer-config '(:size 0 :format full))
   (setq eglot-server-programs `(((rust-ts-mode rust-mode) . ("rust-analyzer"))
                                 ((cmake-mode cmake-ts-mode) . ("cmake-language-server"))
@@ -740,7 +743,15 @@ FRAME is the frame where the setting gets done."
 	"If in python-mode, format the buffer on save."
 	(when (and (equal major-mode 'python-mode) (eglot-managed-p))
 	  (eglot-format-buffer)))
-  (add-hook 'before-save-hook 'sergio/format-buffer))
+  (add-hook 'before-save-hook 'sergio/format-buffer)
+  (defun sergio/prepend-flymake-to-eldoc ()
+	"Remove the flymake eldoc function if it is there, and then move it to the beginning of the eldoc-documentation-functions list."
+    (interactive)
+	(let* ((funcs eldoc-documentation-functions)
+		   (funcs-with-flymake (push 'flymake-eldoc-function funcs))
+		   (funcs-final (cl-remove-duplicates funcs-with-flymake :from-end t)))
+	  (setq eldoc-documentation-functions funcs-final)))
+  (add-hook 'eglot-managed-mode-hook 'sergio/prepend-flymake-to-eldoc))
 
 (use-package csharp-mode
   :elpaca nil
@@ -845,6 +856,9 @@ FRAME is the frame where the setting gets done."
     "ee" '(sergio/open-init-org :wk "Org init file")
     "eE" #'(lambda () (interactive) (find-file user-init-file)) :wk "Init file"
     "et" '(consult-theme :wk "Pick theme"))
+
+  (leader-def
+    "r" 'revert-buffer)
 
   (leader-def
     "b" 'ibuffer)
