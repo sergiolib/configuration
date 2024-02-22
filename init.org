@@ -86,6 +86,7 @@
 (setq backup-directory-alist (list (cons ".*" backup-dir)))
 (setq auto-save-list-file-prefix autosave-dir)
 (setq auto-save-file-name-transforms `((".*" ,autosave-dir t)))
+(setq auto-save-visited-interval 30)
 (setq agenda-file "~/Documents/agenda.org")
 (setq notes-directory "~/Documents/Notes/")
 
@@ -296,23 +297,6 @@ FRAME is the frame where the setting gets done."
   :hook
   (embark-collect-mode . consult-preview-at-point-mode))
 
-(use-package cape
-  :init
-  (add-to-list 'completion-at-point-functions #'cape-dabbrev)
-  (add-to-list 'completion-at-point-functions #'cape-file)
-  (add-to-list 'completion-at-point-functions #'cape-elisp-block)
-  ;; :config
-  ;; (add-hook 'prog-mode-hook #'(lambda ()
-  ;; 							   (setq-local completion-at-point-functions
-  ;; 								(list (cape-capf-buster #'(lambda ()
-  ;; 															(cape-capf-super
-  ;; 															 #'eglot-completion-at-point
-  ;; 															 #'cape-file
-  ;; 															 #'cape-dabbrev
-  ;; 															 t)
-  ;; 															))))))
-  )
-
 (use-package which-key
   :init
   (which-key-mode 1))
@@ -354,9 +338,9 @@ FRAME is the frame where the setting gets done."
   		 ("C-x f" . consult-find)
   		 ("C-x b" . consult-buffer)
   		 ("C-x C-b" . ibuffer)
-  		 ("C-c e t" . consult-theme)
-  		 ("C-x ," . consult-recent-file)
-  		 ("C-c o" . consult-outline)
+  		 ;; ("C-c e t" . consult-theme)
+  		 ;; ("C-x ," . consult-recent-file)
+  		 ;; ("C-c o" . consult-outline)
   		 (:map minibuffer-local-map
   			   ("C-r" . consult-history)))
   :config
@@ -411,7 +395,7 @@ FRAME is the frame where the setting gets done."
   (setenv "PATH" (concat "/home/sliberman/.local/bin:" (getenv "PATH")))
   :commands (poetry))
 
-(global-set-key (kbd "C-c r") 'revert-buffer)
+;; (global-set-key (kbd "C-c r") 'revert-buffer)
 
 (use-package org-roam
   :commands (org-roam-node-find)
@@ -630,10 +614,6 @@ FRAME is the frame where the setting gets done."
   :config
   (require 'ox-extra)
   (ox-extras-activate '(latex-header-blocks ignore-headlines)))
-
-(global-set-key (kbd "C-c C-l") #'org-store-link)
-(global-set-key (kbd "C-c C-a") #'org-agenda)
-(global-set-key (kbd "C-c C->") #'org-capture)
 
 (use-package org-modern)
 
@@ -858,10 +838,18 @@ FRAME is the frame where the setting gets done."
     "et" '(consult-theme :wk "Pick theme"))
 
   (leader-def
+    "o" 'consult-outline)
+
+  (leader-def
     "r" 'revert-buffer)
 
   (leader-def
+    "ff" 'find-file
+    "fd" 'dired)
+
+  (leader-def
     "b" 'ibuffer)
+
   (leader-def
     "g" '(magit-status :wk "Magit"))
 
@@ -884,14 +872,28 @@ FRAME is the frame where the setting gets done."
 
   (leader-def
 	"," 'consult-recent-file)
+
   (leader-def
     "n" '(:ignore t :wk "Denote")
-    "nn" '(denote-open-or-create :wk "Open note or create"))
+    "nn" '(denote-open-or-create :wk "Open note or create")
+    "nl" 'org-store-link)
 
   (leader-def
     "a"  '(:ignore :wk "Agenda")
     "af" '((lambda () (interactive) (find-file agenda-file)) :wk "Open agenda file")
-    "aa" '(org-agenda-list :wk "Show agenda")))
+    "aa" '(org-agenda-list :wk "Show agenda"))
+  )
+
+(use-package cape
+  :after general
+  :init
+  (add-to-list 'completion-at-point-functions #'cape-dabbrev)
+  (add-to-list 'completion-at-point-functions #'cape-file)
+  (add-to-list 'completion-at-point-functions #'cape-elisp-block)
+  :config
+  (leader-def
+    "cf" 'cape-file)
+)
 
 (defun sergio/open-init-org ()
   (interactive)
@@ -905,8 +907,8 @@ FRAME is the frame where the setting gets done."
   :config
   (global-evil-surround-mode 1))
 
-(global-set-key (kbd "C-c e e") 'sergio/open-init-org)
-(global-set-key (kbd "C-c e E") #'(lambda () (interactive) (find-file user-init-file)))
+;; (global-set-key (kbd "C-c e e") 'sergio/open-init-org)
+;; (global-set-key (kbd "C-c e E") #'(lambda () (interactive) (find-file user-init-file)))
 
 (use-package evil-multiedit
   :config
@@ -947,10 +949,12 @@ FRAME is the frame where the setting gets done."
   (set-face-attribute 'eldoc-highlight-function-argument nil :box t))
 
 (use-package eldoc-box
-  :hook
+  :after general
+  ;; :hook
   ;; (eldoc-mode . eldoc-box-hover-mode)
-  (eldoc-mode . eldoc-box-hover-at-point-mode)
+  ;; (eldoc-mode . eldoc-box-hover-at-point-mode)
   :config
+  (leader-def "<tab>" 'eldoc-box-help-at-point)
   ;; (add-hook 'eldoc-box-frame-hook 'toggle-scroll-bar)
   (setq eldoc-box-only-multi-line nil)
   (set-face-attribute 'eldoc-box-body nil :family "Noto Sans")
@@ -968,21 +972,36 @@ FRAME is the frame where the setting gets done."
 (use-package guix)
 
 (use-package code-cells
+  :after general
   :init
-  (with-eval-after-load 'code-cells
-    (let ((map code-cells-mode-map))
-      (define-key map (kbd "M-p") 'code-cells-backward-cell)
-      (define-key map (kbd "M-n") 'code-cells-forward-cell)
-      (define-key map (kbd "C-c C-c") 'code-cells-eval)
-      ;; Overriding other minor mode bindings requires some insistence...
-      (define-key map [remap jupyter-eval-line-or-region] 'code-cells-eval)))
-  (with-eval-after-load 'code-cells
-    (let ((map code-cells-mode-map))
-      (define-key map [remap evil-search-next] (code-cells-speed-key 'code-cells-forward-cell)) ;; n
-      (define-key map [remap evil-paste-after] (code-cells-speed-key 'code-cells-backward-cell)) ;; p
-      (define-key map [remap evil-backward-word-begin] (code-cells-speed-key 'code-cells-eval-above)) ;; b
-      (define-key map [remap evil-forward-word-end] (code-cells-speed-key 'code-cells-eval)) ;; e
-      (define-key map [remap evil-jump-forward] (code-cells-speed-key 'outline-cycle)))) ;; TAB
+  (defun sergio/insert-code-cells-sep ()
+	"Insert a separator of cells"
+	(interactive)
+	(save-excursion
+	  (next-line)
+	  (beginning-of-line)
+	  (newline)
+	  (insert "# %%")
+	  (newline)))
+  :config
+  (let ((map code-cells-mode-map))
+    (define-key map [remap evil-search-next] (code-cells-speed-key 'code-cells-forward-cell)) ;; n
+    (define-key map [remap evil-paste-after] (code-cells-speed-key 'code-cells-backward-cell)) ;; p
+    (define-key map [remap evil-backward-word-begin] (code-cells-speed-key 'code-cells-eval-above)) ;; b
+    (define-key map [remap evil-forward-word-end] (code-cells-speed-key 'code-cells-eval)) ;; e
+    (define-key map [remap evil-jump-forward] (code-cells-speed-key 'outline-cycle))
+    (define-key map (kbd "M-p") 'code-cells-backward-cell)
+    (define-key map (kbd "M-n") 'code-cells-forward-cell)
+    (define-key map (kbd "C-c C-c") 'code-cells-eval)
+    ;; Overriding other minor mode bindings requires some insistence...
+    (define-key map [remap jupyter-eval-line-or-region] 'code-cells-eval))
+   (leader-def code-cells-mode-map
+			 "v" '(:ignore t :wk "Code cells")
+			 "vc" 'code-cells-eval
+			 "vn" 'code-cells-forward-cell
+             "vp" 'code-cells-backward-cell
+             "vs" 'sergio/insert-code-cells-sep
+             "ve" 'code-cells-eval)
   )
 
 (use-package svelte-mode)
@@ -1018,7 +1037,7 @@ FRAME is the frame where the setting gets done."
 
 (use-package dired-gitignore
   :bind (:map dired-mode-map
-	      ("C-c h" . #'dired-gitignore-global-mode)))
+			  ("C-c h" . #'dired-gitignore-global-mode)))
 
 (use-package dired-narrow)
 #+end_src
@@ -1040,15 +1059,15 @@ FRAME is the frame where the setting gets done."
 			   ("org" (or
 					   (mode . org-mode)
 					   (name . "^\\*Org.*\\*$"))
-			   ("emacs" (or
-						 (name . "^\\*scratch\\*$")
-						 (name . "^\\*Backtrace\\*$")
-						 (name . "^\\*Compile-Log\\*$")
-						 (name . "^\\*Async-native-compile-log\\*$")
-						 (name . "^\\*Messages\\*$")))))))
-(add-hook 'ibuffer-mode-hook
-		  (lambda ()
-			(ibuffer-switch-to-saved-filter-groups "default")))
+				("emacs" (or
+						  (name . "^\\*scratch\\*$")
+						  (name . "^\\*Backtrace\\*$")
+						  (name . "^\\*Compile-Log\\*$")
+						  (name . "^\\*Async-native-compile-log\\*$")
+						  (name . "^\\*Messages\\*$")))))))
+	  (add-hook 'ibuffer-mode-hook
+				(lambda ()
+				  (ibuffer-switch-to-saved-filter-groups "default")))
 #+end_src
 
 * Fix keywords alignment
