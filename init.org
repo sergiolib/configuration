@@ -10,6 +10,9 @@
 (setq package-enable-at-startup nil)
 
 (defvar native-comp-deferred-compilation-deny-list nil)
+
+(setq use-package-minimum-reported-time 0.01)
+(setq use-package-verbose nil)
 #+end_src
 
 * Init file
@@ -613,9 +616,11 @@ FRAME is the frame where the setting gets done."
 (use-package org-contrib
   :config
   (require 'ox-extra)
-  (ox-extras-activate '(latex-header-blocks ignore-headlines)))
+  (ox-extras-activate '(latex-header-blocks ignore-headlines))
+  :defer t)
 
-(use-package org-modern)
+(use-package org-modern
+  :defer t)
 
 (add-hook 'prog-mode 'electric-indent-mode)
 (add-hook 'prog-mode 'electric-pair-mode)
@@ -630,7 +635,13 @@ FRAME is the frame where the setting gets done."
 (use-package jsonrpc)
 
 (use-package eglot
+  :commands (eglot eglot-ensure)
+  :hook
+  ((csharp-ts-mode csharp-mode) . eglot-ensure)
+  :init
+  (add-hook 'pyvenv-post-activate-hooks 'eglot-ensure)
   :config
+  (set-face-attribute 'eglot-diagnostic-tag-unnecessary-face nil :strike-through t)
   (setq-default eglot-workspace-configuration
 				'(:pylsp (:plugins (
 									:flake8 (:enabled t)
@@ -718,7 +729,6 @@ FRAME is the frame where the setting gets done."
                                        ("vscode-markdown-language-server" "--stdio"))))
                                 (graphviz-dot-mode . ("dot-language-server" "--stdio"))
                                 (terraform-mode . ("terraform-ls" "serve"))))
-  (add-hook 'pyvenv-post-activate-hooks 'eglot-ensure)
   (defun sergio/format-buffer ()
 	"If in python-mode, format the buffer on save."
 	(when (and (equal major-mode 'python-mode) (eglot-managed-p))
@@ -746,8 +756,7 @@ FRAME is the frame where the setting gets done."
   (add-to-list 'exec-path "~/.local/omnisharp")
   (setq dap-netcore-download-url "https://github.com/Samsung/netcoredbg/releases/download/2.2.3-992/netcoredbg-linux-amd64.tar.gz")
   :mode ("\\.cs$" . csharp-ts-mode)
-  :hook
-  ((csharp-ts-mode csharp-mode) . eglot-ensure))
+  )
 
 (tab-bar-mode -1)
 
@@ -785,13 +794,6 @@ FRAME is the frame where the setting gets done."
   (add-hook 'json-mode-hook #'(lambda () (make-local-variable 'js-indent-level) (setq js-indent-level 4)))
   :mode ("\\.json$" . json-mode))
 
-(use-package codespaces
-  :config
-  (codespaces-setup)
-  (add-to-list 'tramp-remote-path 'tramp-own-remote-path)
-  (setq tramp-ssh-controlmaster-options "")
-  :bind ("C-c S" . #'codespaces-connect))
-
 (recentf-mode 1)
 
 (use-package forge
@@ -811,7 +813,8 @@ FRAME is the frame where the setting gets done."
   :hook
   (prog-mode . yas-minor-mode))
 
-(use-package yasnippet-snippets)
+(use-package yasnippet-snippets
+  :defer t)
 
 (setq backup-directory-alist
       `((".*" . "~/.emacs.d/autosave")))
@@ -1004,7 +1007,8 @@ FRAME is the frame where the setting gets done."
              "ve" 'code-cells-eval)
   )
 
-(use-package svelte-mode)
+(use-package svelte-mode
+  :mode ("\\.svelte\\'" . svelte-mode))
 #+end_src
 
 ** Fonts
@@ -1026,14 +1030,17 @@ FRAME is the frame where the setting gets done."
 #+end_src
 ** Wgrep
 #+begin_src emacs-lisp
-(use-package wgrep)
+(use-package wgrep
+  :defer t)
 #+end_src
 ** Dired
 #+begin_src emacs-lisp
 (use-package dired
   :elpaca nil
   :init
-  (add-hook 'dired-mode-hook 'dired-hide-details-mode))
+  (add-hook 'dired-mode-hook 'dired-hide-details-mode)
+  :config
+  (setq dired-listing-switches "-alh"))
 
 (use-package dired-gitignore
   :bind (:map dired-mode-map
@@ -1045,7 +1052,8 @@ FRAME is the frame where the setting gets done."
 #+RESULTS:
 ** Ox-Pandoc
 #+begin_src emacs-lisp
-(use-package ox-pandoc)
+(use-package ox-pandoc
+  :defer t)
 #+end_src
 ** Ibuffer
 #+begin_src emacs-lisp
