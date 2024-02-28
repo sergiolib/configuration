@@ -81,7 +81,6 @@
 :VISIBILITY: all
 :END:
 #+begin_src emacs-lisp
-(auto-save-visited-mode 1)
 (make-directory "~/.emacs.d/backup/" t)
 (make-directory "~/.emacs.d/autosave/" t)
 (defvar backup-dir (expand-file-name "~/.emacs.d/backup/"))
@@ -89,7 +88,6 @@
 (setq backup-directory-alist (list (cons ".*" backup-dir)))
 (setq auto-save-list-file-prefix autosave-dir)
 (setq auto-save-file-name-transforms `((".*" ,autosave-dir t)))
-(setq auto-save-visited-interval 30)
 (setq agenda-file "~/Documents/agenda.org")
 (setq notes-directory "~/Documents/Notes/")
 
