@@ -387,9 +387,7 @@ FRAME is the frame where the setting gets done."
   (setq docker-run-async-with-buffer-function 'docker-run-async-with-buffer-vterm))
 
 (use-package pyvenv
-  :commands (pyvenv-mode pyvenv-tracking-mode)
-  :config
-  (pyvenv-tracking-mode 1))
+  :commands (pyvenv-mode pyvenv-tracking-mode))
 
 (use-package poetry
   :init
@@ -433,6 +431,7 @@ FRAME is the frame where the setting gets done."
   ("C-c C-k" . 'python-shell-restart)
   :hook
   ((python-ts-mode python-mode) . eglot-ensure)
+  ((python-ts-mode python-mode) . poetry-tracking-mode)
   ((python-ts-mode python-mode) . try-activate-poetry-venv))
 
 (load-file "~/.emacs.d/fix_keywords_align.el")
@@ -636,8 +635,6 @@ FRAME is the frame where the setting gets done."
   :commands (eglot eglot-ensure)
   :hook
   ((csharp-ts-mode csharp-mode) . eglot-ensure)
-  :init
-  (add-hook 'pyvenv-post-activate-hooks 'eglot-ensure)
   :config
   (set-face-attribute 'eglot-diagnostic-tag-unnecessary-face nil :strike-through t)
   (setq-default eglot-workspace-configuration
@@ -645,7 +642,8 @@ FRAME is the frame where the setting gets done."
 									:flake8 (:enabled t)
 									:pycodestyle (:enabled :json-false)
 									:pyflakes (:enabled :json-false)
-									:mccabe (:enabled :json-false))
+									:mccabe (:enabled :json-false)
+									)
 						  :configurationSources ["flake8"])))
   (setq eglot-events-buffer-config '(:size 0 :format full))
   (setq eglot-server-programs `(((rust-ts-mode rust-mode) . ("rust-analyzer"))
@@ -731,7 +729,7 @@ FRAME is the frame where the setting gets done."
 	"If in python-mode, format the buffer on save."
 	(when (and (equal major-mode 'python-mode) (eglot-managed-p))
 	  (eglot-format-buffer)))
-  (add-hook 'before-save-hook 'sergio/format-buffer)
+  ;; (add-hook 'before-save-hook 'sergio/format-buffer)
   (defun sergio/prepend-flymake-to-eldoc ()
 	"Remove the flymake eldoc function if it is there, and then move it to the beginning of the eldoc-documentation-functions list."
     (interactive)
@@ -1070,12 +1068,18 @@ FRAME is the frame where the setting gets done."
 						  (name . "^\\*Backtrace\\*$")
 						  (name . "^\\*Compile-Log\\*$")
 						  (name . "^\\*Async-native-compile-log\\*$")
-						  (name . "^\\*Messages\\*$")))))))
-	  (add-hook 'ibuffer-mode-hook
-				(lambda ()
-				  (ibuffer-switch-to-saved-filter-groups "default")))
+						  (name . "^\\*Messages\\*$"))))))))
+(add-hook 'ibuffer-mode-hook
+		  (lambda ()
+			(ibuffer-switch-to-saved-filter-groups "default")))
 #+end_src
-
+** Realgud
+#+begin_src emacs-lisp
+(use-package realgud
+  :config
+  (add-hook 'realgud-srcbuf-mode-hook 'tool-bar-mode)
+  :commands (realgud realgud:pdb))
+#+end_src
 * Fix keywords alignment
 #+BEGIN_SRC emacs-lisp :tangle /home/sliberman/.emacs.d/fix_keywords_align.el
 (advice-add #'calculate-lisp-indent :override #'void~calculate-lisp-indent)
