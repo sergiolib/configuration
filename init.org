@@ -732,11 +732,18 @@ FRAME is the frame where the setting gets done."
                                        ("vscode-markdown-language-server" "--stdio"))))
                                 (graphviz-dot-mode . ("dot-language-server" "--stdio"))
                                 (terraform-mode . ("terraform-ls" "serve"))))
+  (defun sergio/count-flymake-errors ()
+	(let ((count 0))
+	  (dolist (d (flymake-diagnostics))
+		(when (= (flymake--severity :error)
+				 (flymake--severity (flymake-diagnostic-type d)))
+		  (cl-incf count)))
+	  count))
   (defun sergio/format-buffer ()
-	"If in python-mode, format the buffer on save."
-	(when (and (equal major-mode 'python-mode) (eglot-managed-p))
-	  (eglot-format-buffer)))
-  ;; (add-hook 'before-save-hook 'sergio/format-buffer)
+	"If in python-mode and no errors in the buffer, format the buffer on save."
+	(when (and (equal major-mode 'python-mode) (eglot-managed-p) (eq (sergio/count-flymake-errors) 0)
+	  (eglot-format-buffer))))
+  (add-hook 'before-save-hook 'sergio/format-buffer)
   (defun sergio/prepend-flymake-to-eldoc ()
 	"Remove the flymake eldoc function if it is there, and then move it to the beginning of the eldoc-documentation-functions list."
     (interactive)
