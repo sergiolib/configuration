@@ -392,12 +392,14 @@ FRAME is the frame where the setting gets done."
   (setq docker-run-async-with-buffer-function 'docker-run-async-with-buffer-vterm))
 
 (use-package pyvenv
-  :commands (pyvenv-mode pyvenv-tracking-mode))
+  :hook (((python-mode python-ts-mode) . pyvenv-tracking-mode)
+		 ((python-mode python-ts-mode) . pyvenv-mode)))
 
-(use-package poetry
-  :init
-  (setenv "PATH" (concat "/home/sliberman/.local/bin:" (getenv "PATH")))
-  :commands (poetry))
+(setenv "PATH" (concat "/home/sliberman/.local/bin:" (getenv "PATH")))
+
+;; (use-package poetry
+;;   :init
+;;   :commands (poetry))
 
 ;; (global-set-key (kbd "C-c r") 'revert-buffer)
 
@@ -426,18 +428,18 @@ FRAME is the frame where the setting gets done."
   (add-hook 'python-mode-hook #'(lambda () (require 'dap-python)))
   (add-hook 'python-mode-hook 'which-function-mode)
   (define-key inferior-python-mode-map (kbd "C-c C-k") #'(lambda () (interactive) (kill-buffer)))
-  :init
-  (defun try-activate-poetry-venv ()
-    "Try activate poetry virtual env or fail silently"
-    (ignore-errors
-      (poetry-venv-workon)))
+  ;; :init
+  ;; (defun try-activate-poetry-venv ()
+  ;;   "Try activate poetry virtual env or fail silently"
+  ;;   (ignore-errors
+  ;;     (poetry-venv-workon)))
   :mode ("\\.py$" . python-mode)
   :bind
   ("C-c C-k" . 'python-shell-restart)
   :hook
   ((python-ts-mode python-mode) . eglot-ensure)
-  ((python-ts-mode python-mode) . poetry-tracking-mode)
-  ((python-ts-mode python-mode) . try-activate-poetry-venv)
+  ;; ((python-ts-mode python-mode) . poetry-tracking-mode)
+  ;; ((python-ts-mode python-mode) . try-activate-poetry-venv)
   ((python-ts-mode python-mode) . #'(lambda () (setq outline-regexp "[[:space:]]*\\_<\\(?:def\\|class\\|async[[:space:]]+\\(?:def\\)\\)\\_>")))
 )
 
@@ -474,12 +476,12 @@ FRAME is the frame where the setting gets done."
 
   (setq project-switch-commands (remove '(project-vc-dir "VC-Dir") project-switch-commands))
 
-  (defun sergio/project-poetry ()
-    (interactive)
-    (let ((default-directory (project-root (project-current))))
-      (poetry)))
-  (define-key project-prefix-map "v" 'sergio/project-poetry)
-  (add-to-list 'project-switch-commands (list 'sergio/project-poetry "Poetry"))
+  ;; (defun sergio/project-poetry ()
+  ;;   (interactive)
+  ;;   (let ((default-directory (project-root (project-current))))
+  ;;     (poetry)))
+  ;; (define-key project-prefix-map "v" 'sergio/project-poetry)
+  ;; (add-to-list 'project-switch-commands (list 'sergio/project-poetry "Poetry"))
 
   (defun sergio/project-magit ()
     (interactive)
@@ -624,7 +626,9 @@ FRAME is the frame where the setting gets done."
   :defer t)
 
 (use-package org-modern
-  :defer t)
+  :defer t
+  :init
+  (setq org-modern-table nil))
 
 (add-hook 'prog-mode 'electric-indent-mode)
 (add-hook 'prog-mode 'electric-pair-mode)
@@ -963,9 +967,9 @@ FRAME is the frame where the setting gets done."
 
 (use-package eldoc-box
   :after general
-  ;; :hook
-  ;; (eldoc-mode . eldoc-box-hover-mode)
-  ;; (eldoc-mode . eldoc-box-hover-at-point-mode)
+  :hook
+  (eldoc-mode . eldoc-box-hover-mode)
+  (eldoc-mode . eldoc-box-hover-at-point-mode)
   :config
   (leader-def "<tab>" 'eldoc-box-help-at-point)
   ;; (add-hook 'eldoc-box-frame-hook 'toggle-scroll-bar)
