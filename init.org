@@ -717,7 +717,8 @@ FRAME is the frame where the setting gets done."
                                      '(("marksman" "server")
                                        ("vscode-markdown-language-server" "--stdio"))))
                                 (graphviz-dot-mode . ("dot-language-server" "--stdio"))
-                                (terraform-mode . ("terraform-ls" "serve"))))
+                                (terraform-mode . ("terraform-ls" "serve"))
+                                (svelte-mode . ("svelteserver" "--stdio"))))
   (add-hook 'pyvenv-post-activate-hooks 'eglot-ensure)
   (defun sergio/format-buffer ()
 	"If in python-mode, format the buffer on save."
