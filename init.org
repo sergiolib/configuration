@@ -10,6 +10,9 @@
 (setq package-enable-at-startup nil)
 
 (defvar native-comp-deferred-compilation-deny-list nil)
+
+(setq use-package-minimum-reported-time 0.01)
+(setq use-package-verbose nil)
 #+end_src
 
 * Init file
@@ -78,7 +81,6 @@
 :VISIBILITY: all
 :END:
 #+begin_src emacs-lisp
-(auto-save-visited-mode 1)
 (make-directory "~/.emacs.d/backup/" t)
 (make-directory "~/.emacs.d/autosave/" t)
 (defvar backup-dir (expand-file-name "~/.emacs.d/backup/"))
@@ -86,7 +88,6 @@
 (setq backup-directory-alist (list (cons ".*" backup-dir)))
 (setq auto-save-list-file-prefix autosave-dir)
 (setq auto-save-file-name-transforms `((".*" ,autosave-dir t)))
-(setq auto-save-visited-interval 30)
 (setq agenda-file "~/Documents/agenda.org")
 (setq notes-directory "~/Documents/Notes/")
 
@@ -151,8 +152,13 @@ FRAME is the frame where the setting gets done."
 #+begin_src emacs-lisp
 (use-package doom-themes
   :config
-  (load-theme 'doom-oceanic-next t)
-  (doom-themes-org-config))
+  ;; (load-theme 'doom-oceanic-next t)
+  ;; (doom-themes-org-config)
+)
+
+(use-package ef-themes
+  :config
+  (load-theme 'ef-elea-light t))
 
 (use-package doom-modeline
   :init
@@ -386,14 +392,14 @@ FRAME is the frame where the setting gets done."
   (setq docker-run-async-with-buffer-function 'docker-run-async-with-buffer-vterm))
 
 (use-package pyvenv
-  :commands (pyvenv-mode pyvenv-tracking-mode)
-  :config
-  (pyvenv-tracking-mode 1))
+  :hook (((python-mode python-ts-mode) . pyvenv-tracking-mode)
+		 ((python-mode python-ts-mode) . pyvenv-mode)))
 
-(use-package poetry
-  :init
-  (setenv "PATH" (concat "/home/sliberman/.local/bin:" (getenv "PATH")))
-  :commands (poetry))
+(setenv "PATH" (concat "/home/sliberman/.local/bin:" (getenv "PATH")))
+
+;; (use-package poetry
+;;   :init
+;;   :commands (poetry))
 
 ;; (global-set-key (kbd "C-c r") 'revert-buffer)
 
@@ -422,17 +428,20 @@ FRAME is the frame where the setting gets done."
   (add-hook 'python-mode-hook #'(lambda () (require 'dap-python)))
   (add-hook 'python-mode-hook 'which-function-mode)
   (define-key inferior-python-mode-map (kbd "C-c C-k") #'(lambda () (interactive) (kill-buffer)))
-  :init
-  (defun try-activate-poetry-venv ()
-    "Try activate poetry virtual env or fail silently"
-    (ignore-errors
-      (poetry-venv-workon)))
+  ;; :init
+  ;; (defun try-activate-poetry-venv ()
+  ;;   "Try activate poetry virtual env or fail silently"
+  ;;   (ignore-errors
+  ;;     (poetry-venv-workon)))
   :mode ("\\.py$" . python-mode)
   :bind
   ("C-c C-k" . 'python-shell-restart)
   :hook
   ((python-ts-mode python-mode) . eglot-ensure)
-  ((python-ts-mode python-mode) . try-activate-poetry-venv))
+  ;; ((python-ts-mode python-mode) . poetry-tracking-mode)
+  ;; ((python-ts-mode python-mode) . try-activate-poetry-venv)
+  ((python-ts-mode python-mode) . #'(lambda () (setq outline-regexp "[[:space:]]*\\_<\\(?:def\\|class\\|async[[:space:]]+\\(?:def\\)\\)\\_>")))
+)
 
 (load-file "~/.emacs.d/fix_keywords_align.el")
 
@@ -467,12 +476,12 @@ FRAME is the frame where the setting gets done."
 
   (setq project-switch-commands (remove '(project-vc-dir "VC-Dir") project-switch-commands))
 
-  (defun sergio/project-poetry ()
-    (interactive)
-    (let ((default-directory (project-root (project-current))))
-      (poetry)))
-  (define-key project-prefix-map "v" 'sergio/project-poetry)
-  (add-to-list 'project-switch-commands (list 'sergio/project-poetry "Poetry"))
+  ;; (defun sergio/project-poetry ()
+  ;;   (interactive)
+  ;;   (let ((default-directory (project-root (project-current))))
+  ;;     (poetry)))
+  ;; (define-key project-prefix-map "v" 'sergio/project-poetry)
+  ;; (add-to-list 'project-switch-commands (list 'sergio/project-poetry "Poetry"))
 
   (defun sergio/project-magit ()
     (interactive)
@@ -613,9 +622,13 @@ FRAME is the frame where the setting gets done."
 (use-package org-contrib
   :config
   (require 'ox-extra)
-  (ox-extras-activate '(latex-header-blocks ignore-headlines)))
+  (ox-extras-activate '(latex-header-blocks ignore-headlines))
+  :defer t)
 
-(use-package org-modern)
+(use-package org-modern
+  :defer t
+  :init
+  (setq org-modern-table nil))
 
 (add-hook 'prog-mode 'electric-indent-mode)
 (add-hook 'prog-mode 'electric-pair-mode)
@@ -630,13 +643,18 @@ FRAME is the frame where the setting gets done."
 (use-package jsonrpc)
 
 (use-package eglot
+  :commands (eglot eglot-ensure)
+  :hook
+  ((csharp-ts-mode csharp-mode) . eglot-ensure)
   :config
+  (set-face-attribute 'eglot-diagnostic-tag-unnecessary-face nil :strike-through t)
   (setq-default eglot-workspace-configuration
 				'(:pylsp (:plugins (
 									:flake8 (:enabled t)
 									:pycodestyle (:enabled :json-false)
 									:pyflakes (:enabled :json-false)
-									:mccabe (:enabled :json-false))
+									:mccabe (:enabled :json-false)
+									)
 						  :configurationSources ["flake8"])))
   (setq eglot-events-buffer-config '(:size 0 :format full))
   (setq eglot-server-programs `(((rust-ts-mode rust-mode) . ("rust-analyzer"))
@@ -717,13 +735,24 @@ FRAME is the frame where the setting gets done."
                                      '(("marksman" "server")
                                        ("vscode-markdown-language-server" "--stdio"))))
                                 (graphviz-dot-mode . ("dot-language-server" "--stdio"))
+<<<<<<< HEAD
                                 (terraform-mode . ("terraform-ls" "serve"))
                                 (svelte-mode . ("svelteserver" "--stdio"))))
   (add-hook 'pyvenv-post-activate-hooks 'eglot-ensure)
+=======
+                                (terraform-mode . ("terraform-ls" "serve"))))
+  (defun sergio/count-flymake-errors ()
+	(let ((count 0))
+	  (dolist (d (flymake-diagnostics))
+		(when (= (flymake--severity :error)
+				 (flymake--severity (flymake-diagnostic-type d)))
+		  (cl-incf count)))
+	  count))
+>>>>>>> a216949234195886ddacad58d22581b7037da8c1
   (defun sergio/format-buffer ()
-	"If in python-mode, format the buffer on save."
-	(when (and (equal major-mode 'python-mode) (eglot-managed-p))
-	  (eglot-format-buffer)))
+	"If in python-mode and no errors in the buffer, format the buffer on save."
+	(when (and (equal major-mode 'python-mode) (eglot-managed-p) (eq (sergio/count-flymake-errors) 0)
+	  (eglot-format-buffer))))
   (add-hook 'before-save-hook 'sergio/format-buffer)
   (defun sergio/prepend-flymake-to-eldoc ()
 	"Remove the flymake eldoc function if it is there, and then move it to the beginning of the eldoc-documentation-functions list."
@@ -747,8 +776,7 @@ FRAME is the frame where the setting gets done."
   (add-to-list 'exec-path "~/.local/omnisharp")
   (setq dap-netcore-download-url "https://github.com/Samsung/netcoredbg/releases/download/2.2.3-992/netcoredbg-linux-amd64.tar.gz")
   :mode ("\\.cs$" . csharp-ts-mode)
-  :hook
-  ((csharp-ts-mode csharp-mode) . eglot-ensure))
+  )
 
 (tab-bar-mode -1)
 
@@ -786,13 +814,6 @@ FRAME is the frame where the setting gets done."
   (add-hook 'json-mode-hook #'(lambda () (make-local-variable 'js-indent-level) (setq js-indent-level 4)))
   :mode ("\\.json$" . json-mode))
 
-(use-package codespaces
-  :config
-  (codespaces-setup)
-  (add-to-list 'tramp-remote-path 'tramp-own-remote-path)
-  (setq tramp-ssh-controlmaster-options "")
-  :bind ("C-c S" . #'codespaces-connect))
-
 (recentf-mode 1)
 
 (use-package forge
@@ -812,7 +833,8 @@ FRAME is the frame where the setting gets done."
   :hook
   (prog-mode . yas-minor-mode))
 
-(use-package yasnippet-snippets)
+(use-package yasnippet-snippets
+  :defer t)
 
 (setq backup-directory-alist
       `((".*" . "~/.emacs.d/autosave")))
@@ -951,9 +973,9 @@ FRAME is the frame where the setting gets done."
 
 (use-package eldoc-box
   :after general
-  ;; :hook
-  ;; (eldoc-mode . eldoc-box-hover-mode)
-  ;; (eldoc-mode . eldoc-box-hover-at-point-mode)
+  :hook
+  (eldoc-mode . eldoc-box-hover-mode)
+  (eldoc-mode . eldoc-box-hover-at-point-mode)
   :config
   (leader-def "<tab>" 'eldoc-box-help-at-point)
   ;; (add-hook 'eldoc-box-frame-hook 'toggle-scroll-bar)
@@ -1005,7 +1027,8 @@ FRAME is the frame where the setting gets done."
              "ve" 'code-cells-eval)
   )
 
-(use-package svelte-mode)
+(use-package svelte-mode
+  :mode ("\\.svelte\\'" . svelte-mode))
 #+end_src
 
 ** Fonts
@@ -1027,14 +1050,17 @@ FRAME is the frame where the setting gets done."
 #+end_src
 ** Wgrep
 #+begin_src emacs-lisp
-(use-package wgrep)
+(use-package wgrep
+  :defer t)
 #+end_src
 ** Dired
 #+begin_src emacs-lisp
 (use-package dired
   :elpaca nil
   :init
-  (add-hook 'dired-mode-hook 'dired-hide-details-mode))
+  (add-hook 'dired-mode-hook 'dired-hide-details-mode)
+  :config
+  (setq dired-listing-switches "-alh"))
 
 (use-package dired-gitignore
   :bind (:map dired-mode-map
@@ -1046,7 +1072,8 @@ FRAME is the frame where the setting gets done."
 #+RESULTS:
 ** Ox-Pandoc
 #+begin_src emacs-lisp
-(use-package ox-pandoc)
+(use-package ox-pandoc
+  :defer t)
 #+end_src
 ** Ibuffer
 #+begin_src emacs-lisp
@@ -1065,12 +1092,22 @@ FRAME is the frame where the setting gets done."
 						  (name . "^\\*Backtrace\\*$")
 						  (name . "^\\*Compile-Log\\*$")
 						  (name . "^\\*Async-native-compile-log\\*$")
-						  (name . "^\\*Messages\\*$")))))))
-	  (add-hook 'ibuffer-mode-hook
-				(lambda ()
-				  (ibuffer-switch-to-saved-filter-groups "default")))
+						  (name . "^\\*Messages\\*$"))))))))
+(add-hook 'ibuffer-mode-hook
+		  (lambda ()
+			(ibuffer-switch-to-saved-filter-groups "default")))
 #+end_src
-
+** Realgud
+#+begin_src emacs-lisp
+(use-package realgud
+  :config
+  (add-hook 'realgud-srcbuf-mode-hook 'tool-bar-mode)
+  :commands (realgud realgud:pdb))
+#+end_src
+** Compilation mode
+#+begin_src emacs-lisp
+(add-hook 'compilation-filter-hook 'ansi-color-compilation-filter)
+#+end_src
 * Fix keywords alignment
 #+BEGIN_SRC emacs-lisp :tangle /home/sliberman/.emacs.d/fix_keywords_align.el
 (advice-add #'calculate-lisp-indent :override #'void~calculate-lisp-indent)
