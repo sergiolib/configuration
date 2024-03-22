@@ -735,12 +735,9 @@ FRAME is the frame where the setting gets done."
                                      '(("marksman" "server")
                                        ("vscode-markdown-language-server" "--stdio"))))
                                 (graphviz-dot-mode . ("dot-language-server" "--stdio"))
-<<<<<<< HEAD
                                 (terraform-mode . ("terraform-ls" "serve"))
                                 (svelte-mode . ("svelteserver" "--stdio"))))
   (add-hook 'pyvenv-post-activate-hooks 'eglot-ensure)
-=======
-                                (terraform-mode . ("terraform-ls" "serve"))))
   (defun sergio/count-flymake-errors ()
 	(let ((count 0))
 	  (dolist (d (flymake-diagnostics))
@@ -748,7 +745,6 @@ FRAME is the frame where the setting gets done."
 				 (flymake--severity (flymake-diagnostic-type d)))
 		  (cl-incf count)))
 	  count))
->>>>>>> a216949234195886ddacad58d22581b7037da8c1
   (defun sergio/format-buffer ()
 	"If in python-mode and no errors in the buffer, format the buffer on save."
 	(when (and (equal major-mode 'python-mode) (eglot-managed-p) (eq (sergio/count-flymake-errors) 0)
