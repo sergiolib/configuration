@@ -16,6 +16,10 @@
 #+end_src
 
 * Init file
+** Toggle debugging on error
+#+begin_src emacs-lisp
+;; (toggle-debug-on-error)
+#+end_src
 ** Header
 :PROPERTIES:
 :VISIBILITY: folded
@@ -116,37 +120,37 @@ FRAME is the frame where the setting gets done."
 #+end_src
 ** Evil Mode
 #+begin_src emacs-lisp
-(use-package evil
-  :config
-  (evil-mode 1)
-  (evil-global-set-key 'normal (kbd "C-M-u") 'universal-argument)
-  (evil-global-set-key 'insert (kbd "C-M-u") 'universal-argument)
-  (evil-global-set-key 'visual (kbd "C-M-u") 'universal-argument)
-  (evil-global-set-key 'insert (kbd "C-g") 'evil-normal-state)
-  (evil-global-set-key 'visual (kbd "C-g") 'evil-normal-state)
-  (dolist (map (list evil-normal-state-map evil-insert-state-map evil-visual-state-map))
-    (define-key map (kbd "C-.") 'embark-act)
-    (define-key map (kbd "M-.") 'embark-dwim)
-    (define-key map (kbd "C-h B") 'embark-bindings))
-  (dolist (map (list evil-normal-state-map))
-    (define-key map (kbd "go") 'evil-avy-goto-char))
-  ;; Buffers that have a different initial mode than normal
-  (evil-set-initial-state 'inferior-python-mode 'normal)
-  :custom
-  (evil-goto-definition-functions '(evil-goto-definition-xref evil-goto-definition-imenu evil-goto-definition-semantic evil-goto-definition-search))
-  (evil-want-keybinding nil)
-  (evil-want-C-i-jump t)
-  (evil-want-C-u-scroll t)
-  (evil-want-Y-yank-to-eol t)
-  (evil-want-fine-undo t)
-  (evil-shift-width 2)
-  (evil-undo-system 'undo-redo)
-  (evil-symbol-word-search t)
-  (evil-jumps-cross-buffers nil))
+;; (use-package evil
+;;   :config
+;;   (evil-mode 1)
+;;   (evil-global-set-key 'normal (kbd "C-M-u") 'universal-argument)
+;;   (evil-global-set-key 'insert (kbd "C-M-u") 'universal-argument)
+;;   (evil-global-set-key 'visual (kbd "C-M-u") 'universal-argument)
+;;   (evil-global-set-key 'insert (kbd "C-g") 'evil-normal-state)
+;;   (evil-global-set-key 'visual (kbd "C-g") 'evil-normal-state)
+;;   (dolist (map (list evil-normal-state-map evil-insert-state-map evil-visual-state-map))
+;;     (define-key map (kbd "C-.") 'embark-act)
+;;     (define-key map (kbd "M-.") 'embark-dwim)
+;;     (define-key map (kbd "C-h B") 'embark-bindings))
+;;   (dolist (map (list evil-normal-state-map))
+;;     (define-key map (kbd "go") 'evil-avy-goto-char))
+;;   ;; Buffers that have a different initial mode than normal
+;;   (evil-set-initial-state 'inferior-python-mode 'normal)
+;;   :custom
+;;   (evil-goto-definition-functions '(evil-goto-definition-xref evil-goto-definition-imenu evil-goto-definition-semantic evil-goto-definition-search))
+;;   (evil-want-keybinding nil)
+;;   (evil-want-C-i-jump t)
+;;   (evil-want-C-u-scroll t)
+;;   (evil-want-Y-yank-to-eol t)
+;;   (evil-want-fine-undo t)
+;;   (evil-shift-width 2)
+;;   (evil-undo-system 'undo-redo)
+;;   (evil-symbol-word-search t)
+;;   (evil-jumps-cross-buffers nil))
 
-(use-package evil-collection
-  :init
-  (evil-collection-init))
+;; (use-package evil-collection
+;;   :init
+;;   (evil-collection-init))
 #+end_src
 ** Rest of packages
 #+begin_src emacs-lisp
@@ -253,8 +257,8 @@ FRAME is the frame where the setting gets done."
   :custom
   (corfu-cycle t)
   (corfu-preselect 'prompt)
-  (corfu-auto t)
-  (corfu-auto-prefix 3)
+  ;; (corfu-auto t)
+  ;; (corfu-auto-prefix 3)
 
   :bind
   (:map corfu-map
@@ -282,7 +286,7 @@ FRAME is the frame where the setting gets done."
 (setq tab-always-indent 'complete)
 
 (use-package embark
-  :after evil
+  ;; :after evil
   :commands (embark-act embark-dwim embark-bindings)
   :init
   (setq enable-recursive-minibuffers t)
@@ -331,24 +335,19 @@ FRAME is the frame where the setting gets done."
 (setq show-paren-style 'expression)
 (setq show-paren-when-point-inside-paren nil)
 
-(setq display-time-default-load-average nil)
-(setq display-time-24hr-format t)
-(setq display-time-day-and-date t)
-(setq display-time-format "%H:%M %d-%m-%Y")
-(display-time-mode)
+(display-time-mode -1)
 
-(display-battery-mode -1)
+(display-battery-mode 1)
 
 (use-package consult
-  :bind (("C-s" . consult-line)
-  		 ("C-x f" . consult-find)
-  		 ("C-x b" . consult-buffer)
-  		 ("C-x C-b" . ibuffer)
-  		 ;; ("C-c e t" . consult-theme)
-  		 ;; ("C-x ," . consult-recent-file)
-  		 ;; ("C-c o" . consult-outline)
-  		 (:map minibuffer-local-map
-  			   ("C-r" . consult-history)))
+  :bind (("C-c s" . consult-line)
+  	 ("C-x b" . consult-buffer)
+  	 ("C-x C-b" . ibuffer)
+  	 ("C-c e t" . consult-theme)
+  	 ("C-x ," . consult-recent-file)
+  	 ("C-c o" . consult-outline)
+  	 (:map minibuffer-local-map
+  	       ("C-r" . consult-history)))
   :config
   (consult-customize consult-theme :preview-key '(:debounce 0.5 any)))
 
@@ -392,8 +391,9 @@ FRAME is the frame where the setting gets done."
   (setq docker-run-async-with-buffer-function 'docker-run-async-with-buffer-vterm))
 
 (use-package pyvenv
-  :hook (((python-mode python-ts-mode) . pyvenv-tracking-mode)
-		 ((python-mode python-ts-mode) . pyvenv-mode)))
+  :config
+  (pyvenv-tracking-mode 1)
+  (pyvenv-mode 1))
 
 (setenv "PATH" (concat "/home/sliberman/.local/bin:" (getenv "PATH")))
 
@@ -402,15 +402,6 @@ FRAME is the frame where the setting gets done."
 ;;   :commands (poetry))
 
 ;; (global-set-key (kbd "C-c r") 'revert-buffer)
-
-(use-package org-roam
-  :commands (org-roam-node-find)
-  :init
-  (setq org-roam-directory "/home/sliberman/Documents/Google Drive/RoamNotes/")
-  :config
-  (org-roam-db-autosync-mode 1)
-  :bind
-  ("C-c n" . 'org-roam-node-find))
 
 (setq backup-by-copying t
       delete-old-versions t
@@ -446,12 +437,12 @@ FRAME is the frame where the setting gets done."
 (load-file "~/.emacs.d/fix_keywords_align.el")
 
 ;; Indent the buffer in emacs-lisp mode and lisp-data mode
-(defun sergio/add-indent-to-hook ()
-  "Add indent to before save hook."
-  (add-hook 'before-save-hook (lambda ()
-								(interactive)
-								(save-excursion
-								  (indent-region (point-min) (point-max)))) nil t))
+;; (defun sergio/add-indent-to-hook ()
+;;   "Add indent to before save hook."
+;;   (add-hook 'before-save-hook (lambda ()
+;; 								(interactive)
+;; 								(save-excursion
+;; 								  (indent-region (point-min) (point-max)))) nil t))
 
 (use-package terraform-mode
   :mode
@@ -459,8 +450,8 @@ FRAME is the frame where the setting gets done."
   :hook
   ((terraform-mode) . eglot-ensure))
 
-(add-hook 'emacs-lisp-mode-hook 'sergio/add-indent-to-hook)
-(add-hook 'lisp-data-mode-hook 'sergio/add-indent-to-hook)
+;; (add-hook 'emacs-lisp-mode-hook 'sergio/add-indent-to-hook)
+;; (add-hook 'lisp-data-mode-hook 'sergio/add-indent-to-hook)
 
 (use-package markdown-mode)
 
@@ -630,8 +621,8 @@ FRAME is the frame where the setting gets done."
   :init
   (setq org-modern-table nil))
 
-(add-hook 'prog-mode 'electric-indent-mode)
-(add-hook 'prog-mode 'electric-pair-mode)
+;;(add-hook 'prog-mode-hook 'electric-indent-mode)
+(add-hook 'prog-mode-hook 'electric-pair-mode)
 
 (size-indication-mode -1)
 
@@ -654,6 +645,7 @@ FRAME is the frame where the setting gets done."
 									:pycodestyle (:enabled :json-false)
 									:pyflakes (:enabled :json-false)
 									:mccabe (:enabled :json-false)
+									;; :rope_autoimport (:enabled t)
 									)
 						  :configurationSources ["flake8"])))
   (setq eglot-events-buffer-config '(:size 0 :format full))
@@ -744,10 +736,14 @@ FRAME is the frame where the setting gets done."
 		  (cl-incf count)))
 	  count))
   (defun sergio/format-buffer ()
-	"If in python-mode and no errors in the buffer, format the buffer on save."
-	(when (and (equal major-mode 'python-mode) (eglot-managed-p) (eq (sergio/count-flymake-errors) 0)
-	  (eglot-format-buffer))))
-  (add-hook 'before-save-hook 'sergio/format-buffer)
+    (interactive)
+    (start-process-shell-command "black-formatter" nil (concat "black " buffer-file-name))
+    (start-process-shell-command "isort-formatter" nil (concat "isort " buffer-file-name)))
+  (defun sergio/add-autoformat-to-bsh ()
+    (interactive)
+    (add-hook 'before-save-hook 'sergio/format-buffer nil t))
+  (add-hook 'python-mode-hook 'sergio/add-autoformat-to-bsh)
+  (add-hook 'python-ts-mode-hook 'sergio/add-autoformat-to-bsh)
   (defun sergio/prepend-flymake-to-eldoc ()
 	"Remove the flymake eldoc function if it is there, and then move it to the beginning of the eldoc-documentation-functions list."
     (interactive)
@@ -840,66 +836,65 @@ FRAME is the frame where the setting gets done."
 #+end_src
 
 #+begin_src emacs-lisp
-(use-package general
-  :config
-  (general-evil-setup t)
-  (general-create-definer leader-def
-    :keymaps '(normal insert visual)
-    :prefix "SPC"
-    :global-prefix "C-SPC")
-  (leader-def
-    "" '(:ignore t :wk "Global leader")
-    "e" '(:ignore t :wk "Emacs")
-    "ee" '(sergio/open-init-org :wk "Org init file")
-    "eE" #'(lambda () (interactive) (find-file user-init-file)) :wk "Init file"
-    "et" '(consult-theme :wk "Pick theme"))
+;; (use-package general
+;;   :config
+;;   (general-evil-setup t)
+;;   (general-create-definer leader-def
+;;     :keymaps '(normal insert visual)
+;;     :prefix "SPC"
+;;     :global-prefix "C-SPC")
+;;   (leader-def
+;;     "" '(:ignore t :wk "Global leader")
+;;     "e" '(:ignore t :wk "Emacs")
+;;     "ee" '(sergio/open-init-org :wk "Org init file")
+;;     "eE" #'(lambda () (interactive) (find-file user-init-file)) :wk "Init file"
+;;     "et" '(consult-theme :wk "Pick theme"))
 
-  (leader-def
-    "o" 'consult-outline)
+;;   (leader-def
+;;     "o" 'consult-outline)
 
-  (leader-def
-    "r" 'revert-buffer)
+;;   (leader-def
+;;     "r" 'revert-buffer)
 
-  (leader-def
-    "ff" 'find-file
-    "fd" 'dired)
+;;   (leader-def
+;;     "ff" 'find-file
+;;     "fd" 'dired)
 
-  (leader-def
-    "b" 'ibuffer)
+;;   (leader-def
+;;     "b" 'ibuffer)
 
-  (leader-def
-    "g" '(magit-status :wk "Magit"))
+;;   (leader-def
+;;     "g" '(magit-status :wk "Magit"))
 
-  (leader-def
-    "p" '(:keymap project-prefix-map :wk "Projects"))
+;;   (leader-def
+;;     "p" '(:keymap project-prefix-map :wk "Projects"))
 
-  (leader-def
-    "l" '(:ignore t :wk "Eglot")
-    "la" 'eglot-code-actions
-    "l=" '(:ignore t :wk "Format")
-    "l==" 'eglot-format-buffer
-    "lr" 'eglot-rename
-    "lh" 'eldoc-doc-buffer
-    "le" 'flymake-show-project-diagnostics
-    "ln" 'flymake-goto-next-error
-    "lp" 'flymake-goto-prev-error)
+;;   (leader-def
+;;     "l" '(:ignore t :wk "Eglot")
+;;     "la" 'eglot-code-actions
+;;     "l=" '(:ignore t :wk "Format")
+;;     "lr" 'eglot-rename
+;;     "lh" 'eldoc-doc-buffer
+;;     "le" 'flymake-show-project-diagnostics
+;;     "ln" 'flymake-goto-next-error
+;;     "lp" 'flymake-goto-prev-error)
 
-  (leader-def
-    "x" '(vterm-other-window :wk "Terminal"))
+;;   (leader-def
+;;     "x" '(vterm-other-window :wk "Terminal"))
 
-  (leader-def
-	"," 'consult-recent-file)
+;;   (leader-def
+;; 	"," 'consult-recent-file)
 
-  (leader-def
-    "n" '(:ignore t :wk "Denote")
-    "nn" '(denote-open-or-create :wk "Open note or create")
-    "nl" 'org-store-link)
+;;   (leader-def
+;;     "n" '(:ignore t :wk "Denote")
+;;     "nn" '(denote-open-or-create :wk "Open note or create")
+;;     "nl" 'org-store-link)
 
-  (leader-def
-    "a"  '(:ignore :wk "Agenda")
-    "af" '((lambda () (interactive) (find-file agenda-file)) :wk "Open agenda file")
-    "aa" '(org-agenda-list :wk "Show agenda"))
-  )
+;;   (leader-def
+;;     "a"  '(:ignore :wk "Agenda")
+;;     "af" '((lambda () (interactive) (find-file agenda-file)) :wk "Open agenda file")
+;;     "aa" '(org-agenda-list :wk "Show agenda"))
+;;   )
 
 (use-package cape
   :after general
@@ -916,40 +911,40 @@ FRAME is the frame where the setting gets done."
   (interactive)
   (find-file "~/Documents/src/configuration/init.org"))
 
-(use-package evil-nerd-commenter
-  :config
-  (evilnc-default-hotkeys))
+;; (use-package evil-nerd-commenter
+;;   :config
+;;   (evilnc-default-hotkeys))
 
-(use-package evil-surround
-  :config
-  (global-evil-surround-mode 1))
+;; (use-package evil-surround
+;;   :config
+;;   (global-evil-surround-mode 1))
 
-;; (global-set-key (kbd "C-c e e") 'sergio/open-init-org)
-;; (global-set-key (kbd "C-c e E") #'(lambda () (interactive) (find-file user-init-file)))
+(global-set-key (kbd "C-c e e") 'sergio/open-init-org)
+(global-set-key (kbd "C-c e E") #'(lambda () (interactive) (find-file user-init-file)))
 
-(use-package evil-multiedit
-  :config
-  (evil-define-key '(insert normal visual) evil-multiedit-mode-map (kbd "RET") nil)
-  ;; Make multiedit take casing into consideration
-  (defun make-evil-multiedit-case-sensitive (fn &rest args)
-    (let ((case-fold-search (not iedit-case-sensitive)))
-      (apply fn args)))
+;; (use-package evil-multiedit
+;;   :config
+;;   (evil-define-key '(insert normal visual) evil-multiedit-mode-map (kbd "RET") nil)
+;;   ;; Make multiedit take casing into consideration
+;;   (defun make-evil-multiedit-case-sensitive (fn &rest args)
+;;     (let ((case-fold-search (not iedit-case-sensitive)))
+;;       (apply fn args)))
 
-  (advice-add #'evil-multiedit-match-and-next :around #'make-evil-multiedit-case-sensitive)
-  (evil-global-set-key 'insert (kbd "M-d") 'evil-multiedit-match-and-next)
-  (evil-global-set-key 'normal (kbd "M-d") 'evil-multiedit-match-and-next)
-  (evil-global-set-key 'visual (kbd "M-d") 'evil-multiedit-match-and-next)
-  (evil-global-set-key 'insert (kbd "M-D") 'evil-multiedit-match-and-prev)
-  (evil-global-set-key 'normal (kbd "M-D") 'evil-multiedit-match-and-prev)
-  (evil-global-set-key 'visual (kbd "M-D") 'evil-multiedit-match-and-prev)
-  (evil-global-set-key 'insert (kbd "C-M-d") 'evil-multiedit-match-all)
-  (evil-global-set-key 'normal (kbd "C-M-d") 'evil-multiedit-match-all)
-  (evil-global-set-key 'visual (kbd "C-M-d") 'evil-multiedit-match-all)
-  :custom
-  (evil-multiedit-use-symbols t)
-  (evil-multiedit-follow-matches t)
-  :bind
-  )
+;;   (advice-add #'evil-multiedit-match-and-next :around #'make-evil-multiedit-case-sensitive)
+;;   (evil-global-set-key 'insert (kbd "M-d") 'evil-multiedit-match-and-next)
+;;   (evil-global-set-key 'normal (kbd "M-d") 'evil-multiedit-match-and-next)
+;;   (evil-global-set-key 'visual (kbd "M-d") 'evil-multiedit-match-and-next)
+;;   (evil-global-set-key 'insert (kbd "M-D") 'evil-multiedit-match-and-prev)
+;;   (evil-global-set-key 'normal (kbd "M-D") 'evil-multiedit-match-and-prev)
+;;   (evil-global-set-key 'visual (kbd "M-D") 'evil-multiedit-match-and-prev)
+;;   (evil-global-set-key 'insert (kbd "C-M-d") 'evil-multiedit-match-all)
+;;   (evil-global-set-key 'normal (kbd "C-M-d") 'evil-multiedit-match-all)
+;;   (evil-global-set-key 'visual (kbd "C-M-d") 'evil-multiedit-match-all)
+;;   :custom
+;;   (evil-multiedit-use-symbols t)
+;;   (evil-multiedit-follow-matches t)
+;;   :bind
+;;   )
 
 (define-key minibuffer-mode-map (kbd "M-d") 'kill-word)
 
@@ -963,26 +958,30 @@ FRAME is the frame where the setting gets done."
 
 (use-package eldoc
   :config
-  (set-face-attribute 'eldoc-highlight-function-argument nil :box t))
+  (set-face-attribute 'eldoc-highlight-function-argument nil :box t)
+)
 
-(use-package eldoc-box
-  :after general
-  :hook
-  (eldoc-mode . eldoc-box-hover-mode)
-  (eldoc-mode . eldoc-box-hover-at-point-mode)
-  :config
-  (leader-def "<tab>" 'eldoc-box-help-at-point)
-  ;; (add-hook 'eldoc-box-frame-hook 'toggle-scroll-bar)
-  (setq eldoc-box-only-multi-line nil)
-  (set-face-attribute 'eldoc-box-body nil :family "Noto Sans")
-  (set-face-attribute 'eldoc-box-border nil :background "dim gray")
-  (setq eldoc-box-offset '(32 32 32)))
+;; (use-package eldoc-box
+;;   :after general
+;;   :hook
+;;   (eldoc-mode . eldoc-box-hover-mode)
+;;   (eldoc-mode . eldoc-box-hover-at-point-mode)
+;;   :config
+;;   (leader-def "<tab>" 'eldoc-box-help-at-point)
+;;   ;; (add-hook 'eldoc-box-frame-hook 'toggle-scroll-bar)
+;;   (setq eldoc-box-only-multi-line nil)
+;;   (set-face-attribute 'eldoc-box-body nil :family "Noto Sans")
+;;   (set-face-attribute 'eldoc-box-border nil :background "dim gray")
+;;   (setq eldoc-box-offset '(32 32 32)))
 
 (use-package noccur)
 
 (setq warning-minimum-level :error)
 
 (use-package denote
+  :bind
+  ("C-c n n" . denote-open-or-create)
+  ("C-c n SPC" . denote)
   :config
   (setq denote-directory notes-directory))
 
@@ -1001,17 +1000,17 @@ FRAME is the frame where the setting gets done."
 	  (insert "# %%")
 	  (newline)))
   :config
-  (let ((map code-cells-mode-map))
-    (define-key map [remap evil-search-next] (code-cells-speed-key 'code-cells-forward-cell)) ;; n
-    (define-key map [remap evil-paste-after] (code-cells-speed-key 'code-cells-backward-cell)) ;; p
-    (define-key map [remap evil-backward-word-begin] (code-cells-speed-key 'code-cells-eval-above)) ;; b
-    (define-key map [remap evil-forward-word-end] (code-cells-speed-key 'code-cells-eval)) ;; e
-    (define-key map [remap evil-jump-forward] (code-cells-speed-key 'outline-cycle))
-    (define-key map (kbd "M-p") 'code-cells-backward-cell)
-    (define-key map (kbd "M-n") 'code-cells-forward-cell)
-    (define-key map (kbd "C-c C-c") 'code-cells-eval)
-    ;; Overriding other minor mode bindings requires some insistence...
-    (define-key map [remap jupyter-eval-line-or-region] 'code-cells-eval))
+  ;; (let ((map code-cells-mode-map))
+  ;;   (define-key map [remap evil-search-next] (code-cells-speed-key 'code-cells-forward-cell)) ;; n
+  ;;   (define-key map [remap evil-paste-after] (code-cells-speed-key 'code-cells-backward-cell)) ;; p
+  ;;   (define-key map [remap evil-backward-word-begin] (code-cells-speed-key 'code-cells-eval-above)) ;; b
+  ;;   (define-key map [remap evil-forward-word-end] (code-cells-speed-key 'code-cells-eval)) ;; e
+  ;;   (define-key map [remap evil-jump-forward] (code-cells-speed-key 'outline-cycle))
+  ;;   (define-key map (kbd "M-p") 'code-cells-backward-cell)
+  ;;   (define-key map (kbd "M-n") 'code-cells-forward-cell)
+  ;;   (define-key map (kbd "C-c C-c") 'code-cells-eval)
+  ;;   ;; Overriding other minor mode bindings requires some insistence...
+  ;;   (define-key map [remap jupyter-eval-line-or-region] 'code-cells-eval))
    (leader-def code-cells-mode-map
 			 "v" '(:ignore t :wk "Code cells")
 			 "vc" 'code-cells-eval
@@ -1069,6 +1068,14 @@ FRAME is the frame where the setting gets done."
 (use-package ox-pandoc
   :defer t)
 #+end_src
+** Aggressive indent mode
+#+begin_src emacs-lisp
+(use-package aggressive-indent
+  :config
+  (global-aggressive-indent-mode 1)
+  (add-to-list 'aggressive-indent-excluded-modes 'python-mode)
+  (add-to-list 'aggressive-indent-excluded-modes 'python-ts-mode))
+#+end_src
 ** Ibuffer
 #+begin_src emacs-lisp
 (setq ibuffer-saved-filter-groups
@@ -1102,6 +1109,7 @@ FRAME is the frame where the setting gets done."
 #+begin_src emacs-lisp
 (add-hook 'compilation-filter-hook 'ansi-color-compilation-filter)
 #+end_src
+
 * Fix keywords alignment
 #+BEGIN_SRC emacs-lisp :tangle /home/sliberman/.emacs.d/fix_keywords_align.el
 (advice-add #'calculate-lisp-indent :override #'void~calculate-lisp-indent)
