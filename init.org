@@ -288,6 +288,8 @@ FRAME is the frame where the setting gets done."
 (use-package embark
   ;; :after evil
   :commands (embark-act embark-dwim embark-bindings)
+  :bind
+  ("C-." . embark-act)
   :init
   (setq enable-recursive-minibuffers t)
   (minibuffer-depth-indicate-mode 1)
@@ -298,8 +300,7 @@ FRAME is the frame where the setting gets done."
   (add-to-list 'display-buffer-alist
   			   '("\\`\\*Embark Collect \\(Live\\|Completions\\)\\*"
   				 nil
-  				 (window-parameters (mode-line-format . none))))
-  )
+  				 (window-parameters (mode-line-format . none)))))
 
 (use-package embark-consult
   :after (embark consult)
@@ -371,7 +372,8 @@ FRAME is the frame where the setting gets done."
 (put 'python-shell-extra-pythonpaths 'safe-local-variable (lambda (_) t))
 
 (use-package dockerfile-mode
-  :mode ("\\.dockerfile\\'" . dockerfile-mode))
+  :mode (("\\.dockerfile\\'" . dockerfile-mode)
+		 ("\\Dockerfile\\'" . dockerfile-mode)))
 
 (unbind-key (kbd "C-x C-z") global-map)
 
@@ -393,13 +395,24 @@ FRAME is the frame where the setting gets done."
 (use-package pyvenv
   :config
   (pyvenv-tracking-mode 1)
-  (pyvenv-mode 1))
+  (pyvenv-mode 1)
+  :init
+  (defun sergio/modify-pythonpath ()
+	(interactive)
+	(let* ((pyver (car (s-match "[0-9]+\.[0-9]+" (nth 1 (split-string (string-chop-newline (shell-command-to-string "python --version")) " ")))))
+		   (venv-site-packages (f-join pyvenv-virtual-env (concat "lib/python"
+									  pyver) "site-packages")))
+	  (setenv "PYTHONPATH" venv-site-packages)
+	  (message venv-site-packages)))
+  (add-hook 'pyvenv-post-activate-hooks 'sergio/modify-pythonpath)
+  (add-hook 'pyvenv-post-activate-hooks 'eglot-ensure)
+)
 
 (setenv "PATH" (concat "/home/sliberman/.local/bin:" (getenv "PATH")))
 
-;; (use-package poetry
-;;   :init
-;;   :commands (poetry))
+(use-package poetry
+  :hook
+  ((python-mode python-ts-mode) . poetry-tracking-mode))
 
 ;; (global-set-key (kbd "C-c r") 'revert-buffer)
 
@@ -419,18 +432,12 @@ FRAME is the frame where the setting gets done."
   (add-hook 'python-mode-hook #'(lambda () (require 'dap-python)))
   (add-hook 'python-mode-hook 'which-function-mode)
   (define-key inferior-python-mode-map (kbd "C-c C-k") #'(lambda () (interactive) (kill-buffer)))
-  ;; :init
-  ;; (defun try-activate-poetry-venv ()
-  ;;   "Try activate poetry virtual env or fail silently"
-  ;;   (ignore-errors
-  ;;     (poetry-venv-workon)))
   :mode ("\\.py$" . python-mode)
   :bind
   ("C-c C-k" . 'python-shell-restart)
+  ("C-<return>" . (lambda () (interactive) (python-shell-send-statement) (python-nav-forward-statement)))
   :hook
   ((python-ts-mode python-mode) . eglot-ensure)
-  ;; ((python-ts-mode python-mode) . poetry-tracking-mode)
-  ;; ((python-ts-mode python-mode) . try-activate-poetry-venv)
   ((python-ts-mode python-mode) . #'(lambda () (setq outline-regexp "[[:space:]]*\\_<\\(?:def\\|class\\|async[[:space:]]+\\(?:def\\)\\)\\_>")))
 )
 
@@ -466,13 +473,6 @@ FRAME is the frame where the setting gets done."
   (add-to-list 'project-switch-commands (list 'sergio/project-rg "Ripgrep"))
 
   (setq project-switch-commands (remove '(project-vc-dir "VC-Dir") project-switch-commands))
-
-  ;; (defun sergio/project-poetry ()
-  ;;   (interactive)
-  ;;   (let ((default-directory (project-root (project-current))))
-  ;;     (poetry)))
-  ;; (define-key project-prefix-map "v" 'sergio/project-poetry)
-  ;; (add-to-list 'project-switch-commands (list 'sergio/project-poetry "Poetry"))
 
   (defun sergio/project-magit ()
     (interactive)
@@ -512,9 +512,16 @@ FRAME is the frame where the setting gets done."
   :hook
   (treemacs-mode . sergio/set-pointer-arrow))
 
+
+#+end_src
+** Rest client
+#+begin_src emacs-lisp
 (use-package restclient
   :commands (restclient-mode))
+#+end_src
+** Org mode
 
+#+begin_src emacs-lisp
 (use-package ob-restclient
   :after org)
 
@@ -594,6 +601,9 @@ FRAME is the frame where the setting gets done."
 		  (-filter #'(lambda (f) (s-ends-with? ".org" f))
 				   (directory-files notes-directory)))
   :commands (org-store-link org-agenda org-capture)
+  :bind (
+		 ("C-c a" . org-agenda)
+		 )
   )
 
 (defun efs/org-mode-visual-fill ()
@@ -620,9 +630,12 @@ FRAME is the frame where the setting gets done."
   :defer t
   :init
   (setq org-modern-table nil))
-
+#+end_src
+* Others
+#+begin_src emacs-lisp
 ;;(add-hook 'prog-mode-hook 'electric-indent-mode)
 (add-hook 'prog-mode-hook 'electric-pair-mode)
+
 
 (size-indication-mode -1)
 
@@ -640,13 +653,11 @@ FRAME is the frame where the setting gets done."
   :config
   (set-face-attribute 'eglot-diagnostic-tag-unnecessary-face nil :strike-through t)
   (setq-default eglot-workspace-configuration
-				'(:pylsp (:plugins (
-									:flake8 (:enabled t)
+				'(:pylsp (:plugins (:flake8 (:enabled t)
 									:pycodestyle (:enabled :json-false)
 									:pyflakes (:enabled :json-false)
 									:mccabe (:enabled :json-false)
-									;; :rope_autoimport (:enabled t)
-									)
+									:mypy (:enabled t))
 						  :configurationSources ["flake8"])))
   (setq eglot-events-buffer-config '(:size 0 :format full))
   (setq eglot-server-programs `(((rust-ts-mode rust-mode) . ("rust-analyzer"))
@@ -729,7 +740,6 @@ FRAME is the frame where the setting gets done."
                                 (graphviz-dot-mode . ("dot-language-server" "--stdio"))
                                 (terraform-mode . ("terraform-ls" "serve"))
                                 (svelte-mode . ("svelteserver" "--stdio"))))
-  (add-hook 'pyvenv-post-activate-hooks 'eglot-ensure)
   (defun sergio/count-flymake-errors ()
 	(let ((count 0))
 	  (dolist (d (flymake-diagnostics))
@@ -737,15 +747,6 @@ FRAME is the frame where the setting gets done."
 				 (flymake--severity (flymake-diagnostic-type d)))
 		  (cl-incf count)))
 	  count))
-  (defun sergio/format-buffer ()
-    (interactive)
-    (start-process-shell-command "black-formatter" nil (concat "black " buffer-file-name))
-    (start-process-shell-command "isort-formatter" nil (concat "isort " buffer-file-name)))
-  (defun sergio/add-autoformat-to-bsh ()
-    (interactive)
-    (add-hook 'before-save-hook 'sergio/format-buffer nil t))
-  (add-hook 'python-mode-hook 'sergio/add-autoformat-to-bsh)
-  (add-hook 'python-ts-mode-hook 'sergio/add-autoformat-to-bsh)
   (defun sergio/prepend-flymake-to-eldoc ()
 	"Remove the flymake eldoc function if it is there, and then move it to the beginning of the eldoc-documentation-functions list."
     (interactive)
@@ -753,7 +754,11 @@ FRAME is the frame where the setting gets done."
 		   (funcs-with-flymake (push 'flymake-eldoc-function funcs))
 		   (funcs-final (cl-remove-duplicates funcs-with-flymake :from-end t)))
 	  (setq eldoc-documentation-functions funcs-final)))
-  (add-hook 'eglot-managed-mode-hook 'sergio/prepend-flymake-to-eldoc))
+  (add-hook 'eglot-managed-mode-hook 'sergio/prepend-flymake-to-eldoc)
+  (add-hook 'python-mode-hook #'(lambda () (interactive) (add-hook 'before-save-hook ' eglot-format-buffer nil t)))
+  :bind (:map eglot-mode-map
+              ("C-c C-d" . eldoc)
+              ("C-c C-r" . eglot-rename)))
 
 (use-package csharp-mode
   :elpaca nil
@@ -1076,6 +1081,7 @@ FRAME is the frame where the setting gets done."
   :config
   (global-aggressive-indent-mode 1)
   (add-to-list 'aggressive-indent-excluded-modes 'python-mode)
+  (add-to-list 'aggressive-indent-excluded-modes 'dockerfile-mode)
   (add-to-list 'aggressive-indent-excluded-modes 'python-ts-mode))
 #+end_src
 ** Ibuffer
@@ -1111,7 +1117,6 @@ FRAME is the frame where the setting gets done."
 #+begin_src emacs-lisp
 (add-hook 'compilation-filter-hook 'ansi-color-compilation-filter)
 #+end_src
-
 * Fix keywords alignment
 #+BEGIN_SRC emacs-lisp :tangle /home/sliberman/.emacs.d/fix_keywords_align.el
 (advice-add #'calculate-lisp-indent :override #'void~calculate-lisp-indent)
