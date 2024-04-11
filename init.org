@@ -755,7 +755,7 @@ FRAME is the frame where the setting gets done."
 		   (funcs-final (cl-remove-duplicates funcs-with-flymake :from-end t)))
 	  (setq eldoc-documentation-functions funcs-final)))
   (add-hook 'eglot-managed-mode-hook 'sergio/prepend-flymake-to-eldoc)
-  (add-hook 'python-mode-hook #'(lambda () (interactive) (add-hook 'before-save-hook ' eglot-format-buffer nil t)))
+  (add-hook 'pyvenv-post-activate-hooks #'(lambda () (interactive) (add-hook 'before-save-hook 'eglot-format-buffer nil t)))
   :bind (:map eglot-mode-map
               ("C-c C-d" . eldoc)
               ("C-c C-r" . eglot-rename)))
@@ -1116,6 +1116,12 @@ FRAME is the frame where the setting gets done."
 ** Compilation mode
 #+begin_src emacs-lisp
 (add-hook 'compilation-filter-hook 'ansi-color-compilation-filter)
+#+end_src
+** Git gutter
+#+begin_src emacs-lisp
+(use-package git-gutter
+  :config
+  (global-git-gutter-mode 1))
 #+end_src
 * Fix keywords alignment
 #+BEGIN_SRC emacs-lisp :tangle /home/sliberman/.emacs.d/fix_keywords_align.el
